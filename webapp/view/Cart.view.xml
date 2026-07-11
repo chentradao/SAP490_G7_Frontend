@@ -1,0 +1,38 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.Cart"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+    <Page title="Cart">
+        <headerContent>
+            <Button icon="sap-icon://nav-back" text="Back" press=".onBack" />
+        </headerContent>
+        <content>
+            <!--
+                LUU Y: doi "/CartItems" cho khop dung ten Entity Set that
+                trong $metadata.xml neu khac. Khong dat filter co dinh o
+                day vi Cart.controller.js se tu filter theo CartID sau
+                khi route matched (xem ham _loadCartItems).
+            -->
+            <List
+                id="cartList"
+                items="{path: '/CartItems', parameters: { $expand: '_Food' }}"
+                noDataText="Your cart is empty">
+                <items>
+                    <CustomListItem>
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMargin">
+                            <VBox>
+                                <Title text="{_Food/FoodName}" level="H4" />
+                                <Text text="{_Food/Description}" />
+                            </VBox>
+                            <VBox alignItems="End">
+                                <Text text="{= ${UnitPrice} !== null ? (${UnitPrice} + ' ' + ${Currency}) : '' }" />
+                                <Text text="Qty: {Quantity}" />
+                            </VBox>
+                        </HBox>
+                    </CustomListItem>
+                </items>
+            </List>
+        </content>
+    </Page>
+</mvc:View>

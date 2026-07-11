@@ -1,0 +1,50 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.Login"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    <Page title="{i18n>loginTitle}" showHeader="false" fitContainer="true">
+        <content>
+            <VBox alignItems="Center" justifyContent="Center" class="sapUiLargeMarginTop">
+                <VBox class="sapUiContentPadding sapUiMediumMarginTop" width="24rem"
+                    backgroundDesign="Solid"
+                    renderType="Bare">
+                    <core:Icon src="sap-icon://restaurant" size="3rem" class="sapUiMediumMarginBottom" />
+                    <Title text="{i18n>loginTitle}" level="H2" class="sapUiSmallMarginBottom" />
+
+                    <Label text="{i18n>labelUsername}" labelFor="usernameInput" />
+                    <Input
+                        id="usernameInput"
+                        value="{loginModel>/username}"
+                        placeholder="{i18n>labelUsername}"
+                        class="sapUiSmallMarginBottom"
+                        submit=".onLogin" />
+
+                    <Label text="{i18n>labelPassword}" labelFor="passwordInput" />
+                    <Input
+                        id="passwordInput"
+                        type="Password"
+                        value="{loginModel>/password}"
+                        placeholder="{i18n>labelPassword}"
+                        class="sapUiSmallMarginBottom"
+                        submit=".onLogin" />
+
+                    <MessageStrip
+                        text="{loginModel>/errorMessage}"
+                        type="Error"
+                        showIcon="true"
+                        visible="{loginModel>/errorVisible}"
+                        class="sapUiSmallMarginBottom" />
+
+                    <Button
+                        text="{i18n>btnLogin}"
+                        type="Emphasized"
+                        width="100%"
+                        press=".onLogin"
+                        busy="{loginModel>/busy}" />
+                </VBox>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

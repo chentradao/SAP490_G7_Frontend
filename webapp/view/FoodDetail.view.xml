@@ -1,0 +1,79 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.FoodDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    displayBlock="true">
+    <Page title="{i18n>foodDetailTitle}" showNavButton="true" navButtonPress=".onNavBack" fitContainer="true">
+        <content>
+            <VBox class="sapUiSmallMargin" width="100%">
+
+                <ObjectHeader
+                    title="{FoodName}"
+                    number="{
+                        path: 'Price',
+                        type: 'sap.ui.model.type.Float',
+                        formatOptions: {
+                            minFractionDigits: 0,
+                            maxFractionDigits: 0
+                        }
+                    }"
+                    numberUnit="{Currency}">
+                    <attributes>
+                        <ObjectAttribute title="{i18n>labelFoodId}" text="{FoodID}" />
+                        <ObjectAttribute title="{i18n>labelCategory}" text="{_Category/CategoryName}" />
+                        <ObjectAttribute title="Category ID" text="{CategoryID}" />
+                    </attributes>
+                    <statuses>
+                        <ObjectStatus
+                            text="{= ${Status} === '1' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
+                            state="{= ${Status} === '1' ? 'Success' : 'Error' }" />
+                    </statuses>
+                </ObjectHeader>
+
+                <Panel
+                    headerText="Order Options"
+                    class="sapUiSmallMarginTop">
+
+                    <VBox class="sapUiSmallMargin">
+
+                        <Label text="Quantity" />
+                        <StepInput
+                            id="quantityInput"
+                            min="1"
+                            max="20"
+                            value="1"
+                            width="200px" />
+
+                        <Label text="Note" class="sapUiSmallMarginTop" />
+                        <TextArea
+                            id="noteInput"
+                            width="100%"
+                            rows="3"
+                            placeholder="Example: less spicy, no onion..." />
+
+                        <HBox class="sapUiSmallMarginTop">
+                            <Button
+                                text="Add to Cart"
+                                type="Emphasized"
+                                icon="sap-icon://cart"
+                                press=".onAddToCart" />
+                            <Button
+                                text="View Cart"
+                                icon="sap-icon://cart"
+                                class="sapUiSmallMarginBegin"
+                                press=".onOpenCart" />
+                            <Button
+                                text="Back to Menu"
+                                class="sapUiSmallMarginBegin"
+                                press=".onNavBack" />
+                        </HBox>
+
+                    </VBox>
+                </Panel>
+
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

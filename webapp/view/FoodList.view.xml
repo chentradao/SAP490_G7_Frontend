@@ -1,0 +1,90 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.FoodList"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    <Page title="{i18n>foodListTitle}" fitContainer="true">
+        <headerContent>
+            <Button id="cartButton" icon="sap-icon://cart" text="Cart" press=".onViewCart" />
+            <Button icon="sap-icon://log" text="{i18n>btnLogout}" press=".onLogout" />
+        </headerContent>
+        <subHeader>
+            <Bar>
+                <contentLeft>
+                    <SearchField
+                        id="foodSearchField"
+                        width="16rem"
+                        placeholder="{i18n>foodSearchPlaceholder}"
+                        search=".onSearchFood" />
+                </contentLeft>
+                <contentMiddle>
+                    <ComboBox
+                        id="categoryFilter"
+                        width="12rem"
+                        placeholder="Category"
+                        change=".onCategoryChange"
+                        items="{/Categories}">
+                        <core:Item key="{CategoryID}" text="{CategoryName}" />
+                    </ComboBox>
+                </contentMiddle>
+                <contentRight>
+                    <Select
+                        id="statusFilter"
+                        width="10rem"
+                        selectedKey="All"
+                        change=".onStatusChange">
+                        <core:Item key="All" text="All Status" />
+                        <core:Item key="1" text="Active" />
+                        <core:Item key="0" text="Inactive" />
+                    </Select>
+                </contentRight>
+            </Bar>
+        </subHeader>
+        <content>
+            <Table
+                id="foodTable"
+                items="{
+                    path: '/Foods',
+                    parameters: { $expand: '_Category' },
+                    sorter: { path: 'FoodName' }
+                }"
+                noDataText="{i18n>msgNoFood}"
+                growing="true"
+                growingScrollToLoad="true">
+                <columns>
+                    <Column width="12rem">
+                        <Text text="{i18n>colFoodName}" />
+                    </Column>
+                    <Column width="9rem">
+                        <Text text="{i18n>colCategory}" />
+                    </Column>
+                    <Column hAlign="End" width="8rem">
+                        <Text text="{i18n>colPrice}" />
+                    </Column>
+                    <Column width="7rem">
+                        <Text text="{i18n>colStatus}" />
+                    </Column>
+                    <Column width="8rem" hAlign="Center">
+                        <Text text="" />
+                    </Column>
+                </columns>
+                <items>
+                    <ColumnListItem type="Navigation" press=".onFoodPress">
+                        <cells>
+                            <ObjectIdentifier
+                                title="{FoodName}"
+                                text="{Description}" />
+                            <Text text="{_Category/CategoryName}" />
+                            <Text text="{= ${Price} !== null ? (${Price} + ' ' + ${Currency}) : '' }" />
+                            <ObjectStatus
+                                text="{= ${Status} === '1' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
+                                state="{= ${Status} === '1' ? 'Success' : 'Error' }" />
+                            <Button text="Add to Cart" press=".onAddToCart" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+</mvc:View>
