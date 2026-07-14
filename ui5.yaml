@@ -18,6 +18,7 @@ server:
         backend:
           - path: /sap
             url: https://s40lp1.ucc.cit.tum.de
+            client: "324"
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:

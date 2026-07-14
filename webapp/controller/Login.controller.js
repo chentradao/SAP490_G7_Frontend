@@ -3,8 +3,9 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
-    "sap/m/MessageToast"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageToast) {
+    "sap/m/MessageToast",
+    "sap490g7fioriapp/model/cartUtils"
+], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, cartUtils) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.Login", {
@@ -68,18 +69,22 @@ sap.ui.define([
                     var oAppModel = this.getOwnerComponent().getModel("session") || new JSONModel();
                     oAppModel.setData({
                         userId: oUser.UserID,
-                        // DA SUA: KHONG gan cung cartId nua.
-                        // cartUtils.ensureCartForUser() se tu kiem tra cart that
-                        // trong bang Carts theo UserID, hoac tao moi neu chua co,
-                        // thay vi dang cung dinh dang "CART-<UserID>" gay sai lech
-                        // voi ID that duoc sinh ra boi cartUtils.
+                        // KHONG gan cung cartId - cartUtils.ensureCartForUser() se tu
+                        // kiem tra cart that trong bang Carts theo UserID, hoac tao moi.
                         cartId: null,
+                        cartItemCount: 0,
                         username: oUser.Username,
                         fullName: oUser.FullName,
                         role: sRole,
                         isLoggedIn: true
                     });
                     this.getOwnerComponent().setModel(oAppModel, "session");
+
+                    // Load cart 1 lan de tinh badge so luong, chay ngam khong can
+                    // cho ket qua truoc khi dieu huong.
+                    cartUtils.ensureCartForUser(oODataModel, oAppModel, oUser.UserID).then(function (sCartId) {
+                        return cartUtils.refreshCartCount(oODataModel, oAppModel, sCartId);
+                    });
 
                     MessageToast.show(oI18n.getText("msgLoginSuccess"));
 

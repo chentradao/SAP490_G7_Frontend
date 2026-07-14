@@ -1,75 +1,100 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator",
-    "sap490g7fioriapp/model/cartUtils"
-], function (Controller, Filter, FilterOperator, cartUtils) {
+    "sap/ui/model/json/JSONModel"
+], function (Controller, JSONModel) {
     "use strict";
-
-    // LUU Y: doi cho khop dung ten Entity Set that (xem $metadata.xml)
-    var CART_ENTITY_SET = "/Carts";
 
     return Controller.extend("sap490g7fioriapp.controller.Cart", {
 
         onInit: function () {
-            var oRouter = this.getOwnerComponent().getRouter();
-            oRouter.getRoute("RouteCart").attachPatternMatched(this._onRouteMatched, this);
-        },
+            // Model riêng cho view (tổng tiền, trạng thái nút checkout)
+            var oViewModel = new JSONModel({
+                totalPrice: 0,
+                totalPriceFormatted: "0.00",
+                currency: "",
+                checkoutEnabled: false
+            });
+            this.getView().setModel(oViewModel, "cartView");
 
-        _onRouteMatched: function () {
-            var oCartModel = this.getOwnerComponent().getModel("cart");
-            var oSession = this.getOwnerComponent().getModel("session");
-            var sUserId = oSession && oSession.getProperty("/userId");
-            var sCartId = oSession && oSession.getProperty("/cartId");
-
-            cartUtils.syncActiveCart(oCartModel, sUserId, sCartId);
-
-            this._loadCartItems(sUserId, sCartId);
-        },
-
-        _loadCartItems: function (sUserId, sCartId) {
-            var oList = this.getView().byId("cartList");
-            if (!oList) {
-                return;
-            }
-
-            var oListBinding = oList.getBinding("items");
-            if (!oListBinding) {
-                return;
-            }
-
-            if (!sCartId && sUserId) {
-                var oODataModel = this.getOwnerComponent().getModel();
-                oODataModel.bindList(CART_ENTITY_SET, undefined, undefined, [
-                    new Filter("UserID", FilterOperator.EQ, sUserId)
-                ], {
-                    $$groupId: "$auto"
-                }).requestContexts(0, 1).then(function (aContexts) {
-                    if (aContexts && aContexts.length > 0) {
-                        var oCart = aContexts[0].getObject();
-                        this._loadCartItems(sUserId, oCart.CartID);
-                    } else {
-                        // Chua co cart nao cho user nay - hien danh sach rong
-                        oListBinding.filter([
-                            new Filter("CartID", FilterOperator.EQ, "___NO_CART___")
-                        ]);
-                        oListBinding.refresh();
-                    }
-                }.bind(this));
-                return;
-            }
-
-            var aFilters = [];
-            if (sCartId) {
-                aFilters.push(new Filter("CartID", FilterOperator.EQ, sCartId));
-            }
-
-            oListBinding.filter(aFilters);
-            oListBinding.refresh();
+            // TODO: nếu CartID lấy theo route, gọi lại _loadCartItems như comment gốc
         },
 
         onBack: function () {
-            this.getOwnerComponent().getRouter().navTo("RouteFoodList");
+            this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
+        },
+
+        formatUnitPrice: function (fUnitPrice, sCurrency) {
+            var fValue = parseFloat(fUnitPrice);
+            if (isNaN(fValue)) {
+                return "";
+            }
+            return fValue.toFixed(2) + (sCurrency ? " " + sCurrency : "");
+        },
+
+        formatLineAmount: function (fUnitPrice, iQuantity, sCurrency) {
+            var fValue = (parseFloat(fUnitPrice) || 0) * (parseInt(iQuantity, 10) || 0);
+            return fValue.toFixed(2) + (sCurrency ? " " + sCurrency : "");
+        },
+
+        // Gọi mỗi khi List load xong / filter lại -> tính tổng tiền
+        onCartListUpdateFinished: function (oEvent) {
+            var oList = this.byId("cartList");
+            var oBinding = oList.getBinding("items");
+            var aContexts = oBinding ? oBinding.getCurrentContexts() : [];
+
+            var fTotal = 0;
+            var sCurrency = "";
+
+            aContexts.forEach(function (oCtx) {
+                if (!oCtx) { return; }
+                var oData = oCtx.getObject();
+                var fUnitPrice = parseFloat(oData.UnitPrice) || 0;
+                var iQty = parseInt(oData.Quantity, 10) || 0;
+                fTotal += fUnitPrice * iQty;
+                if (!sCurrency && oData.Currency) {
+                    sCurrency = oData.Currency;
+                }
+            });
+
+            var oViewModel = this.getView().getModel("cartView");
+            oViewModel.setProperty("/totalPrice", fTotal);
+            oViewModel.setProperty("/totalPriceFormatted", fTotal.toFixed(2) + (sCurrency ? " " + sCurrency : ""));
+            oViewModel.setProperty("/currency", sCurrency);
+            oViewModel.setProperty("/checkoutEnabled", aContexts.length > 0);
+        },
+
+        onCheckout: function () {
+            var oList = this.byId("cartList");
+            var oBinding = oList.getBinding("items");
+            var aContexts = oBinding ? oBinding.getCurrentContexts() : [];
+            var oViewModel = this.getView().getModel("cartView");
+
+            // Gom dữ liệu giỏ hàng để truyền sang trang Checkout
+            var aItems = aContexts.map(function (oCtx) {
+                var d = oCtx.getObject();
+                return {
+                    FoodID: d.FoodID,
+                    FoodName: d._Food ? d._Food.FoodName : "",
+                    Quantity: d.Quantity,
+                    UnitPrice: d.UnitPrice,
+                    Currency: d.Currency,
+                    LineAmount: (parseFloat(d.UnitPrice) || 0) * (parseInt(d.Quantity, 10) || 0)
+                };
+            });
+
+            var oOrderPayload = {
+                items: aItems,
+                totalAmount: oViewModel.getProperty("/totalPrice"),
+                currency: oViewModel.getProperty("/currency"),
+                note: ""
+            };
+
+            // Lưu tạm vào Component model để Checkout đọc lại (đơn giản, không cần backend order trước)
+            this.getOwnerComponent().setModel(
+                new sap.ui.model.json.JSONModel(oOrderPayload), "checkoutData"
+            );
+
+            this.getOwnerComponent().getRouter().navTo("RouteCheckout");
         }
     });
 });

@@ -4,13 +4,32 @@ sap.ui.define([
 ], function (Filter, FilterOperator) {
     "use strict";
 
-    // ==================================================================
-    // LUU Y QUAN TRONG: doi 2 hang so duoi day cho khop dung ten
-    // Entity Set thuc te trong Service Definition cua ban (kiem tra
-    // trong $metadata.xml hoac tab Preview cua Service Binding).
-    // ==================================================================
     var CART_ENTITY_SET = "/Carts";
     var CART_ITEM_ENTITY_SET = "/CartItems";
+
+    // ------------------------------------------------------------
+    // Tim ItemNo ke tiep cho 1 cart: doc toan bo item hien co,
+    // lay so lon nhat + 1, dinh dang du 6 chu so (numc(6)).
+    // ------------------------------------------------------------
+    function getNextItemNo(oODataModel, sCartId) {
+        var oListBinding = oODataModel.bindList(CART_ITEM_ENTITY_SET, undefined, undefined, [
+            new Filter("CartID", FilterOperator.EQ, sCartId)
+        ], {
+            $$groupId: "$auto"
+        });
+
+        return oListBinding.requestContexts().then(function (aContexts) {
+            var iMax = 0;
+            (aContexts || []).forEach(function (oContext) {
+                var iNo = parseInt(oContext.getObject().ItemNo, 10);
+                if (!isNaN(iNo) && iNo > iMax) {
+                    iMax = iNo;
+                }
+            });
+            var iNext = iMax + 1;
+            return String(iNext).padStart(6, "0");
+        });
+    }
 
     return {
         syncActiveCart: function (oCartModel, sUserId, sCartId) {
@@ -70,9 +89,6 @@ sap.ui.define([
             return aItems;
         },
 
-        // ------------------------------------------------------------
-        // Dam bao user co 1 cart dang active - neu chua co thi tao moi.
-        // ------------------------------------------------------------
         ensureCartForUser: function (oODataModel, oSessionModel, sUserId) {
             if (!oODataModel || !oSessionModel || !sUserId) {
                 return Promise.resolve(null);
@@ -115,10 +131,6 @@ sap.ui.define([
             });
         },
 
-        // ------------------------------------------------------------
-        // Them mon an vao cart - ho tro tham so iQuantity (so luong
-        // duoc chon o FoodDetail thong qua StepInput).
-        // ------------------------------------------------------------
         addFoodToCart: function (oODataModel, oSessionModel, sUserId, oFood, iQuantity) {
             var iQtyToAdd = Number(iQuantity) > 0 ? Number(iQuantity) : 1;
 
@@ -154,27 +166,54 @@ sap.ui.define([
                         });
                     }
 
-                    var sItemNo = Date.now().toString().slice(-6);
-                    var sLineAmountStr = (fUnitPrice * iQtyToAdd).toFixed(2);
+                    // Chua co dong nay trong cart - tinh ItemNo ke tiep truoc khi tao
+                    return getNextItemNo(oODataModel, sCartId).then(function (sItemNo) {
+                        var sLineAmountStr = (fUnitPrice * iQtyToAdd).toFixed(2);
 
-                    var oCreateBinding = oODataModel.bindList(CART_ITEM_ENTITY_SET);
-                    var oNewContext = oCreateBinding.create({
-                        CartID: sCartId,
-                        ItemNo: sItemNo,
-                        FoodID: oFood.FoodID,
-                        Quantity: iQtyToAdd,
-                        UnitPrice: sUnitPriceStr,
-                        Currency: oFood.Currency || "VND",
-                        LineAmount: sLineAmountStr,
-                        // DA SUA: "A" -> "ACTIVE" cho dong nhat voi cac cho khac
-                        Status: "ACTIVE"
-                    });
+                        var oCreateBinding = oODataModel.bindList(CART_ITEM_ENTITY_SET);
+                        var oNewContext = oCreateBinding.create({
+                            CartID: sCartId,
+                            ItemNo: sItemNo,
+                            FoodID: oFood.FoodID,
+                            Quantity: iQtyToAdd,
+                            UnitPrice: sUnitPriceStr,
+                            Currency: oFood.Currency || "VND",
+                            LineAmount: sLineAmountStr,
+                            Status: "ACTIVE"
+                        });
 
-                    return oNewContext.created().then(function () {
-                        return sCartId;
+                        return oNewContext.created().then(function () {
+                            return sCartId;
+                        });
                     });
                 });
             });
+        },
+        refreshCartCount: function (oODataModel, oSessionModel, sCartId) {
+    if (!oODataModel || !oSessionModel || !sCartId) {
+        if (oSessionModel) {
+            oSessionModel.setProperty("/cartItemCount", 0);
         }
+        return Promise.resolve(0);
+    }
+
+    var oListBinding = oODataModel.bindList(CART_ITEM_ENTITY_SET, undefined, undefined, [
+        new Filter("CartID", FilterOperator.EQ, sCartId)
+    ], {
+        $$groupId: "$auto"
+    });
+
+    return oListBinding.requestContexts().then(function (aContexts) {
+        var iCount = 0;
+        (aContexts || []).forEach(function (oContext) {
+            iCount += Number(oContext.getObject().Quantity || 0);
+        });
+        oSessionModel.setProperty("/cartItemCount", iCount);
+        return iCount;
+    }).catch(function () {
+        oSessionModel.setProperty("/cartItemCount", 0);
+        return 0;
+    });
+}
     };
 });

@@ -151,6 +151,10 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteCart");
         },
 
+        onViewMyOrders: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteMyOrders");
+        },
+
         onLogout: function () {
             var oSessionModel = this.getOwnerComponent().getModel("session");
             if (oSessionModel) {

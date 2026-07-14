@@ -7,6 +7,7 @@
     <Page title="{i18n>foodListTitle}" fitContainer="true">
         <headerContent>
             <Button id="cartButton" icon="sap-icon://cart" text="Cart" press=".onViewCart" />
+            <Button icon="sap-icon://activity-items" text="My Orders" press=".onViewMyOrders" />
             <Button icon="sap-icon://log" text="{i18n>btnLogout}" press=".onLogout" />
         </headerContent>
         <subHeader>
