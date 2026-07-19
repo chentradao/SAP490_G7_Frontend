@@ -40,45 +40,36 @@ sap.ui.define([
             var oCheckoutModel = oComponent.getModel("checkoutData");
             var oOrder = oCheckoutModel ? oCheckoutModel.getData() : null;
 
-            if (!oOrder || !oOrder.items || !oOrder.items.length) {
-                oQrModel.setProperty("/loading", false);
-                oQrModel.setProperty("/hasQr", false);
-                oQrModel.setProperty("/statusText", "Không có dữ liệu giỏ hàng để tạo QR.");
-                return;
+            var amount = 0;
+            if (oOrder && Array.isArray(oOrder.items)) {
+                amount = oOrder.items.reduce(function (sum, item) {
+                    var fUnitPrice = parseFloat(item.UnitPrice) || 0;
+                    var iQty = parseInt(item.Quantity, 10) || 0;
+                    return sum + (fUnitPrice * iQty);
+                }, 0);
+            }
+            if (amount === 0 && oOrder && oOrder.totalAmount) {
+                amount = parseFloat(oOrder.totalAmount) || 0;
+            }
+            if (amount === 0) {
+                amount = 50000;
             }
 
-            oQrModel.setProperty("/loading", true);
-            oQrModel.setProperty("/hasQr", false);
-            oQrModel.setProperty("/statusText", "Đang tạo mã QR thanh toán...");
+            var transactionCode = oOrder && oOrder.orderId ? oOrder.orderId : "ORDER001";
+            var timestamp = Date.now();
 
-            var oModel = oComponent.getModel();
-            if (!oModel || typeof oModel.callFunction !== "function") {
-                oQrModel.setProperty("/loading", false);
-                oQrModel.setProperty("/hasQr", false);
-                oQrModel.setProperty("/statusText", "Môi trường dữ liệu chưa sẵn sàng để tạo QR.");
-                return;
-            }
+            var qrCodeUrl =
+                "https://img.vietqr.io/image/MB-0964735122-compact.png" +
+                "?amount=" + amount +
+                "&addInfo=" + encodeURIComponent(transactionCode) +
+                "&accountName=" + encodeURIComponent("DO MINH CHIEN") +
+                "&t=" + timestamp;
 
-            oModel.callFunction("/CreateVnpayPayment", {
-                method: "POST",
-                urlParameters: {
-                    OrderAmount: oOrder.totalAmount,
-                    Currency: oOrder.currency
-                },
-                success: function (oData) {
-                    oQrModel.setProperty("/loading", false);
-                    oQrModel.setProperty("/hasQr", true);
-                    oQrModel.setProperty("/qrCodeUrl", oData && oData.QrCodeUrl ? oData.QrCodeUrl : "");
-                    oQrModel.setProperty("/transactionRef", oData && oData.TransactionRef ? oData.TransactionRef : "");
-                    oQrModel.setProperty("/statusText", "Quét mã để thanh toán qua VNPay");
-                }.bind(this),
-                error: function (oError) {
-                    var sMessage = oError && oError.message ? oError.message : "Tạo mã QR thất bại, vui lòng thử lại.";
-                    oQrModel.setProperty("/loading", false);
-                    oQrModel.setProperty("/hasQr", false);
-                    oQrModel.setProperty("/statusText", "Tạo mã QR thất bại. " + sMessage);
-                }.bind(this)
-            });
+            oQrModel.setProperty("/loading", false);
+            oQrModel.setProperty("/hasQr", true);
+            oQrModel.setProperty("/qrCodeUrl", qrCodeUrl);
+            oQrModel.setProperty("/transactionRef", transactionCode);
+            oQrModel.setProperty("/statusText", "Quét mã để thanh toán qua VietQR");
         }
     });
 });

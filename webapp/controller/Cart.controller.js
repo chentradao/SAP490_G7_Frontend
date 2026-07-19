@@ -1,13 +1,14 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/ui/model/json/JSONModel"
-], function (Controller, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/m/MessageToast",
+    "sap490g7fioriapp/model/cartUtils"
+], function (Controller, JSONModel, MessageToast, cartUtils) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.Cart", {
 
         onInit: function () {
-            // Model riêng cho view (tổng tiền, trạng thái nút checkout)
             var oViewModel = new JSONModel({
                 totalPrice: 0,
                 totalPriceFormatted: "0.00",
@@ -15,12 +16,38 @@ sap.ui.define([
                 checkoutEnabled: false
             });
             this.getView().setModel(oViewModel, "cartView");
-
-            // TODO: nếu CartID lấy theo route, gọi lại _loadCartItems như comment gốc
         },
 
         onBack: function () {
             this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
+        },
+
+        // DA SUA: dung oContext.delete() (API dung cho ODataModel v4),
+        // thay vi oModel.remove() (API cua v2, khong ton tai trong v4).
+        onRemoveCartItem: function (oEvent) {
+            var oSource = oEvent.getSource();
+            var oContext = oSource.getBindingContext();
+            if (!oContext) {
+                return;
+            }
+
+            oContext.delete().then(function () {
+                MessageToast.show("Item removed from cart.");
+
+                // Cap nhat lai tong tien hien thi tren view
+                this.onCartListUpdateFinished();
+
+                // Cap nhat lai badge so luong tren FoodList (session/cartItemCount)
+                var oSession = this.getOwnerComponent().getModel("session");
+                var sCartId = oSession && oSession.getProperty("/cartId");
+                var oODataModel = oContext.getModel();
+
+                if (cartUtils && oSession && sCartId) {
+                    cartUtils.refreshCartCount(oODataModel, oSession, sCartId);
+                }
+            }.bind(this)).catch(function () {
+                MessageToast.show("Could not remove the item from cart.");
+            });
         },
 
         formatUnitPrice: function (fUnitPrice, sCurrency) {
@@ -36,7 +63,6 @@ sap.ui.define([
             return fValue.toFixed(2) + (sCurrency ? " " + sCurrency : "");
         },
 
-        // Gọi mỗi khi List load xong / filter lại -> tính tổng tiền
         onCartListUpdateFinished: function (oEvent) {
             var oList = this.byId("cartList");
             var oBinding = oList.getBinding("items");
@@ -69,7 +95,6 @@ sap.ui.define([
             var aContexts = oBinding ? oBinding.getCurrentContexts() : [];
             var oViewModel = this.getView().getModel("cartView");
 
-            // Gom dữ liệu giỏ hàng để truyền sang trang Checkout
             var aItems = aContexts.map(function (oCtx) {
                 var d = oCtx.getObject();
                 return {
@@ -82,16 +107,19 @@ sap.ui.define([
                 };
             });
 
+            var fTotalAmount = aItems.reduce(function (sum, item) {
+                return sum + ((parseFloat(item.UnitPrice) || 0) * (parseInt(item.Quantity, 10) || 0));
+            }, 0);
+
             var oOrderPayload = {
                 items: aItems,
-                totalAmount: oViewModel.getProperty("/totalPrice"),
+                totalAmount: fTotalAmount,
                 currency: oViewModel.getProperty("/currency"),
                 note: ""
             };
 
-            // Lưu tạm vào Component model để Checkout đọc lại (đơn giản, không cần backend order trước)
             this.getOwnerComponent().setModel(
-                new sap.ui.model.json.JSONModel(oOrderPayload), "checkoutData"
+                new JSONModel(oOrderPayload), "checkoutData"
             );
 
             this.getOwnerComponent().getRouter().navTo("RouteCheckout");

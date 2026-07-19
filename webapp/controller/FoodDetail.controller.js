@@ -36,8 +36,12 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteFoodList");
         },
 
+        onOpenCart: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteCart", {}, true);
+        },
+
         onAddToCart: function () {
-    var oContext = this.getView().getBindingContext();
+            var oContext = this.getView().getBindingContext();
     var oFood = oContext.getObject();
     var oSession = this.getOwnerComponent().getModel("session");
     var sUserId = oSession && oSession.getProperty("/userId");

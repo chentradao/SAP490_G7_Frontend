@@ -25,6 +25,7 @@
                                 <Text text="Qty: {Quantity}" />
                                 <!-- Thành tiền từng dòng -->
                                 <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Quantity'}, {path: 'Currency'}], formatter: '.formatLineAmount'}" class="sapUiTinyMarginTop sapMTextBold" />
+                                <Button text="Remove" type="Reject" press=".onRemoveCartItem" class="sapUiTinyMarginTop" />
                             </VBox>
                         </HBox>
                     </CustomListItem>
