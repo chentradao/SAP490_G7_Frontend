@@ -1,0 +1,27 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.MyOrders"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+    <Page title="My Orders" showNavButton="true" navButtonPress=".onBack">
+        <content>
+            <List
+                id="orderList"
+                items="{orders>/filteredOrders}"
+                noDataText="Bạn chưa có đơn hàng nào">
+                <items>
+                    <CustomListItem>
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMargin">
+                            <VBox>
+                                <Title text="{orders>orderId}" level="H4" />
+                                <Text text="{= 'Ngày ' + ${orders>orderDate} + ' ' + ${orders>orderTime} }" />
+                                <Text text="{= ${orders>totalAmount}.toFixed(2) + ' ' + ${orders>currency} }" />
+                            </VBox>
+                            <Button text="Chi tiết" type="Emphasized" press=".onOrderPress" />
+                        </HBox>
+                    </CustomListItem>
+                </items>
+            </List>
+        </content>
+    </Page>
+</mvc:View>

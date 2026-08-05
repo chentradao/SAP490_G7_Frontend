@@ -1,0 +1,47 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.MyOrderDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+    <Page title="Order Detail" showNavButton="true" navButtonPress=".onBack">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <ObjectHeader
+                    title="{= 'Order ' + ${orders>/selectedOrder/orderId} }"
+                    number="{= ${orders>/selectedOrder/totalAmount}.toFixed(2) + ' ' + ${orders>/selectedOrder/currency} }"
+                    numberUnit=""
+                    intro="{= 'Ngày ' + ${orders>/selectedOrder/orderDate} + ' ' + ${orders>/selectedOrder/orderTime} }"
+                    backgroundDesign="Solid">
+                    <attributes>
+                        <ObjectAttribute title="Phương thức thanh toán" text="VNPay QR" />
+                        <ObjectAttribute title="Trạng thái đơn" text="{orders>/selectedOrder/orderStatus}" />
+                        <ObjectAttribute title="Trạng thái thanh toán" text="{orders>/selectedOrder/paymentStatus}" />
+                    </attributes>
+                </ObjectHeader>
+
+                <Panel headerText="Thông tin đơn hàng" class="sapUiSmallMarginTop">
+                    <VBox class="sapUiSmallMargin">
+                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                            <Text text="Mã đơn hàng" />
+                            <Text text="{orders>/selectedOrder/orderId}" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                            <Text text="Ghi chú" />
+                            <Text text="{orders>/selectedOrder/note}" />
+                        </HBox>
+                    </VBox>
+                </Panel>
+
+                <Panel headerText="Sản phẩm trong đơn" class="sapUiSmallMarginTop">
+                    <List items="{orders>/selectedOrder/items}">
+                        <StandardListItem
+                            title="{orders>foodName}"
+                            description="{= 'Qty: ' + ${orders>quantity} }"
+                            info="{= ${orders>lineAmount}.toFixed(2) + ' ' + ${orders>currency} }"
+                            infoState="Success" />
+                    </List>
+                </Panel>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

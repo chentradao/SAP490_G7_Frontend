@@ -1,0 +1,101 @@
+[
+  {
+    "OrderID": "ORD001",
+    "ItemNo": "000010",
+    "FoodID": "FOOD001",
+    "FoodName": "Com suon nuong",
+    "Quantity": 2,
+    "UnitPrice": "35000",
+    "Currency": "VND",
+    "LineAmount": "70000",
+    "ItemStatus": "NEW"
+  },
+  {
+    "OrderID": "ORD001",
+    "ItemNo": "000020",
+    "FoodID": "FOOD003",
+    "FoodName": "Nuoc ngot",
+    "Quantity": 1,
+    "UnitPrice": "15000",
+    "Currency": "VND",
+    "LineAmount": "15000",
+    "ItemStatus": "NEW"
+  },
+  {
+    "OrderID": "ORD002",
+    "ItemNo": "000010",
+    "FoodID": "FOOD002",
+    "FoodName": "Bun bo Hue",
+    "Quantity": 3,
+    "UnitPrice": "40000",
+    "Currency": "VND",
+    "LineAmount": "120000",
+    "ItemStatus": "CREATED"
+  },
+  {
+    "OrderID": "ORD003",
+    "ItemNo": "000010",
+    "FoodID": "FOOD004",
+    "FoodName": "Pho ga",
+    "Quantity": 1,
+    "UnitPrice": "45000",
+    "Currency": "VND",
+    "LineAmount": "45000",
+    "ItemStatus": "PAID"
+  },
+  {
+    "OrderID": "ORD003",
+    "ItemNo": "000020",
+    "FoodID": "FOOD003",
+    "FoodName": "Tra da",
+    "Quantity": 2,
+    "UnitPrice": "10000",
+    "Currency": "VND",
+    "LineAmount": "20000",
+    "ItemStatus": "PAID"
+  },
+  {
+    "OrderID": "ORD004",
+    "ItemNo": "000010",
+    "FoodID": "FOOD005",
+    "FoodName": "Banh mi thit",
+    "Quantity": 1,
+    "UnitPrice": "45000",
+    "Currency": "VND",
+    "LineAmount": "45000",
+    "ItemStatus": "CANCELLED"
+  },
+  {
+    "OrderID": "ORD005",
+    "ItemNo": "000010",
+    "FoodID": "FOOD001",
+    "FoodName": "Com suon nuong",
+    "Quantity": 3,
+    "UnitPrice": "35000",
+    "Currency": "VND",
+    "LineAmount": "105000",
+    "ItemStatus": "NEW"
+  },
+  {
+    "OrderID": "ORD005",
+    "ItemNo": "000020",
+    "FoodID": "FOOD003",
+    "FoodName": "Nuoc ngot",
+    "Quantity": 2,
+    "UnitPrice": "15000",
+    "Currency": "VND",
+    "LineAmount": "30000",
+    "ItemStatus": "NEW"
+  },
+  {
+    "OrderID": "ORD005",
+    "ItemNo": "000030",
+    "FoodID": "FOOD006",
+    "FoodName": "Che ba mau",
+    "Quantity": 1,
+    "UnitPrice": "20000",
+    "Currency": "VND",
+    "LineAmount": "20000",
+    "ItemStatus": "NEW"
+  }
+]

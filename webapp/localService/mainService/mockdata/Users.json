@@ -1,0 +1,57 @@
+[
+  {
+    "UserID": "USR001",
+    "Username": "staff01",
+    "FullName": "Nguyen Van A",
+    "Email": "staff01@company.com",
+    "Phone": "0901234567",
+    "Role": "STAFF",
+    "Status": "1",
+    "CreatedAt": "20260101",
+    "UpdatedAt": "20260801"
+  },
+  {
+    "UserID": "USR002",
+    "Username": "emp01",
+    "FullName": "Tran Thi B",
+    "Email": "emp01@company.com",
+    "Phone": "0912345678",
+    "Role": "EMPLOYEE",
+    "Status": "1",
+    "CreatedAt": "20260101",
+    "UpdatedAt": "20260801"
+  },
+  {
+    "UserID": "USR003",
+    "Username": "emp02",
+    "FullName": "Le Van C",
+    "Email": "emp02@company.com",
+    "Phone": "0923456789",
+    "Role": "EMPLOYEE",
+    "Status": "1",
+    "CreatedAt": "20260101",
+    "UpdatedAt": "20260801"
+  },
+  {
+    "UserID": "USR004",
+    "Username": "emp03",
+    "FullName": "Pham Thi D",
+    "Email": "emp03@company.com",
+    "Phone": "0934567890",
+    "Role": "EMPLOYEE",
+    "Status": "1",
+    "CreatedAt": "20260101",
+    "UpdatedAt": "20260801"
+  },
+  {
+    "UserID": "USR_ADMIN",
+    "Username": "admin",
+    "FullName": "Admin He Thong",
+    "Email": "admin@company.com",
+    "Phone": "0900000000",
+    "Role": "ADMIN",
+    "Status": "1",
+    "CreatedAt": "20260101",
+    "UpdatedAt": "20260801"
+  }
+]

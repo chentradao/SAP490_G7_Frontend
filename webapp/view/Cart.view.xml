@@ -1,0 +1,53 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.Cart"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+    <Page title="Cart" showFooter="true">
+        <headerContent>
+            <Button icon="sap-icon://nav-back" text="Back" press=".onBack" />
+        </headerContent>
+        <content>
+            <List
+                id="cartList"
+                items="{path: '/CartItems', parameters: { $expand: '_Food' }}"
+                updateFinished=".onCartListUpdateFinished"
+                noDataText="Your cart is empty">
+                <items>
+                    <CustomListItem>
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMargin">
+                            <VBox>
+                                <Title text="{_Food/FoodName}" level="H4" />
+                                <Text text="{_Food/Description}" />
+                            </VBox>
+                            <VBox alignItems="End">
+                                <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Currency'}], formatter: '.formatUnitPrice'}" />
+                                <Text text="Qty: {Quantity}" />
+                                <!-- Thành tiền từng dòng -->
+                                <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Quantity'}, {path: 'Currency'}], formatter: '.formatLineAmount'}" class="sapUiTinyMarginTop sapMTextBold" />
+                                <Button text="Remove" type="Reject" press=".onRemoveCartItem" class="sapUiTinyMarginTop" />
+                            </VBox>
+                        </HBox>
+                    </CustomListItem>
+                </items>
+            </List>
+        </content>
+
+        <!-- Footer: Tổng tiền + nút Checkout -->
+        <footer>
+            <Toolbar>
+                <ToolbarSpacer />
+                <VBox alignItems="End" class="sapUiTinyMarginEnd">
+                    <Text text="Tổng cộng" class="sapUiTinyMarginBottom" />
+                    <Title text="{cartView>/totalPriceFormatted}" level="H3" />
+                </VBox>
+                <Button
+                    text="Checkout"
+                    type="Emphasized"
+                    icon="sap-icon://cart"
+                    enabled="{cartView>/checkoutEnabled}"
+                    press=".onCheckout" />
+            </Toolbar>
+        </footer>
+    </Page>
+</mvc:View>

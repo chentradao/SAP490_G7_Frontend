@@ -1,0 +1,23 @@
+html, body, body > div, #container, #container-uiarea, #content {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    min-height: 100%;
+}
+
+.sapUiApp, .sapMPage, .sapUiPage {
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+}
+
+.sapMPage > .sapMPageContent,
+.sapUiPage > .sapUiPageContent {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}

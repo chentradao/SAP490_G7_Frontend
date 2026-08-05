@@ -1,0 +1,146 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.CashierOrders"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+
+    <Page
+        title="Quản lý đơn hàng"
+        showNavButton="true"
+        navButtonPress=".onBack"
+        busy="{orders>/busy}"
+        busyIndicatorDelay="0"
+        class="sapUiContentPadding">
+
+        <!-- Nút Làm mới ở header -->
+        <headerContent>
+            <Button
+                icon="sap-icon://refresh"
+                tooltip="Làm mới danh sách"
+                type="Transparent"
+                press=".onRefresh" />
+        </headerContent>
+
+        <!-- Thanh tìm kiếm + lọc -->
+        <subHeader>
+            <OverflowToolbar>
+                <SearchField
+                    id="searchField"
+                    placeholder="Tìm theo mã đơn hoặc khách hàng..."
+                    liveChange=".onSearch"
+                    width="320px" />
+                <ToolbarSpacer />
+                <Label text="Lọc:" class="sapUiSmallMarginEnd" />
+                <Select
+                    id="statusFilter"
+                    width="200px"
+                    selectedKey="ALL"
+                    change=".onStatusFilterChange">
+                    <core:Item key="ALL"       text="Tất cả trạng thái" />
+                    <core:Item key="NEW"       text="Chờ xử lý" />
+                    <core:Item key="CREATED"   text="Đã xác nhận" />
+                    <core:Item key="PAID"      text="Đã thanh toán" />
+                    <core:Item key="CANCELLED" text="Đã hủy" />
+                </Select>
+            </OverflowToolbar>
+        </subHeader>
+
+        <content>
+            <!-- Bảng đơn hàng theo chuẩn SAP Fiori List Report -->
+            <Table
+                id="cashierOrderTable"
+                items="{orders>/filteredOrders}"
+                noDataText="Không có đơn hàng nào phù hợp"
+                growing="true"
+                growingThreshold="25"
+                sticky="HeaderToolbar,ColumnHeaders"
+                alternateRowColors="true">
+
+                <!-- Tiêu đề bảng + SegmentedButton lọc nhanh -->
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="Danh sách đơn hàng" level="H3" />
+                        <ToolbarSpacer />
+                        <SegmentedButton
+                            id="quickStatusBar"
+                            selectionChange=".onQuickStatusChange">
+                            <items>
+                                <SegmentedButtonItem key="ALL"       text="Tất cả" />
+                                <SegmentedButtonItem key="NEW"       text="Chờ xử lý" />
+                                <SegmentedButtonItem key="CREATED"   text="Đã xác nhận" />
+                                <SegmentedButtonItem key="PAID"      text="Đã thanh toán" />
+                                <SegmentedButtonItem key="CANCELLED" text="Đã hủy" />
+                            </items>
+                        </SegmentedButton>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <!-- Cột bảng -->
+                <columns>
+                    <Column width="14rem">
+                        <Text text="Mã đơn hàng" />
+                    </Column>
+                    <Column width="13rem">
+                        <Text text="Khách hàng" />
+                    </Column>
+                    <Column width="14rem">
+                        <Text text="Ngày / Giờ đặt" />
+                    </Column>
+                    <Column width="11rem" hAlign="End">
+                        <Text text="Tổng tiền" />
+                    </Column>
+                    <Column width="10rem" hAlign="Center">
+                        <Text text="Trạng thái đơn" />
+                    </Column>
+                    <Column width="10rem" hAlign="Center">
+                        <Text text="Thanh toán" />
+                    </Column>
+                    <Column width="8rem" hAlign="Center">
+                        <Text text="Thao tác" />
+                    </Column>
+                </columns>
+
+                <!-- Dữ liệu từng dòng -->
+                <items>
+                    <ColumnListItem type="Navigation" press=".onOrderPress">
+                        <cells>
+                            <ObjectIdentifier title="{orders>orderId}" />
+                            <Text text="{= ${orders>customerName} || ${orders>userId} || 'N/A' }" />
+                            <Text text="{= (${orders>orderDate} || '') + '  ' + (${orders>orderTime} || '') }" />
+                            <ObjectNumber
+                                number="{= (${orders>totalAmount} || 0).toFixed(0) }"
+                                unit="{= ${orders>currency} || 'VND' }"
+                                state="{= ${orders>orderStatus} === 'PAID'      ? 'Success'
+                                         : ${orders>orderStatus} === 'CANCELLED' ? 'Error'
+                                         : ${orders>orderStatus} === 'NEW'       ? 'Warning'
+                                         : 'None' }" />
+                            <ObjectStatus
+                                text="{= ${orders>orderStatus} === 'NEW'       ? 'Chờ xử lý'
+                                        : ${orders>orderStatus} === 'CREATED'  ? 'Đã xác nhận'
+                                        : ${orders>orderStatus} === 'PAID'     ? 'Đã thanh toán'
+                                        : 'Đã hủy' }"
+                                icon="{= ${orders>orderStatus} === 'NEW'       ? 'sap-icon://time-overtime'
+                                        : ${orders>orderStatus} === 'CREATED'  ? 'sap-icon://accept'
+                                        : ${orders>orderStatus} === 'PAID'     ? 'sap-icon://sys-enter-2'
+                                        : 'sap-icon://sys-cancel-2' }"
+                                state="{= ${orders>orderStatus} === 'NEW'       ? 'Warning'
+                                        : ${orders>orderStatus} === 'CREATED'  ? 'Information'
+                                        : ${orders>orderStatus} === 'PAID'     ? 'Success'
+                                        : 'Error' }" />
+                            <ObjectStatus
+                                text="{= ${orders>paymentStatus} === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán' }"
+                                state="{= ${orders>paymentStatus} === 'PAID' ? 'Success' : 'Warning' }" />
+                            <Button
+                                text="Xác nhận"
+                                type="Emphasized"
+                                icon="sap-icon://accept"
+                                visible="{= ${orders>orderStatus} === 'NEW' }"
+                                press=".onQuickConfirm" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+</mvc:View>

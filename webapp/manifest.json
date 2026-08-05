@@ -1,0 +1,248 @@
+{
+  "_version": "1.48.0",
+  "sap.app": {
+    "id": "sap490g7fioriapp",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:basic",
+      "version": "1.20.4",
+      "toolsId": "a9f77922-a91a-4bae-b414-5338089bce24"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/sap/opu/odata4/sap/zsb_g7_canteen/srvd/sap/zsd_g7_canteen/0001/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/mainService/metadata.xml",
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.108.33",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.f": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "sap490g7fioriapp.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "type": "sap.ui.model.odata.v4.ODataModel",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "sap490g7fioriapp.view",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "clearControlAggregation": false
+      },
+      "routes": [
+        {
+          "name": "RouteLogin",
+          "pattern": ":?query:",
+          "target": [
+            "TargetLogin"
+          ]
+        },
+        {
+          "name": "RouteFoodList",
+          "pattern": "FoodList",
+          "target": [
+            "TargetFoodList"
+          ]
+        },
+        {
+          "name": "RouteFoodDetail",
+          "pattern": "FoodDetail/{foodId}",
+          "target": [
+            "TargetFoodDetail"
+          ]
+        },
+        {
+          "name": "RouteUserList",
+          "pattern": "UserList",
+          "target": [
+            "TargetUserList"
+          ]
+        },
+        {
+          "name": "RouteCart",
+          "pattern": "Cart",
+          "target": [
+            "TargetCart"
+          ]
+        },
+        {
+          "name": "RouteCheckout",
+          "pattern": "Checkout",
+          "target": [
+            "TargetCheckout"
+          ]
+        },
+        {
+          "name": "RouteMyOrders",
+          "pattern": "MyOrders",
+          "target": [
+            "TargetMyOrders"
+          ]
+        },
+        {
+          "name": "RouteMyOrderDetail",
+          "pattern": "MyOrderDetail/{orderId}",
+          "target": [
+            "TargetMyOrderDetail"
+          ]
+        },
+        {
+          "name": "RouteCashierOrders",
+          "pattern": "CashierOrders",
+          "target": [
+            "TargetCashierOrders"
+          ]
+        },
+        {
+          "name": "RouteCashierOrderDetail",
+          "pattern": "CashierOrderDetail/{orderId}",
+          "target": [
+            "TargetCashierOrderDetail"
+          ]
+        }
+      ],
+      "targets": {
+        "TargetLogin": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "Login",
+          "viewName": "Login"
+        },
+        "TargetFoodList": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "FoodList",
+          "viewName": "FoodList"
+        },
+        "TargetFoodDetail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "FoodDetail",
+          "viewName": "FoodDetail"
+        },
+        "TargetUserList": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "UserList",
+          "viewName": "UserList"
+        },
+        "TargetCart": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "Cart",
+          "viewName": "Cart"
+        },
+        "TargetCheckout": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "Checkout",
+          "viewName": "Checkout"
+        },
+        "TargetMyOrders": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "MyOrders",
+          "viewName": "MyOrders"
+        },
+        "TargetMyOrderDetail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "MyOrderDetail",
+          "viewName": "MyOrderDetail"
+        },
+        "TargetCashierOrders": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "CashierOrders",
+          "viewName": "CashierOrders"
+        },
+        "TargetCashierOrderDetail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "CashierOrderDetail",
+          "viewName": "CashierOrderDetail"
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "sap490g7fioriapp.view.App",
+      "type": "XML",
+      "async": true,
+      "id": "App"
+    }
+  }
+}

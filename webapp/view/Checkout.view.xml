@@ -1,0 +1,65 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.Checkout"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+    <Page title="Checkout">
+        <headerContent>
+            <Button icon="sap-icon://nav-back" text="Back" press=".onBack" />
+        </headerContent>
+        <content>
+            <HBox width="100%" class="sapUiMediumMargin" renderType="Div">
+                <VBox width="65%" class="sapUiMediumMarginEnd">
+                    <Title text="Chi tiết đơn hàng" level="H3" class="sapUiSmallMarginBottom" />
+
+                    <List
+                        width="100%"
+                        items="{checkoutData>/items}"
+                        class="sapUiSmallMarginBottom">
+                        <items>
+                            <StandardListItem
+                                title="{checkoutData>FoodName}"
+                                description="Qty: {checkoutData>Quantity}"
+                                info="{= ${checkoutData>LineAmount}.toFixed(2) + ' ' + ${checkoutData>Currency} }"
+                                infoState="Success" />
+                        </items>
+                    </List>
+
+                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
+                        <Text text="Tổng thanh toán" class="sapMTitleStyle" />
+                        <Title text="{= ${checkoutData>/totalAmount}.toFixed(2) + ' ' + ${checkoutData>/currency} }" level="H3" />
+                    </HBox>
+
+                    <Label text="Ghi chú đơn hàng" labelFor="orderNote" class="sapUiTinyMarginBottom" />
+                    <TextArea id="orderNote" value="{checkoutData>/note}" width="100%" rows="4" placeholder="Nhập ghi chú cho đơn hàng..." />
+
+                    
+                </VBox>
+
+                <VBox width="35%" alignItems="Center" class="sapUiSmallPaddingTop">
+                    <Panel headerText="Mã QR thanh toán" width="100%" class="sapUiSmallMarginBottom">
+                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                            <BusyIndicator visible="{qrModel>/loading}" class="sapUiMediumMarginBottom" />
+
+                            <VBox visible="{= !${qrModel>/loading} }" alignItems="Center" width="100%">
+                                <Image
+                                    src="{qrModel>/qrCodeUrl}"
+                                    width="220px"
+                                    height="220px"
+                                    visible="{qrModel>/hasQr}"
+                                    class="sapUiMediumMarginBottom" />
+                                <Text text="{qrModel>/statusText}" class="sapUiTinyMarginBottom" />
+                                <Text text="Mã giao dịch: {qrModel>/transactionRef}" />
+                            </VBox>
+                            <Button
+                        text="Tạo lại mã QR"
+                        icon="sap-icon://refresh"
+                        press=".onGenerateQr"
+                        class="sapUiMediumMarginTop" />
+                        </VBox>
+                    </Panel>
+                </VBox>
+            </HBox>
+        </content>
+    </Page>
+</mvc:View>

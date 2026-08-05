@@ -1,0 +1,49 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.UserList"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    <Page title="{i18n>userListTitle}" showNavButton="true" navButtonPress=".onNavBack" fitContainer="true">
+        <content>
+            <Table
+                id="userTable"
+                items="{
+                    path: '/Users',
+                    sorter: { path: 'username' }
+                }"
+                noDataText="{i18n>msgNoUser}"
+                growing="true"
+                growingScrollToLoad="true">
+                <columns>
+                    <Column>
+                        <Text text="{i18n>colUsername}" />
+                    </Column>
+                    <Column>
+                        <Text text="{i18n>colFullName}" />
+                    </Column>
+                    <Column>
+                        <Text text="{i18n>colEmail}" />
+                    </Column>
+                    <Column>
+                        <Text text="{i18n>colPhone}" />
+                    </Column>
+                    <Column>
+                        <Text text="{i18n>colRole}" />
+                    </Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <ObjectIdentifier title="{username}" />
+                            <Text text="{full_name}" />
+                            <Text text="{email}" />
+                            <Text text="{phone}" />
+                            <ObjectStatus text="{role}" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+</mvc:View>
