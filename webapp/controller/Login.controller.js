@@ -65,19 +65,18 @@ sap.ui.define([
                         return;
                     }
 
-                    // Đọc role từ field "Role" (không phải "RoleID")
-                    var sRole = (oUser.Role || "").toUpperCase();
-                    console.log("USER LOGIN:", oUser);
-                    console.log("ROLE:", sRole);
+                    var sRoleId = (oUser.RoleID || oUser.role_id || oUser.Role || "").toString().toUpperCase();
+                    var sRole = (oUser.Role || oUser.RoleID || "").toString();
                     var oAppModel = this.getOwnerComponent().getModel("session") || new JSONModel();
                     oAppModel.setData({
-                        userId: oUser.UserID,
+userId: oUser.UserID,
                         // KHONG gan cung cartId - cartUtils.ensureCartForUser() se tu
                         // kiem tra cart that trong bang Carts theo UserID, hoac tao moi.
                         cartId: null,
                         cartItemCount: 0,
                         username: oUser.Username,
                         fullName: oUser.FullName,
+                        roleId: sRoleId,
                         role: sRole,
                         isLoggedIn: true
                     });
@@ -91,16 +90,12 @@ sap.ui.define([
 
                     MessageToast.show(oI18n.getText("msgLoginSuccess"));
 
-                    // Điều hướng dựa theo vai trò người dùng:
-                    // ADMIN   → Quản lý danh sách người dùng
-                    // STAFF   → Màn hình thu ngân (Cashier Orders)
-                    // EMPLOYEE → Giỏ hàng cá nhân
                     var sTargetRoute = "RouteFoodList";
-                    if (sRole === "ADMIN") {
+                    if (sRoleId === "ADMIN" || sRole === "ADMIN") {
                         sTargetRoute = "RouteUserList";
-                    } else if (sRole === "STAFF") {
-                        sTargetRoute = "RouteCashierOrders";  // Thu ngân xem toàn bộ đơn hàng
-                    } else if (sRole === "EMPLOYEE") {
+                    } else if (sRoleId === "STAFF" || sRole === "STAFF") {
+                        sTargetRoute = "RouteCashierOrders";
+                    } else if (sRoleId === "EMPLOYEE" || sRole === "EMPLOYEE") {
                         sTargetRoute = "RouteCart";
                     }
 

@@ -42,6 +42,7 @@ sap.ui.define([
                     cartId: null,
                     username: "",
                     fullName: "",
+                    roleId: "",
                     role: "",
                     isLoggedIn: false
                 });
