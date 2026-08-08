@@ -21,3 +21,41 @@ body, html {
     overflow: auto;
     -webkit-overflow-scrolling: touch;
 }
+
+.cartTable .sapMListTblCell {
+    height: 4.5rem;
+    vertical-align: middle;
+}
+
+.cartFooter {
+    min-height: 4.5rem;
+    height: 4.5rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.ordersTable .sapMListTblCell {
+    height: 4.5rem;
+    vertical-align: middle;
+}
+
+.orderAmount .sapMObjectNumberText,
+.orderAmount .sapMObjectNumberUnit {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.orderItemsTable .sapMListTblCell {
+    height: 4.5rem;
+    vertical-align: middle;
+}
+
+.orderItemAmount {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.checkoutItemsTable .sapMListTblCell {
+    height: 4.5rem;
+    vertical-align: middle;
+}

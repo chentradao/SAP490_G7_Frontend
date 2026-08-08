@@ -2,9 +2,10 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
+    "sap/ui/model/Sorter",
     "sap/m/MessageToast",
     "sap490g7fioriapp/model/cartUtils"
-], function (Controller, Filter, FilterOperator, MessageToast, cartUtils) {
+], function (Controller, Filter, FilterOperator, Sorter, MessageToast, cartUtils) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.FoodList", {
@@ -45,16 +46,29 @@ sap.ui.define([
             ], {
                 $$groupId: "$auto"
             }).requestContexts(0, 100).then(function (aContexts) {
-                var iCount = 0;
-                (aContexts || []).forEach(function (oContext) {
-                    var oItem = oContext.getObject();
-                    iCount += Number(oItem.Quantity || 0);
-                });
+                var iCount = (aContexts || []).length;
 
                 if (oCartButton) {
                     oCartButton.setText(iCount > 0 ? "Cart (" + iCount + ")" : "Cart");
                 }
             }.bind(this));
+        },
+
+        _updateOrdersBadge: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            var sUserId = oSession && oSession.getProperty("/userId");
+            var oOrdersButton = this.byId("ordersButton");
+
+            if (!sUserId || !oOrdersButton) {
+                return;
+            }
+
+            this.getOwnerComponent().getModel().bindList("/Orders", undefined, undefined, [
+                new Filter("UserID", FilterOperator.EQ, sUserId)
+            ], { $$groupId: "$auto" }).requestContexts(0, 100).then(function (aContexts) {
+                var iCount = (aContexts || []).length;
+                oOrdersButton.setText(iCount > 0 ? "My Orders (" + iCount + ")" : "My Orders");
+            });
         },
 
         _onRouteMatched: function () {
@@ -63,6 +77,7 @@ sap.ui.define([
                 // this.getOwnerComponent().getRouter().navTo("RouteLogin");
             }
             this._updateCartBadge();
+            this._updateOrdersBadge();
         },
 
         onSearchFood: function (oEvent) {
@@ -70,7 +85,7 @@ sap.ui.define([
             this._applyFilters(sQuery);
         },
 
-        onCategoryChange: function () {
+        onQuantitySortChange: function () {
             this._applyFilters();
         },
 
@@ -83,21 +98,17 @@ sap.ui.define([
             var oBinding = oTable.getBinding("items");
             var aFilters = [];
             var sSearchQuery = sQuery || this.byId("foodSearchField").getValue() || "";
-            var sCategory = this.byId("categoryFilter").getSelectedKey();
+            var sQuantitySort = this.byId("quantitySort").getSelectedKey();
             var sStatus = this.byId("statusFilter").getSelectedKey();
 
             if (sSearchQuery) {
                 aFilters.push(new Filter({
                     filters: [
-                        new Filter("FoodName", FilterOperator.Contains, sSearchQuery),
-                        new Filter("Description", FilterOperator.Contains, sSearchQuery)
+                        new Filter("MaterialNumber", FilterOperator.Contains, sSearchQuery),
+                        new Filter("MaterialDescription", FilterOperator.Contains, sSearchQuery)
                     ],
                     and: false
                 }));
-            }
-
-            if (sCategory) {
-                aFilters.push(new Filter("CategoryID", FilterOperator.EQ, sCategory));
             }
 
             if (sStatus && sStatus !== "All") {
@@ -106,16 +117,19 @@ sap.ui.define([
 
             if (oBinding) {
                 oBinding.filter(aFilters);
+                oBinding.sort(sQuantitySort === "None" ?
+                    [new Sorter("MaterialDescription", false)] :
+                    [new Sorter("AvailableStock", sQuantitySort === "Desc")]);
             }
         },
 
         onFoodPress: function (oEvent) {
             var oItem = oEvent.getSource();
             var oContext = oItem.getBindingContext();
-            var sFoodId = oContext.getProperty("FoodID");
+            var sMaterialNumber = oContext.getProperty("MaterialNumber");
 
             this.getOwnerComponent().getRouter().navTo("RouteFoodDetail", {
-                foodId: sFoodId
+                materialNumber: sMaterialNumber
             });
         },
 
@@ -126,9 +140,9 @@ sap.ui.define([
 
             var oSource = oEvent && typeof oEvent.getSource === "function" ? oEvent.getSource() : null;
             var oContext = oSource && typeof oSource.getBindingContext === "function" ? oSource.getBindingContext() : null;
-            var oFood = oContext && typeof oContext.getObject === "function" ? oContext.getObject() : null;
+            var oMaterial = oContext && typeof oContext.getObject === "function" ? oContext.getObject() : null;
 
-            if (!oFood) {
+            if (!oMaterial) {
                 return;
             }
 
@@ -138,9 +152,9 @@ sap.ui.define([
     console.log("sUserId:", sUserId);
             var oODataModel = this.getOwnerComponent().getModel();
 
-            cartUtils.addFoodToCart(oODataModel, oSession, sUserId, oFood).then(function () {
+            cartUtils.addMaterialToCart(oODataModel, oSession, sUserId, oMaterial).then(function () {
     this._updateCartBadge();
-    MessageToast.show(oFood.FoodName + " added to cart");
+    MessageToast.show(oMaterial.MaterialDescription + " added to cart");
 }.bind(this)).catch(function (oError) {
     console.error("Add to cart error:", oError);   // THEM DONG NAY
     MessageToast.show("Unable to add item to cart");

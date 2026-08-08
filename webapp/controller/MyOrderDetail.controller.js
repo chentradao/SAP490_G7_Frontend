@@ -4,83 +4,91 @@ sap.ui.define([
 ], function (Controller, JSONModel) {
     "use strict";
 
-    return Controller.extend("sap490g7fioriapp.controller.MyOrderDetail", {
+    var PRICE_SCALE = 1;
 
+    function formatDate(sValue) {
+        var sDate = String(sValue || "").replace(/[^0-9]/g, "").slice(0, 8);
+        return sDate.length === 8 ? sDate.slice(6, 8) + "/" + sDate.slice(4, 6) + "/" + sDate.slice(0, 4) : sValue || "";
+    }
+
+    function formatAmount(vAmount) {
+        return ((parseFloat(vAmount) || 0) * PRICE_SCALE).toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    return Controller.extend("sap490g7fioriapp.controller.MyOrderDetail", {
         onInit: function () {
-            var oRouter = this.getOwnerComponent().getRouter();
-            if (oRouter && oRouter.getRoute) {
-                var oRoute = oRouter.getRoute("RouteMyOrderDetail");
-                if (oRoute && typeof oRoute.attachPatternMatched === "function") {
-                    oRoute.attachPatternMatched(this._onRouteMatched, this);
-                }
-            }
+            this.getOwnerComponent().getRouter().getRoute("RouteMyOrderDetail")
+                .attachPatternMatched(this._onRouteMatched, this);
         },
 
         _onRouteMatched: function (oEvent) {
-            var sOrderId = oEvent.getParameter("arguments") && oEvent.getParameter("arguments").orderId;
-            this._loadOrderDetail(sOrderId);
+            this._loadOrderDetail(oEvent.getParameter("arguments").orderId);
         },
 
         _loadOrderDetail: function (sOrderId) {
             var oComponent = this.getOwnerComponent();
-            var oOrdersModel = oComponent.getModel("orders");
-
-            if (!oOrdersModel) {
-                oOrdersModel = new JSONModel({
-                    orders: [],
-                    filteredOrders: [],
-                    selectedOrder: null
-                });
-                oComponent.setModel(oOrdersModel, "orders");
-            }
+            var oOrdersModel = oComponent.getModel("orders") || new JSONModel({
+                orders: [], filteredOrders: [], selectedOrder: null
+            });
+            oComponent.setModel(oOrdersModel, "orders");
+            this.getView().setModel(oOrdersModel, "orders");
 
             this._loadOrderFromBackend(sOrderId).then(function (oOrder) {
                 oOrdersModel.setProperty("/selectedOrder", oOrder);
-                this.getView().setModel(oOrdersModel, "orders");
-            }.bind(this)).catch(function (oError) {
-                console.error("Không load được chi tiết đơn hàng:", oError);
+            }).catch(function (oError) {
+                console.error("Could not load order detail:", oError);
                 oOrdersModel.setProperty("/selectedOrder", null);
             });
         },
 
         _loadOrderFromBackend: function (sOrderId) {
-            var oModel = this.getOwnerComponent().getModel();
-            // Đọc trực tiếp 1 entity theo key, expand luôn _Items và _Items/_Food
-            var oContext = oModel.bindContext("/Orders('" + sOrderId + "')", null, {
-                $expand: "_Items($expand=_Food)"
+            var oContext = this.getOwnerComponent().getModel().bindContext("/Orders('" + sOrderId + "')", null, {
+                $expand: "_Items"
             });
-
-            return oContext.requestObject().then(function (oRow) {
-                return this._normalizeOrder(oRow);
-            }.bind(this));
+            return oContext.requestObject().then(this._normalizeOrder.bind(this));
         },
 
         _normalizeOrder: function (oRow) {
             var aItems = Array.isArray(oRow._Items) ? oRow._Items : [];
+            var sOrderDate = oRow.OrderDate || oRow.CreatedAt || "";
             return {
                 orderId: oRow.OrderID,
-                userId: oRow.UserID,
-                cartId: oRow.CartID,
-                orderDate: oRow.OrderDate,
-                orderTime: oRow.OrderTime,
-                totalAmount: parseFloat(oRow.TotalAmount) || 0,
+                orderDateDisplay: formatDate(sOrderDate),
+                orderTime: oRow.OrderTime || "",
+                totalAmountText: formatAmount(oRow.TotalAmount),
                 currency: oRow.Currency || "VND",
                 orderStatus: oRow.OrderStatus || "Unknown",
                 paymentStatus: oRow.PaymentStatus || "Unknown",
                 note: oRow.Note || "",
-                createdAt: oRow.CreatedAt || "",
                 items: aItems.map(function (oItem) {
                     return {
                         foodId: oItem.FoodID,
-                        foodName: oItem.FoodName || (oItem._Food && oItem._Food.FoodName) || "",
+                        foodName: oItem.FoodName || oItem.FoodID || "",
                         quantity: oItem.Quantity,
-                        unitPrice: parseFloat(oItem.UnitPrice) || 0,
+                        unitPriceText: formatAmount(oItem.UnitPrice),
+                        lineAmountText: formatAmount(oItem.LineAmount),
                         currency: oItem.Currency || "VND",
-                        lineAmount: parseFloat(oItem.LineAmount) || 0,
                         itemStatus: oItem.ItemStatus || ""
                     };
                 })
             };
+        },
+
+        onCheckout: function () {
+            var oOrder = this.getOwnerComponent().getModel("orders").getProperty("/selectedOrder");
+            if (!oOrder) { return; }
+            this.getOwnerComponent().setModel(new JSONModel({
+                orderId: oOrder.orderId,
+                items: oOrder.items,
+                totalAmountText: oOrder.totalAmountText,
+                currency: oOrder.currency,
+                note: oOrder.note || "",
+                existingOrder: true
+            }), "checkoutData");
+            this.getOwnerComponent().getRouter().navTo("RouteCheckout");
         },
 
         onBack: function () {

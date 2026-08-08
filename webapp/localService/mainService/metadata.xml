@@ -45,22 +45,24 @@
     <edmx:DataServices>
         <Schema Namespace="com.sap.gateway.srvd.zsd_g7_canteen.v0001" Alias="SAP__self">
             <Annotation Term="SAP__core.SchemaVersion" String="1.0.0"/>
-            <EntityType Name="FoodsType">
+            <EntityType Name="Food2Type">
                 <Key>
-                    <PropertyRef Name="FoodID"/>
+                    <PropertyRef Name="MaterialNumber"/>
                 </Key>
-                <Property Name="FoodID" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="MaterialNo" Type="Edm.String" Nullable="false" MaxLength="18"/>
-                <Property Name="CategoryID" Type="Edm.String" Nullable="false" MaxLength="10"/>
-                <Property Name="FoodName" Type="Edm.String" Nullable="false" MaxLength="100"/>
-                <Property Name="Description" Type="Edm.String" Nullable="false" MaxLength="255"/>
-                <Property Name="Price" Type="Edm.Decimal" Nullable="false" Precision="15" Scale="variable"/>
-                <Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
-                <Property Name="ImageUrl" Type="Edm.String" Nullable="false" MaxLength="255"/>
-                <Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="1"/>
-                <Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
-                <Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
-                <NavigationProperty Name="_Category" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CategoriesType"/>
+                <Property Name="MaterialNumber" Type="Edm.String" Nullable="false" MaxLength="18"/>
+                <Property Name="MaterialDescription" Type="Edm.String" MaxLength="40"/>
+                <Property Name="MaterialGroup" Type="Edm.String" MaxLength="9"/>
+                <Property Name="MaterialType" Type="Edm.String" MaxLength="4"/>
+                <Property Name="Plant" Type="Edm.String" MaxLength="4"/>
+                <Property Name="StorageLocation" Type="Edm.String" MaxLength="4"/>
+                <Property Name="AvailableStock" Type="Edm.Decimal" Precision="13" Scale="3"/>
+                <Property Name="BaseUnit" Type="Edm.String" MaxLength="3"/>
+                <Property Name="Price" Type="Edm.Decimal" Precision="15" Scale="variable"/>
+                <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
+                <Property Name="ImageUrl" Type="Edm.String" MaxLength="255"/>
+                <Property Name="Status" Type="Edm.String" MaxLength="20"/>
+                <Property Name="CreatedAt" Type="Edm.String" MaxLength="12"/>
+                <Property Name="UpdatedAt" Type="Edm.String" MaxLength="12"/>
             </EntityType>
             <EntityType Name="UsersType">
                 <Key>
@@ -104,7 +106,7 @@
                 </Key>
                 <Property Name="CartID" Type="Edm.String" Nullable="false" MaxLength="20"/>
                 <Property Name="ItemNo" Type="Edm.String" Nullable="false" MaxLength="6"/>
-                <Property Name="FoodID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+                <Property Name="FoodID" Type="Edm.String" Nullable="false" MaxLength="18"/>
                 <Property Name="Quantity" Type="Edm.Int32" Nullable="false"/>
                 <Property Name="UnitPrice" Type="Edm.Decimal" Precision="16" Scale="2"/>
                 <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
@@ -112,62 +114,44 @@
                 <Property Name="Status" Type="Edm.String" MaxLength="10"/>
                 <Property Name="CreatedAt" Type="Edm.String" MaxLength="12"/>
                 <Property Name="UpdatedAt" Type="Edm.String" MaxLength="12"/>
-                <NavigationProperty Name="_Food" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.FoodsType"/>
+                <NavigationProperty Name="_Food" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
             </EntityType>
             <EntityContainer Name="Container">
                 <EntitySet Name="Categories" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CategoriesType"/>
-                <EntitySet Name="Foods" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.FoodsType">
-                    <NavigationPropertyBinding Path="_Category" Target="Categories"/>
-                </EntitySet>
+                <EntitySet Name="Food2" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
                 <EntitySet Name="Users" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
                 <EntitySet Name="ZC_G7_CART" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartsType">
                     <NavigationPropertyBinding Path="_User" Target="Users"/>
                     <NavigationPropertyBinding Path="_Items" Target="ZC_G7_CART_ITEM"/>
                 </EntitySet>
                 <EntitySet Name="ZC_G7_CART_ITEM" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartItemsType">
-                    <NavigationPropertyBinding Path="_Food" Target="Foods"/>
+                    <NavigationPropertyBinding Path="_Food" Target="Food2"/>
                 </EntitySet>
             </EntityContainer>
-            <Annotations Target="SAP__self.FoodsType/FoodID">
-                <Annotation Term="SAP__common.Label" String="Food ID"/>
+            <Annotations Target="SAP__self.Food2Type/MaterialNumber">
+                <Annotation Term="SAP__common.Label" String="Material Number"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/CategoryID">
-                <Annotation Term="SAP__common.Label" String="Category ID"/>
+            <Annotations Target="SAP__self.Food2Type/MaterialGroup">
+                <Annotation Term="SAP__common.Label" String="Material Group"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/FoodName">
-                <Annotation Term="SAP__common.Label" String="Food Name"/>
+            <Annotations Target="SAP__self.Food2Type/MaterialDescription">
+                <Annotation Term="SAP__common.Label" String="Material Description"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/Description">
-                <Annotation Term="SAP__common.Label" String="Description"/>
+            <Annotations Target="SAP__self.Food2Type/AvailableStock">
+                <Annotation Term="SAP__common.Label" String="Available Stock (Next Day)"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/Price">
+            <Annotations Target="SAP__self.Food2Type/Price">
                 <Annotation Term="SAP__common.Label" String="Price"/>
                 <Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/Currency">
+            <Annotations Target="SAP__self.Food2Type/Currency">
                 <Annotation Term="SAP__common.IsCurrency"/>
                 <Annotation Term="SAP__UI.Hidden"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/Status">
+            <Annotations Target="SAP__self.Food2Type/Status">
                 <Annotation Term="SAP__common.Label" String="Status"/>
             </Annotations>
-            <Annotations Target="SAP__self.Container/Foods">
-                <Annotation Term="SAP__capabilities.NavigationRestrictions">
-                    <Record>
-                        <PropertyValue Property="RestrictedProperties">
-                            <Collection>
-                                <Record>
-                                    <PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Category"/>
-                                    <PropertyValue Property="InsertRestrictions">
-                                        <Record>
-                                            <PropertyValue Property="Insertable" Bool="false"/>
-                                        </Record>
-                                    </PropertyValue>
-                                </Record>
-                            </Collection>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
+            <Annotations Target="SAP__self.Container/Food2">
                 <Annotation Term="SAP__capabilities.SearchRestrictions">
                     <Record>
                         <PropertyValue Property="Searchable" Bool="true"/>
@@ -210,24 +194,24 @@
                     </Record>
                 </Annotation>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType">
-                <Annotation Term="SAP__common.Label" String="G7 Food Master CDS View"/>
+            <Annotations Target="SAP__self.Food2Type">
+                <Annotation Term="SAP__common.Label" String="G7 Food 2 Master CDS View"/>
                 <Annotation Term="SAP__UI.Facets">
                     <Collection>
                         <Record Type="SAP__UI.ReferenceFacet">
                             <PropertyValue Property="Label" String="Food Detail"/>
-                            <PropertyValue Property="ID" String="Food"/>
+                            <PropertyValue Property="ID" String="Food2"/>
                             <PropertyValue Property="Target" AnnotationPath="@SAP__UI.Identification"/>
                         </Record>
                     </Collection>
                 </Annotation>
                 <Annotation Term="SAP__UI.HeaderInfo">
                     <Record>
-                        <PropertyValue Property="TypeName" String="Food"/>
-                        <PropertyValue Property="TypeNamePlural" String="Food List"/>
+                        <PropertyValue Property="TypeName" String="Food Item"/>
+                        <PropertyValue Property="TypeNamePlural" String="Food Items List"/>
                         <PropertyValue Property="Title">
                             <Record Type="SAP__UI.DataField">
-                                <PropertyValue Property="Value" Path="FoodName"/>
+                                <PropertyValue Property="Value" Path="MaterialDescription"/>
                             </Record>
                         </PropertyValue>
                     </Record>
@@ -235,28 +219,28 @@
                 <Annotation Term="SAP__UI.Identification">
                     <Collection>
                         <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="FoodID"/>
+                            <PropertyValue Property="Value" Path="MaterialNumber"/>
                         </Record>
                         <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="FoodName"/>
+                            <PropertyValue Property="Value" Path="MaterialDescription"/>
                         </Record>
                         <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Description"/>
+                            <PropertyValue Property="Value" Path="MaterialGroup"/>
                         </Record>
                     </Collection>
                 </Annotation>
                 <Annotation Term="SAP__UI.LineItem">
                     <Collection>
                         <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="FoodID"/>
+                            <PropertyValue Property="Value" Path="MaterialNumber"/>
                             <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="FoodName"/>
+                            <PropertyValue Property="Value" Path="MaterialDescription"/>
                             <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="CategoryID"/>
+                            <PropertyValue Property="Value" Path="AvailableStock"/>
                         </Record>
                         <Record Type="SAP__UI.DataField">
                             <PropertyValue Property="Value" Path="Price"/>
@@ -269,9 +253,9 @@
                 </Annotation>
                 <Annotation Term="SAP__UI.SelectionFields">
                     <Collection>
-                        <PropertyPath>FoodID</PropertyPath>
-                        <PropertyPath>FoodName</PropertyPath>
-                        <PropertyPath>CategoryID</PropertyPath>
+                        <PropertyPath>MaterialNumber</PropertyPath>
+                        <PropertyPath>MaterialDescription</PropertyPath>
+                        <PropertyPath>MaterialGroup</PropertyPath>
                         <PropertyPath>Status</PropertyPath>
                     </Collection>
                 </Annotation>
@@ -530,16 +514,13 @@
                     <Collection/>
                 </Annotation>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/MaterialNo">
+            <Annotations Target="SAP__self.Food2Type/ImageUrl">
                 <Annotation Term="SAP__UI.Hidden"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/ImageUrl">
+            <Annotations Target="SAP__self.Food2Type/CreatedAt">
                 <Annotation Term="SAP__UI.Hidden"/>
             </Annotations>
-            <Annotations Target="SAP__self.FoodsType/CreatedAt">
-                <Annotation Term="SAP__UI.Hidden"/>
-            </Annotations>
-            <Annotations Target="SAP__self.FoodsType/UpdatedAt">
+            <Annotations Target="SAP__self.Food2Type/UpdatedAt">
                 <Annotation Term="SAP__UI.Hidden"/>
             </Annotations>
             <Annotations Target="SAP__self.UsersType/CreatedAt">

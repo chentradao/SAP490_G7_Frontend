@@ -7,7 +7,7 @@
     <Page title="{i18n>foodListTitle}" fitContainer="true">
         <headerContent>
             <Button id="cartButton" icon="sap-icon://cart" text="Cart" press=".onViewCart" />
-            <Button icon="sap-icon://activity-items" text="My Orders" press=".onViewMyOrders" />
+            <Button id="ordersButton" icon="sap-icon://activity-items" text="My Orders" press=".onViewMyOrders" />
             <Button icon="sap-icon://log" text="{i18n>btnLogout}" press=".onLogout" />
         </headerContent>
         <subHeader>
@@ -17,17 +17,19 @@
                         id="foodSearchField"
                         width="16rem"
                         placeholder="{i18n>foodSearchPlaceholder}"
-                        search=".onSearchFood" />
+                        search=".onSearchFood"
+                        liveChange=".onSearchFood" />
                 </contentLeft>
                 <contentMiddle>
-                    <ComboBox
-                        id="categoryFilter"
+                    <Select
+                        id="quantitySort"
                         width="12rem"
-                        placeholder="Category"
-                        change=".onCategoryChange"
-                        items="{/Categories}">
-                        <core:Item key="{CategoryID}" text="{CategoryName}" />
-                    </ComboBox>
+                        selectedKey="None"
+                        change=".onQuantitySortChange">
+                        <core:Item key="None" text="Quantity sort" />
+                        <core:Item key="Asc" text="Quantity: low to high" />
+                        <core:Item key="Desc" text="Quantity: high to low" />
+                    </Select>
                 </contentMiddle>
                 <contentRight>
                     <Select
@@ -46,21 +48,23 @@
             <Table
                 id="foodTable"
                 items="{
-                    path: '/Foods',
-                    parameters: { $expand: '_Category' },
-                    sorter: { path: 'FoodName' }
+                    path: '/Food2',
+                    sorter: { path: 'MaterialDescription' }
                 }"
                 noDataText="{i18n>msgNoFood}"
                 growing="true"
                 growingScrollToLoad="true">
                 <columns>
                     <Column width="12rem">
-                        <Text text="{i18n>colFoodName}" />
+                        <Text text="{i18n>colMaterialDescription}" />
                     </Column>
                     <Column width="9rem">
-                        <Text text="{i18n>colCategory}" />
+                        <Text text="{i18n>colMaterialGroup}" />
                     </Column>
                     <Column hAlign="End" width="8rem">
+                        <Text text="{i18n>colAvailableStock}" />
+                    </Column>
+                    <Column width="7rem">
                         <Text text="{i18n>colPrice}" />
                     </Column>
                     <Column width="7rem">
@@ -74,13 +78,14 @@
                     <ColumnListItem type="Navigation" press=".onFoodPress">
                         <cells>
                             <ObjectIdentifier
-                                title="{FoodName}"
-                                text="{Description}" />
-                            <Text text="{_Category/CategoryName}" />
+                                title="{MaterialDescription}"
+                                text="{MaterialNumber}" />
+                            <Text text="{MaterialGroup}" />
+                            <Text text="{= ${AvailableStock} !== null ? (${AvailableStock} + ' ' + ${BaseUnit}) : '' }" />
                             <Text text="{= ${Price} !== null ? (${Price} + ' ' + ${Currency}) : '' }" />
                             <ObjectStatus
-                                text="{= ${Status} === '1' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
-                                state="{= ${Status} === '1' ? 'Success' : 'Error' }" />
+                                text="{Status}"
+                                state="{= ${Status} === 'ACTIVE' || ${Status} === '1' ? 'Success' : 'None' }" />
                             <Button text="Add to Cart" press=".onAddToCart" />
                         </cells>
                     </ColumnListItem>

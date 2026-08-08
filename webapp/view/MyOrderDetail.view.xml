@@ -8,16 +8,22 @@
             <VBox class="sapUiMediumMargin">
                 <ObjectHeader
                     title="{= 'Order ' + ${orders>/selectedOrder/orderId} }"
-                    number="{= ${orders>/selectedOrder/totalAmount}.toFixed(2) + ' ' + ${orders>/selectedOrder/currency} }"
-                    numberUnit=""
-                    intro="{= 'Ngày ' + ${orders>/selectedOrder/orderDate} + ' ' + ${orders>/selectedOrder/orderTime} }"
+                    number="{orders>/selectedOrder/totalAmountText}"
+                    numberUnit="{orders>/selectedOrder/currency}"
+                    intro="{= 'Ngày ' + ${orders>/selectedOrder/orderDateDisplay} + ' ' + ${orders>/selectedOrder/orderTime} }"
                     backgroundDesign="Solid">
                     <attributes>
-                        <ObjectAttribute title="Phương thức thanh toán" text="VNPay QR" />
                         <ObjectAttribute title="Trạng thái đơn" text="{orders>/selectedOrder/orderStatus}" />
                         <ObjectAttribute title="Trạng thái thanh toán" text="{orders>/selectedOrder/paymentStatus}" />
                     </attributes>
                 </ObjectHeader>
+                <Button
+                    text="Checkout"
+                    type="Emphasized"
+                    icon="sap-icon://cart"
+                    visible="{= ${orders>/selectedOrder/orderStatus} === 'CREATED' }"
+                    press=".onCheckout"
+                    class="sapUiSmallMarginTop" />
 
                 <Panel headerText="Thông tin đơn hàng" class="sapUiSmallMarginTop">
                     <VBox class="sapUiSmallMargin">
@@ -33,13 +39,26 @@
                 </Panel>
 
                 <Panel headerText="Sản phẩm trong đơn" class="sapUiSmallMarginTop">
-                    <List items="{orders>/selectedOrder/items}">
-                        <StandardListItem
-                            title="{orders>foodName}"
-                            description="{= 'Qty: ' + ${orders>quantity} }"
-                            info="{= ${orders>lineAmount}.toFixed(2) + ' ' + ${orders>currency} }"
-                            infoState="Success" />
-                    </List>
+                    <Table items="{orders>/selectedOrder/items}" class="orderItemsTable">
+                        <columns>
+                            <Column width="38%"><Text text="Product" /></Column>
+                            <Column hAlign="End" width="18%"><Text text="Unit price" /></Column>
+                            <Column hAlign="Center" width="12%"><Text text="Quantity" /></Column>
+                            <Column hAlign="End" width="20%"><Text text="Line amount" /></Column>
+                            <Column width="12%"><Text text="Status" /></Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem vAlign="Middle">
+                                <cells>
+                                    <ObjectIdentifier title="{orders>foodName}" text="{orders>foodId}" />
+                                    <Text text="{= ${orders>unitPriceText} + ' ' + ${orders>currency} }" class="orderItemAmount" />
+                                    <Text text="{orders>quantity}" textAlign="Center" />
+                                    <Text text="{= ${orders>lineAmountText} + ' ' + ${orders>currency} }" class="orderItemAmount" />
+                                    <ObjectStatus text="{orders>itemStatus}" />
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
                 </Panel>
             </VBox>
         </content>

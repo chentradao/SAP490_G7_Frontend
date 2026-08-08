@@ -60,13 +60,13 @@ sap.ui.define([
             return oUserCart;
         },
 
-        addItemToUserCart: function (oCartModel, sUserId, sCartId, oFood) {
+        addItemToUserCart: function (oCartModel, sUserId, sCartId, oMaterial) {
             var oUserCart = this.syncActiveCart(oCartModel, sUserId, sCartId);
             var aItems = (oUserCart.items || []).slice();
             var iIndex = -1;
 
             aItems.forEach(function (oItem, index) {
-                if (oItem.FoodID === oFood.FoodID) {
+                if (oItem.FoodID === oMaterial.MaterialNumber) {
                     iIndex = index;
                 }
             });
@@ -75,11 +75,10 @@ sap.ui.define([
                 aItems[iIndex].Quantity += 1;
             } else {
                 aItems.push({
-                    FoodID: oFood.FoodID,
-                    FoodName: oFood.FoodName,
-                    Description: oFood.Description,
-                    Price: oFood.Price,
-                    Currency: oFood.Currency || "VND",
+                    FoodID: oMaterial.MaterialNumber,
+                    MaterialDescription: oMaterial.MaterialDescription,
+                    Price: oMaterial.Price,
+                    Currency: oMaterial.Currency || "VND",
                     Quantity: 1
                 });
             }
@@ -131,7 +130,7 @@ sap.ui.define([
             });
         },
 
-        addFoodToCart: function (oODataModel, oSessionModel, sUserId, oFood, iQuantity) {
+        addMaterialToCart: function (oODataModel, oSessionModel, sUserId, oMaterial, iQuantity) {
             var iQtyToAdd = Number(iQuantity) > 0 ? Number(iQuantity) : 1;
 
             return this.ensureCartForUser(oODataModel, oSessionModel, sUserId).then(function (sCartId) {
@@ -141,13 +140,13 @@ sap.ui.define([
 
                 var oReadBinding = oODataModel.bindList(CART_ITEM_ENTITY_SET, undefined, undefined, [
                     new Filter("CartID", FilterOperator.EQ, sCartId),
-                    new Filter("FoodID", FilterOperator.EQ, oFood.FoodID)
+                    new Filter("FoodID", FilterOperator.EQ, oMaterial.MaterialNumber)
                 ], {
                     $$groupId: "$auto"
                 });
 
                 return oReadBinding.requestContexts(0, 1).then(function (aContexts) {
-                    var fUnitPrice = parseFloat(oFood.Price || 0);
+                    var fUnitPrice = parseFloat(oMaterial.Price || 0);
                     var sUnitPriceStr = fUnitPrice.toFixed(2);
 
                     if (aContexts && aContexts.length > 0) {
@@ -157,7 +156,7 @@ sap.ui.define([
 
                         oExistingItem.setProperty("Quantity", iNewQuantity);
                         oExistingItem.setProperty("UnitPrice", sUnitPriceStr);
-                        oExistingItem.setProperty("Currency", oFood.Currency || "VND");
+                        oExistingItem.setProperty("Currency", oMaterial.Currency || "VND");
                         oExistingItem.setProperty("LineAmount", sLineAmountStr);
                         oExistingItem.setProperty("Status", "ACTIVE");
 
@@ -174,10 +173,10 @@ sap.ui.define([
                         var oNewContext = oCreateBinding.create({
                             CartID: sCartId,
                             ItemNo: sItemNo,
-                            FoodID: oFood.FoodID,
+                            FoodID: oMaterial.MaterialNumber,
                             Quantity: iQtyToAdd,
                             UnitPrice: sUnitPriceStr,
-                            Currency: oFood.Currency || "VND",
+                            Currency: oMaterial.Currency || "VND",
                             LineAmount: sLineAmountStr,
                             Status: "ACTIVE"
                         });

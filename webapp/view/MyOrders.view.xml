@@ -2,26 +2,42 @@
     controllerName="sap490g7fioriapp.controller.MyOrders"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:core="sap.ui.core"
     displayBlock="true">
     <Page title="My Orders" showNavButton="true" navButtonPress=".onBack">
+        <subHeader>
+            <Toolbar>
+                <Label text="From" labelFor="fromDate" />
+                <DatePicker id="fromDate" valueFormat="yyyyMMdd" displayFormat="dd/MM/yyyy" change=".onFilterChange" class="sapUiTinyMarginBegin" />
+                <Label text="To" labelFor="toDate" class="sapUiSmallMarginBegin" />
+                <DatePicker id="toDate" valueFormat="yyyyMMdd" displayFormat="dd/MM/yyyy" change=".onFilterChange" class="sapUiTinyMarginBegin" />
+                <ToolbarSpacer />
+                <ComboBox id="statusFilter" width="12rem" placeholder="Order status" selectionChange=".onFilterChange" items="{orders>/statusOptions}">
+                    <core:Item key="{orders>key}" text="{orders>text}" />
+                </ComboBox>
+            </Toolbar>
+        </subHeader>
         <content>
-            <List
-                id="orderList"
-                items="{orders>/filteredOrders}"
-                noDataText="Bạn chưa có đơn hàng nào">
+            <Table id="orderList" items="{orders>/filteredOrders}" noDataText="Bạn chưa có đơn hàng nào" class="ordersTable">
+                <columns>
+                    <Column width="24%"><Text text="Order ID" /></Column>
+                    <Column width="22%"><Text text="Created date" /></Column>
+                    <Column width="20%"><Text text="Order status" /></Column>
+                    <Column hAlign="End" width="22%"><Text text="Total amount" /></Column>
+                    <Column hAlign="Center" width="12%"><Text text="" /></Column>
+                </columns>
                 <items>
-                    <CustomListItem>
-                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMargin">
-                            <VBox>
-                                <Title text="{orders>orderId}" level="H4" />
-                                <Text text="{= 'Ngày ' + ${orders>orderDate} + ' ' + ${orders>orderTime} }" />
-                                <Text text="{= ${orders>totalAmount}.toFixed(2) + ' ' + ${orders>currency} }" />
-                            </VBox>
-                            <Button text="Chi tiết" type="Emphasized" press=".onOrderPress" />
-                        </HBox>
-                    </CustomListItem>
+                    <ColumnListItem vAlign="Middle">
+                        <cells>
+                            <ObjectIdentifier title="{orders>orderId}" text="{orders>paymentStatus}" />
+                            <Text text="{orders>orderDateDisplay}" />
+                            <ObjectStatus text="{orders>orderStatus}" state="{= ${orders>orderStatus} === 'COMPLETED' ? 'Success' : 'Information' }" />
+                            <ObjectNumber number="{orders>totalAmountText}" unit="{orders>currency}" state="Success" class="orderAmount" />
+                            <Button text="Details" type="Emphasized" press=".onOrderPress" />
+                        </cells>
+                    </ColumnListItem>
                 </items>
-            </List>
+            </Table>
         </content>
     </Page>
 </mvc:View>

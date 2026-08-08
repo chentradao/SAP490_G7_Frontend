@@ -8,34 +8,41 @@
             <Button icon="sap-icon://nav-back" text="Back" press=".onBack" />
         </headerContent>
         <content>
-            <List
+            <Table
                 id="cartList"
-                items="{path: '/CartItems', parameters: { $expand: '_Food' }}"
+                items="{path: '/CartItems'}"
                 updateFinished=".onCartListUpdateFinished"
-                noDataText="Your cart is empty">
+                noDataText="Your cart is empty"
+                class="cartTable">
+                <columns>
+                    <Column width="45%"><Text text="Material" /></Column>
+                    <Column hAlign="End" width="15%"><Text text="Unit Price" /></Column>
+                    <Column hAlign="Center" width="12%"><Text text="Quantity" /></Column>
+                    <Column hAlign="End" width="18%"><Text text="Line Amount" /></Column>
+                    <Column hAlign="Center" width="10%"><Text text="" /></Column>
+                </columns>
                 <items>
-                    <CustomListItem>
-                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMargin">
-                            <VBox>
-                                <Title text="{_Food/FoodName}" level="H4" />
-                                <Text text="{_Food/Description}" />
-                            </VBox>
-                            <VBox alignItems="End">
-                                <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Currency'}], formatter: '.formatUnitPrice'}" />
-                                <Text text="Qty: {Quantity}" />
-                                <!-- Thành tiền từng dòng -->
-                                <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Quantity'}, {path: 'Currency'}], formatter: '.formatLineAmount'}" class="sapUiTinyMarginTop sapMTextBold" />
-                                <Button text="Remove" type="Reject" press=".onRemoveCartItem" class="sapUiTinyMarginTop" />
-                            </VBox>
-                        </HBox>
-                    </CustomListItem>
+                    <ColumnListItem vAlign="Middle">
+                        <cells>
+                            <ObjectIdentifier
+                                title="{parts: [{path: 'FoodID'}, {path: 'cartNames>/'}], formatter: '.formatFoodName'}"
+                                text="{FoodID}" />
+                            <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Currency'}], formatter: '.formatUnitPrice'}" />
+                            <StepInput
+                                value="{Quantity}"
+                                min="1"
+                                step="1"
+                                width="7rem"
+                                change=".onQuantityChange" />
+                            <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Quantity'}, {path: 'Currency'}], formatter: '.formatLineAmount'}" class="sapMTextBold" />
+                            <Button icon="sap-icon://decline" tooltip="Remove" type="Reject" press=".onRemoveCartItem" />
+                        </cells>
+                    </ColumnListItem>
                 </items>
-            </List>
+            </Table>
         </content>
-
-        <!-- Footer: Tổng tiền + nút Checkout -->
         <footer>
-            <Toolbar>
+            <Toolbar class="cartFooter">
                 <ToolbarSpacer />
                 <VBox alignItems="End" class="sapUiTinyMarginEnd">
                     <Text text="Tổng cộng" class="sapUiTinyMarginBottom" />
@@ -46,6 +53,7 @@
                     type="Emphasized"
                     icon="sap-icon://cart"
                     enabled="{cartView>/checkoutEnabled}"
+                    busy="{cartView>/checkoutBusy}"
                     press=".onCheckout" />
             </Toolbar>
         </footer>

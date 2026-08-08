@@ -19,16 +19,12 @@ sap.ui.define([
                 return;
             }
 
-            var sFoodId = oEvent.getParameter("arguments").foodId;
-            var oODataModel = this.getOwnerComponent().getModel();
-
-            var sPath = "/Foods(FoodID='" + sFoodId + "')";
+            var sMaterialNumber = oEvent.getParameter("arguments").materialNumber;
+            var sPath = "/Food2(MaterialNumber='" + encodeURIComponent(sMaterialNumber) + "')";
 
             this.getView().bindElement({
                 path: sPath,
-                parameters: {
-                    $expand: "_Category"
-                }
+                parameters: {}
             });
         },
 
@@ -42,7 +38,7 @@ sap.ui.define([
 
         onAddToCart: function () {
             var oContext = this.getView().getBindingContext();
-    var oFood = oContext.getObject();
+    var oMaterial = oContext.getObject();
     var oSession = this.getOwnerComponent().getModel("session");
     var sUserId = oSession && oSession.getProperty("/userId");
     var oODataModel = this.getOwnerComponent().getModel();
@@ -50,8 +46,8 @@ sap.ui.define([
     var oQuantityInput = this.byId("quantityInput");
     var iQuantity = oQuantityInput ? oQuantityInput.getValue() : 1;
 
-    cartUtils.addFoodToCart(oODataModel, oSession, sUserId, oFood, iQuantity).then(function () {
-        MessageToast.show(oFood.FoodName + " added to cart");
+    cartUtils.addMaterialToCart(oODataModel, oSession, sUserId, oMaterial, iQuantity).then(function () {
+        MessageToast.show(oMaterial.MaterialDescription + " added to cart");
     }).catch(function () {
         MessageToast.show("Unable to add item to cart");
     });

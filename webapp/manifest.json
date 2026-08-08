@@ -110,7 +110,7 @@
         },
         {
           "name": "RouteFoodDetail",
-          "pattern": "FoodDetail/{foodId}",
+          "pattern": "FoodDetail/{materialNumber}",
           "target": [
             "TargetFoodDetail"
           ]

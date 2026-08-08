@@ -10,7 +10,8 @@
             <VBox class="sapUiSmallMargin" width="100%">
 
                 <ObjectHeader
-                    title="{FoodName}"
+                    title="{MaterialDescription}"
+                    icon="{ImageUrl}"
                     number="{
                         path: 'Price',
                         type: 'sap.ui.model.type.Float',
@@ -21,14 +22,16 @@
                     }"
                     numberUnit="{Currency}">
                     <attributes>
-                        <ObjectAttribute title="{i18n>labelFoodId}" text="{FoodID}" />
-                        <ObjectAttribute title="{i18n>labelCategory}" text="{_Category/CategoryName}" />
-                        <ObjectAttribute title="Category ID" text="{CategoryID}" />
+                        <ObjectAttribute title="{i18n>labelMaterialNumber}" text="{MaterialNumber}" />
+                        <ObjectAttribute title="{i18n>labelMaterialGroup}" text="{MaterialGroup}" />
+                        <ObjectAttribute title="{i18n>labelMaterialType}" text="{MaterialType}" />
+                        <ObjectAttribute title="{i18n>labelStock}" text="{= ${AvailableStock} + ' ' + ${BaseUnit} }" />
+                        <ObjectAttribute title="{i18n>labelPlant}" text="{= ${Plant} + ' / ' + ${StorageLocation} }" />
                     </attributes>
                     <statuses>
                         <ObjectStatus
-                            text="{= ${Status} === '1' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
-                            state="{= ${Status} === '1' ? 'Success' : 'Error' }" />
+                            text="{Status}"
+                            state="{= ${Status} === 'ACTIVE' || ${Status} === '1' ? 'Success' : 'None' }" />
                     </statuses>
                 </ObjectHeader>
 
