@@ -17,8 +17,22 @@ sap.ui.define([
             }
         },
 
-        onNavBack: function () {
-            // this.getOwnerComponent().getRouter().navTo("RouteFoodList");
+        onLogout: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            if (oSession) {
+                oSession.setData({
+                    userId: null,
+                    cartId: null,
+                    cartItemCount: 0,
+                    username: "",
+                    fullName: "",
+                    role: "",
+                    roleId: "",
+                    status: "",
+                    isLoggedIn: false
+                });
+            }
+            this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
         }
     });
 });

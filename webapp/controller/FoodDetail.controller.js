@@ -33,24 +33,38 @@ sap.ui.define([
         },
 
         onOpenCart: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            var oContext = this.getView().getBindingContext();
+            if (oSession) {
+                oSession.setProperty("/cartReturnRoute", "RouteFoodDetail");
+                oSession.setProperty("/cartReturnMaterialNumber",
+                    oContext ? oContext.getProperty("MaterialNumber") : "");
+            }
             this.getOwnerComponent().getRouter().navTo("RouteCart", {}, true);
         },
 
         onAddToCart: function () {
             var oContext = this.getView().getBindingContext();
-    var oMaterial = oContext.getObject();
-    var oSession = this.getOwnerComponent().getModel("session");
-    var sUserId = oSession && oSession.getProperty("/userId");
-    var oODataModel = this.getOwnerComponent().getModel();
+            if (!oContext) {
+                return;
+            }
 
-    var oQuantityInput = this.byId("quantityInput");
-    var iQuantity = oQuantityInput ? oQuantityInput.getValue() : 1;
+            var oMaterial = oContext.getObject();
+            var oSession = this.getOwnerComponent().getModel("session");
+            var sUserId = oSession && oSession.getProperty("/userId");
+            var oODataModel = this.getOwnerComponent().getModel();
+            var oQuantityInput = this.byId("quantityInput");
+            var iQuantity = oQuantityInput ? oQuantityInput.getValue() : 1;
 
-    cartUtils.addMaterialToCart(oODataModel, oSession, sUserId, oMaterial, iQuantity).then(function () {
-        MessageToast.show(oMaterial.MaterialDescription + " added to cart");
-    }).catch(function () {
-        MessageToast.show("Unable to add item to cart");
-    });
-}
+            cartUtils.addMaterialToCart(oODataModel, oSession, sUserId, oMaterial, iQuantity)
+                .then(function (sCartId) {
+                    return cartUtils.refreshCartCount(oODataModel, oSession, sCartId);
+                }).then(function () {
+                    MessageToast.show(oMaterial.MaterialDescription + " added to cart");
+                }).catch(function (oError) {
+                    console.error("Add to cart from Food Detail failed:", oError);
+                    MessageToast.show("Unable to add item to cart");
+                });
+        }
     });
 });

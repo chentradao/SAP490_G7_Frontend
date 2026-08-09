@@ -6,13 +6,15 @@ sap.ui.define([
 ], function (Controller, JSONModel, Filter, FilterOperator) {
     "use strict";
 
+    var AMOUNT_DISPLAY_SCALE = 0.00001;
+
     function formatDate(sValue) {
         var sDate = String(sValue || "").replace(/[^0-9]/g, "").slice(0, 8);
         return sDate.length === 8 ? sDate.slice(6, 8) + "/" + sDate.slice(4, 6) + "/" + sDate.slice(0, 4) : sValue || "";
     }
 
     function formatVnd(vAmount) {
-        return (parseFloat(vAmount) || 0).toLocaleString("en-US", {
+        return ((parseFloat(vAmount) || 0) * AMOUNT_DISPLAY_SCALE).toLocaleString("en-US", {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         });

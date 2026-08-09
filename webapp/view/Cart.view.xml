@@ -3,10 +3,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     displayBlock="true">
-    <Page title="Cart" showFooter="true">
-        <headerContent>
-            <Button icon="sap-icon://nav-back" text="Back" press=".onBack" />
-        </headerContent>
+    <Page title="Cart" showFooter="true" showNavButton="true" navButtonPress=".onBack">
         <content>
             <Table
                 id="cartList"

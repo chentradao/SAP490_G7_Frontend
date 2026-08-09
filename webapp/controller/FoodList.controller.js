@@ -162,6 +162,11 @@ sap.ui.define([
         },
 
         onViewCart: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            if (oSession) {
+                oSession.setProperty("/cartReturnRoute", "RouteFoodList");
+                oSession.setProperty("/cartReturnMaterialNumber", "");
+            }
             this.getOwnerComponent().getRouter().navTo("RouteCart");
         },
 

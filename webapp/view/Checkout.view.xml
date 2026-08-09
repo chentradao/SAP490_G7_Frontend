@@ -1,6 +1,5 @@
 <mvc:View controllerName="sap490g7fioriapp.controller.Checkout" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" displayBlock="true">
-    <Page title="Checkout">
-        <headerContent><Button icon="sap-icon://nav-back" text="Back" press=".onBack" /></headerContent>
+    <Page title="Checkout" showNavButton="true" navButtonPress=".onBack">
         <content>
             <HBox width="100%" class="sapUiMediumMargin" renderType="Div">
                 <VBox width="65%" class="sapUiMediumMarginEnd">
@@ -28,6 +27,24 @@
                         <Text text="Tổng thanh toán" class="sapMTitleStyle" />
                         <Title text="{= ${checkoutData>/totalAmountText} + ' ' + ${checkoutData>/currency} }" level="H3" />
                     </HBox>
+                    <VBox class="sapUiSmallMarginTop">
+                        <Label text="Ghi chú đơn hàng" labelFor="orderNoteInput" />
+                        <TextArea
+                            id="orderNoteInput"
+                            value="{checkoutData>/note}"
+                            rows="3"
+                            maxLength="255"
+                            width="100%"
+                            placeholder="Nhập ghi chú cho đơn hàng..." />
+                        <Button
+                            text="Lưu ghi chú"
+                            icon="sap-icon://save"
+                            type="Emphasized"
+                            busy="{checkoutData>/noteBusy}"
+                            enabled="{= !!${checkoutData>/orderId} }"
+                            press=".onSaveNote"
+                            class="sapUiTinyMarginTop" />
+                    </VBox>
                 </VBox>
                 <VBox width="35%" alignItems="Center" class="sapUiSmallPaddingTop">
                     <Panel headerText="Mã QR PayOS" width="100%">

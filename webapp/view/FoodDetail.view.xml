@@ -49,13 +49,6 @@
                             value="1"
                             width="200px" />
 
-                        <Label text="Note" class="sapUiSmallMarginTop" />
-                        <TextArea
-                            id="noteInput"
-                            width="100%"
-                            rows="3"
-                            placeholder="Example: less spicy, no onion..." />
-
                         <HBox class="sapUiSmallMarginTop">
                             <Button
                                 text="Add to Cart"

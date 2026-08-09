@@ -8,7 +8,9 @@ sap.ui.define([
 ], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, cartUtils) {
     "use strict";
 
-    var PRICE_SCALE = 1;
+    // Cart amount fields are exposed by OData in thousands of VND (40),
+    // while the persisted/business amount is full VND (40,000).
+    var PRICE_SCALE = 1000;
 
     function toDisplayPrice(vPrice) {
         return (parseFloat(vPrice) || 0) * PRICE_SCALE;
@@ -19,6 +21,10 @@ sap.ui.define([
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }) + (sCurrency ? " " + sCurrency : "");
+    }
+
+    function parseFormattedAmount(sAmount) {
+        return Number(String(sAmount || "").replace(/[^0-9.-]/g, "")) || 0;
     }
 
     return Controller.extend("sap490g7fioriapp.controller.Cart", {
@@ -33,9 +39,37 @@ sap.ui.define([
             });
             this.getView().setModel(oViewModel, "cartView");
             this.getView().setModel(new JSONModel({}), "cartNames");
+
+            this.getOwnerComponent().getRouter().getRoute("RouteCart")
+                .attachPatternMatched(this._onRouteMatched, this);
+        },
+
+        _onRouteMatched: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            var sCartId = oSession && oSession.getProperty("/cartId");
+            var oBinding = this.byId("cartList").getBinding("items");
+
+            if (oBinding) {
+                oBinding.filter([
+                    new Filter("CartID", FilterOperator.EQ, sCartId || "__NO_ACTIVE_CART__")
+                ]);
+                // CartItems are created through a separate list binding. Refresh
+                // this table binding on every entry so the new row is visible now.
+                oBinding.refresh();
+            }
         },
 
         onBack: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            var sReturnRoute = oSession && oSession.getProperty("/cartReturnRoute");
+            var sMaterialNumber = oSession && oSession.getProperty("/cartReturnMaterialNumber");
+
+            if (sReturnRoute === "RouteFoodDetail" && sMaterialNumber) {
+                this.getOwnerComponent().getRouter().navTo("RouteFoodDetail", {
+                    materialNumber: sMaterialNumber
+                }, true);
+                return;
+            }
             this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
         },
 
@@ -159,11 +193,19 @@ sap.ui.define([
             aContexts.forEach(function (oCtx) {
                 if (!oCtx) { return; }
                 var oData = oCtx.getObject();
-                var fUnitPrice = toDisplayPrice(oData.UnitPrice);
-                var iQty = parseInt(oData.Quantity, 10) || 0;
-                fTotal += fUnitPrice * iQty;
                 if (!sCurrency && oData.Currency) {
                     sCurrency = oData.Currency;
+                }
+            });
+
+            // OData's raw decimal value uses a different internal scale from the
+            // value passed to the row formatter. Sum the formatted Line Amount
+            // cells so the footer always matches exactly what the user sees.
+            oList.getItems().forEach(function (oItem) {
+                var aCells = oItem.getCells();
+                var oLineAmountCell = aCells[3];
+                if (oLineAmountCell && typeof oLineAmountCell.getText === "function") {
+                    fTotal += parseFormattedAmount(oLineAmountCell.getText());
                 }
             });
 
@@ -232,7 +274,8 @@ sap.ui.define([
                     items: aItems,
                     totalAmount: fTotalAmount,
                     currency: oViewModel.getProperty("/currency"),
-                    note: ""
+                    note: "",
+                    sourceRoute: "cart"
                 }), "checkoutData");
                 this.getOwnerComponent().getRouter().navTo("RouteCheckout");
             }.bind(this)).catch(function (oError) {

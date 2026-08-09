@@ -4,7 +4,8 @@ sap.ui.define([
 ], function (Controller, JSONModel) {
     "use strict";
 
-    var PRICE_SCALE = 1;
+    var UNIT_PRICE_DISPLAY_SCALE = 0.001;
+    var CALCULATED_AMOUNT_DISPLAY_SCALE = 0.00001;
 
     function formatDate(sValue) {
         var sDate = String(sValue || "").replace(/[^0-9]/g, "").slice(0, 8);
@@ -12,7 +13,14 @@ sap.ui.define([
     }
 
     function formatAmount(vAmount) {
-        return ((parseFloat(vAmount) || 0) * PRICE_SCALE).toLocaleString("en-US", {
+        return (parseFloat(vAmount) || 0).toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    function formatCalculatedAmount(vAmount) {
+        return ((parseFloat(vAmount) || 0) * CALCULATED_AMOUNT_DISPLAY_SCALE).toLocaleString("en-US", {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         });
@@ -58,7 +66,7 @@ sap.ui.define([
                 orderId: oRow.OrderID,
                 orderDateDisplay: formatDate(sOrderDate),
                 orderTime: oRow.OrderTime || "",
-                totalAmountText: formatAmount(oRow.TotalAmount),
+                totalAmountText: formatCalculatedAmount(oRow.TotalAmount),
                 currency: oRow.Currency || "VND",
                 orderStatus: oRow.OrderStatus || "Unknown",
                 paymentStatus: oRow.PaymentStatus || "Unknown",
@@ -68,8 +76,8 @@ sap.ui.define([
                         foodId: oItem.FoodID,
                         foodName: oItem.FoodName || oItem.FoodID || "",
                         quantity: oItem.Quantity,
-                        unitPriceText: formatAmount(oItem.UnitPrice),
-                        lineAmountText: formatAmount(oItem.LineAmount),
+                        unitPriceText: formatAmount((parseFloat(oItem.UnitPrice) || 0) * UNIT_PRICE_DISPLAY_SCALE),
+                        lineAmountText: formatCalculatedAmount(oItem.LineAmount),
                         currency: oItem.Currency || "VND",
                         itemStatus: oItem.ItemStatus || ""
                     };
@@ -86,7 +94,8 @@ sap.ui.define([
                 totalAmountText: oOrder.totalAmountText,
                 currency: oOrder.currency,
                 note: oOrder.note || "",
-                existingOrder: true
+                existingOrder: true,
+                sourceRoute: "orderDetail"
             }), "checkoutData");
             this.getOwnerComponent().getRouter().navTo("RouteCheckout");
         },

@@ -94,7 +94,7 @@ sap.ui.define([
                     } else if (sRole === "STAFF") {
                         sTargetRoute = "RouteFoodList";
                     } else if (sRole === "EMPLOYEE") {
-                        sTargetRoute = "RouteCart";
+                        sTargetRoute = "RouteFoodList";
                     }
 
                     this.getOwnerComponent().getRouter().navTo(sTargetRoute);

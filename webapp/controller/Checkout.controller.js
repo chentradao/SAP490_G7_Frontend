@@ -4,22 +4,18 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/ui/model/Sorter",
+    "sap/m/MessageToast",
     "sap490g7fioriapp/model/cartUtils"
-], function (Controller, JSONModel, Filter, FilterOperator, Sorter, cartUtils) {
+], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageToast, cartUtils) {
     "use strict";
 
     // createCheckout is a static RAP action bound to the Payments collection.
     var CREATE_CHECKOUT_ACTION = "/Payments/com.sap.gateway.srvd.zsd_g7_canteen.v0001.createCheckout(...)";
-    var PRICE_SCALE = 1;
+    var UNIT_PRICE_DISPLAY_SCALE = 0.0001;
+    var CALCULATED_AMOUNT_DISPLAY_SCALE = 0.00000001;
 
-    function getPaymentResult(oResult) {
-        if (Array.isArray(oResult)) { return oResult[0] || {}; }
-        if (oResult && Array.isArray(oResult.value)) { return oResult.value[0] || {}; }
-        return oResult || {};
-    }
-
-    function formatAmount(vAmount) {
-        return ((parseFloat(vAmount) || 0) * PRICE_SCALE).toLocaleString("en-US", {
+    function formatAmount(vAmount, fScale) {
+        return ((parseFloat(vAmount) || 0) * fScale).toLocaleString("en-US", {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         });
@@ -46,7 +42,18 @@ sap.ui.define([
         },
 
         onBack: function () {
-            this.getOwnerComponent().getRouter().navTo("RouteCart", {}, true);
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+            var sSourceRoute = oCheckoutData && oCheckoutData.getProperty("/sourceRoute");
+            var sOrderId = oCheckoutData && oCheckoutData.getProperty("/orderId");
+            var oRouter = this.getOwnerComponent().getRouter();
+
+            if (sSourceRoute === "orderDetail" && sOrderId) {
+                oRouter.navTo("RouteMyOrderDetail", { orderId: sOrderId }, true);
+            } else if (sOrderId) {
+                oRouter.navTo("RouteMyOrders", {}, true);
+            } else {
+                oRouter.navTo("RouteCart", {}, true);
+            }
         },
 
         onGenerateQr: function () {
@@ -67,27 +74,26 @@ sap.ui.define([
             });
             oAction.setParameter("UserID", sUserId);
 
-            oAction.execute().then(function () {
-                return oAction.requestObject();
-            }).then(function (oResult) {
-                var oPayment = getPaymentResult(oResult);
-                var sOrderId = oPayment.OrderID || oPayment.order_id || "";
-                var sPaymentId = oPayment.PaymentID || oPayment.payment_id || "";
-                var pOrder;
+            var sPreviousOrderId = "";
+
+            this._getLatestOrderForUser(sUserId).then(function (oPreviousOrder) {
+                sPreviousOrderId = oPreviousOrder && oPreviousOrder.OrderID || "";
+                return oAction.execute();
+            }).then(function () {
+                // The RAP action has no result payload. After it completes, read
+                // the newest order created for this user instead of requestObject().
+                return this._loadCheckoutOrder(sUserId);
+            }.bind(this)).then(function (oOrder) {
+                var sOrderId = oOrder && oOrder.OrderID;
                 var pPayment;
                 var sCartId;
                 var pClearCart;
 
-                if (!sPaymentId && !sOrderId) {
-                    throw new Error("createCheckout did not return PaymentID or OrderID.");
+                if (!sOrderId || sOrderId === sPreviousOrderId) {
+                    throw new Error("createCheckout completed but no new order was found.");
                 }
 
-                pOrder = this._loadCheckoutOrder(sUserId, sOrderId);
-                if (sPaymentId) {
-                    pPayment = this._loadPaymentGateway(sPaymentId);
-                } else {
-                    pPayment = this._loadPaymentForOrder(sOrderId);
-                }
+                pPayment = this._loadPaymentForOrder(sOrderId);
 
                 // createCheckout has already consumed the cart at this point, so it
                 // is now safe to remove every item from the current active cart.
@@ -100,7 +106,7 @@ sap.ui.define([
                     console.error("Order was created but cart cleanup failed:", oError);
                 });
 
-                return Promise.all([pOrder, pPayment, pClearCart]);
+                return Promise.all([pPayment, pClearCart]);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not create PayOS checkout:", oError);
                 oQrModel.setProperty("/statusText", "Không thể tạo đơn hàng/thanh toán PayOS. Vui lòng thử lại.");
@@ -200,22 +206,33 @@ sap.ui.define([
             if (sOrderId) {
                 pOrder = oModel.bindContext("/Orders('" + sOrderId + "')", undefined, { $expand: "_Items" }).requestObject();
             } else {
-                pOrder = oModel.bindList("/Orders", undefined, [new Sorter("CreatedAt", true)], [
-                    new Filter("UserID", FilterOperator.EQ, sUserId)
-                ], { $expand: "_Items" }).requestContexts(0, 1).then(function (aContexts) {
-                    return aContexts.length ? aContexts[0].getObject() : null;
-                });
+                pOrder = this._getLatestOrderForUser(sUserId);
             }
             return pOrder.then(function (oOrder) {
-                if (!oOrder) { return; }
+                if (!oOrder) { return null; }
                 this._setCheckoutOrder(oOrder);
-            }.bind(this)).catch(function (oError) {
-                console.error("Could not load newly created order:", oError);
+                return oOrder;
+            }.bind(this));
+        },
+
+        _getLatestOrderForUser: function (sUserId) {
+            return this.getOwnerComponent().getModel().bindList("/Orders", undefined, [
+                new Sorter("CreatedAt", true),
+                new Sorter("OrderID", true)
+            ], [
+                new Filter("UserID", FilterOperator.EQ, sUserId)
+            ], {
+                $expand: "_Items",
+                $$groupId: "$direct"
+            }).requestContexts(0, 1).then(function (aContexts) {
+                return aContexts.length ? aContexts[0].getObject() : null;
             });
         },
 
         _setCheckoutOrder: function (oOrder) {
             var aItems = Array.isArray(oOrder._Items) ? oOrder._Items : [];
+            var oCurrentModel = this.getOwnerComponent().getModel("checkoutData");
+            var oCurrentData = oCurrentModel ? oCurrentModel.getData() : {};
             this.getOwnerComponent().setModel(new JSONModel({
                 orderId: oOrder.OrderID,
                 items: aItems.map(function (oItem) {
@@ -223,15 +240,46 @@ sap.ui.define([
                         foodId: oItem.FoodID,
                         foodName: oItem.FoodName || oItem.FoodID || "",
                         quantity: oItem.Quantity,
-                        unitPriceText: formatAmount(oItem.UnitPrice),
-                        lineAmountText: formatAmount(oItem.LineAmount),
+                        unitPriceText: formatAmount(oItem.UnitPrice, UNIT_PRICE_DISPLAY_SCALE),
+                        lineAmountText: formatAmount(oItem.LineAmount, CALCULATED_AMOUNT_DISPLAY_SCALE),
                         currency: oItem.Currency || oOrder.Currency || "VND"
                     };
                 }),
-                totalAmountText: formatAmount(oOrder.TotalAmount),
+                totalAmountText: formatAmount(oOrder.TotalAmount, CALCULATED_AMOUNT_DISPLAY_SCALE),
                 currency: oOrder.Currency || "VND",
-                note: oOrder.Note || ""
+                note: oOrder.Note || "",
+                noteBusy: false,
+                sourceRoute: oCurrentData.sourceRoute || "cart",
+                existingOrder: !!oCurrentData.existingOrder
             }), "checkoutData");
+        },
+
+        onSaveNote: function () {
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+            var sOrderId = oCheckoutData && oCheckoutData.getProperty("/orderId");
+            var sNote = String(oCheckoutData && oCheckoutData.getProperty("/note") || "").trim();
+
+            if (!sOrderId) {
+                MessageToast.show("Chưa xác định được đơn hàng để lưu ghi chú.");
+                return;
+            }
+
+            var sEscapedOrderId = String(sOrderId).replace(/'/g, "''");
+            var oModel = this.getOwnerComponent().getModel();
+            var oBinding = oModel.bindContext("/Orders('" + sEscapedOrderId + "')");
+
+            oCheckoutData.setProperty("/noteBusy", true);
+            oBinding.requestObject().then(function () {
+                oBinding.getBoundContext().setProperty("Note", sNote);
+                return oModel.submitBatch("$auto");
+            }).then(function () {
+                MessageToast.show("Đã lưu ghi chú cho đơn hàng.");
+            }).catch(function (oError) {
+                console.error("Could not save order note:", oError);
+                MessageToast.show("Không thể lưu ghi chú. Vui lòng thử lại.");
+            }).finally(function () {
+                oCheckoutData.setProperty("/noteBusy", false);
+            });
         },
 
         onOpenCheckoutUrl: function () {

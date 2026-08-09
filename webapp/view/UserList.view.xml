@@ -4,7 +4,10 @@
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
     displayBlock="true">
-    <Page title="{i18n>userListTitle}" showNavButton="true" navButtonPress=".onNavBack" fitContainer="true">
+    <Page title="{i18n>userListTitle}" fitContainer="true">
+        <headerContent>
+            <Button icon="sap-icon://log" text="{i18n>btnLogout}" press=".onLogout" />
+        </headerContent>
         <content>
             <Table
                 id="userTable"
