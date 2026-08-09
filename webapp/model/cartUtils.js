@@ -6,6 +6,11 @@ sap.ui.define([
 
     var CART_ENTITY_SET = "/Carts";
     var CART_ITEM_ENTITY_SET = "/CartItems";
+    var MATERIAL_PRICE_SCALE = 1000;
+
+    function getCartUnitPrice(vMaterialPrice) {
+        return (Number(vMaterialPrice) || 0) * MATERIAL_PRICE_SCALE;
+    }
 
     // ------------------------------------------------------------
     // Tim ItemNo ke tiep cho 1 cart: doc toan bo item hien co,
@@ -146,7 +151,9 @@ sap.ui.define([
                 });
 
                 return oReadBinding.requestContexts(0, 1).then(function (aContexts) {
-                    var fUnitPrice = parseFloat(oMaterial.Price || 0);
+                    // Food2 returns prices in thousands of VND. Store the full VND
+                    // amount once here so every later cart/order step uses one value.
+                    var fUnitPrice = getCartUnitPrice(oMaterial.Price);
                     var sUnitPriceStr = fUnitPrice.toFixed(2);
 
                     if (aContexts && aContexts.length > 0) {
@@ -188,6 +195,31 @@ sap.ui.define([
                 });
             });
         },
+
+        clearCartItems: function (oODataModel, oSessionModel, sCartId) {
+            if (!oODataModel || !sCartId) {
+                return Promise.resolve(0);
+            }
+
+            var oListBinding = oODataModel.bindList(CART_ITEM_ENTITY_SET, undefined, undefined, [
+                new Filter("CartID", FilterOperator.EQ, sCartId)
+            ], {
+                $$groupId: "$auto"
+            });
+
+            return oListBinding.requestContexts().then(function (aContexts) {
+                var aCartItems = aContexts || [];
+                return Promise.all(aCartItems.map(function (oContext) {
+                    return oContext.delete();
+                })).then(function () {
+                    if (oSessionModel) {
+                        oSessionModel.setProperty("/cartItemCount", 0);
+                    }
+                    return aCartItems.length;
+                });
+            });
+        },
+
         refreshCartCount: function (oODataModel, oSessionModel, sCartId) {
     if (!oODataModel || !oSessionModel || !sCartId) {
         if (oSessionModel) {

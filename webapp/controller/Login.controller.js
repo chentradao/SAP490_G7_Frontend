@@ -1,12 +1,25 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
-    "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
     "sap490g7fioriapp/model/cartUtils"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, cartUtils) {
+], function (Controller, JSONModel, MessageToast, cartUtils) {
     "use strict";
+
+    var LOGIN_ACTION = "/Users/com.sap.gateway.srvd.zsd_g7_canteen.v0001.login(...)";
+
+    function getLoginResult(oResult) {
+        if (Array.isArray(oResult)) { return oResult[0] || {}; }
+        if (oResult && Array.isArray(oResult.value)) { return oResult.value[0] || {}; }
+        return oResult || {};
+    }
+
+    function getValue(oResult, aNames) {
+        var sName = aNames.find(function (sCandidate) {
+            return Object.prototype.hasOwnProperty.call(oResult, sCandidate);
+        });
+        return sName ? oResult[sName] : undefined;
+    }
 
     return Controller.extend("sap490g7fioriapp.controller.Login", {
 
@@ -39,50 +52,37 @@ sap.ui.define([
 
             oLoginModel.setProperty("/busy", true);
 
-            // Doi voi cach lam nay, mat khau dang duoc so sanh truc tiep qua OData (plain text).
-            // Trong thuc te nen goi mot action/function import server-side de kiem tra
-            // va bam (hash) mat khau, khong nen so sanh plain text tren client.
             var oODataModel = this.getOwnerComponent().getModel();
-
-            var aFilters = [
-                new Filter("Username", FilterOperator.EQ, sUsername)
-            ];
-
-            var oListBinding = oODataModel.bindList("/Users", undefined, undefined, aFilters, {
-                $$groupId: "$auto"
+            var oAction = oODataModel.bindContext(LOGIN_ACTION, undefined, {
+                $$groupId: "$direct"
             });
+            oAction.setParameter("Username", sUsername);
+            oAction.setParameter("Password", sPassword);
 
-            oListBinding.requestContexts(0, 2).then(function (aContexts) {
-                oLoginModel.setProperty("/busy", false);
+            oAction.execute().then(function () {
+                return oAction.requestObject();
+            }).then(function (oResponse) {
+                var oResult = getLoginResult(oResponse);
+                var bSuccess = getValue(oResult, ["Success", "success"]);
 
-                if (aContexts && aContexts.length > 0) {
-                    var oUser = aContexts[0].getObject();
-
-                    var sStatus = oUser.Status || "";
-                    if (sStatus !== "1" && sStatus.toUpperCase() !== "A") {
-                        oLoginModel.setProperty("/errorVisible", true);
-                        oLoginModel.setProperty("/errorMessage", oI18n.getText("msgLoginFailed"));
-                        return;
-                    }
-
-                    var sRole = (oUser.Role || "").toUpperCase();
+                if (bSuccess === true || bSuccess === "true" || bSuccess === "X") {
+                    var sUserId = getValue(oResult, ["Userid", "UserID", "userId", "userid"]);
+                    var sRole = String(getValue(oResult, ["Roleid", "RoleID", "roleId", "roleid"]) || "").toUpperCase();
                     var oAppModel = this.getOwnerComponent().getModel("session") || new JSONModel();
                     oAppModel.setData({
-                        userId: oUser.UserID,
-                        // KHONG gan cung cartId - cartUtils.ensureCartForUser() se tu
-                        // kiem tra cart that trong bang Carts theo UserID, hoac tao moi.
+                        userId: sUserId,
                         cartId: null,
                         cartItemCount: 0,
-                        username: oUser.Username,
-                        fullName: oUser.FullName,
+                        username: getValue(oResult, ["Username", "username"]) || sUsername,
+                        fullName: getValue(oResult, ["Fullname", "FullName", "fullName", "fullname"]) || "",
                         role: sRole,
+                        roleId: sRole,
+                        status: getValue(oResult, ["Status", "status"]) || "",
                         isLoggedIn: true
                     });
                     this.getOwnerComponent().setModel(oAppModel, "session");
 
-                    // Load cart 1 lan de tinh badge so luong, chay ngam khong can
-                    // cho ket qua truoc khi dieu huong.
-                    cartUtils.ensureCartForUser(oODataModel, oAppModel, oUser.UserID).then(function (sCartId) {
+                    cartUtils.ensureCartForUser(oODataModel, oAppModel, sUserId).then(function (sCartId) {
                         return cartUtils.refreshCartCount(oODataModel, oAppModel, sCartId);
                     });
 
@@ -100,12 +100,15 @@ sap.ui.define([
                     this.getOwnerComponent().getRouter().navTo(sTargetRoute);
                 } else {
                     oLoginModel.setProperty("/errorVisible", true);
-                    oLoginModel.setProperty("/errorMessage", oI18n.getText("msgLoginFailed"));
+                    oLoginModel.setProperty("/errorMessage",
+                        getValue(oResult, ["Message", "message"]) || oI18n.getText("msgLoginFailed"));
                 }
             }.bind(this)).catch(function (oError) {
-                oLoginModel.setProperty("/busy", false);
                 oLoginModel.setProperty("/errorVisible", true);
                 oLoginModel.setProperty("/errorMessage", oI18n.getText("msgLoginError"));
+                console.error("Could not execute login action:", oError);
+            }).finally(function () {
+                oLoginModel.setProperty("/busy", false);
             });
         }
     });

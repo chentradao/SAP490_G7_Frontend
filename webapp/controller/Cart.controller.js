@@ -103,11 +103,11 @@ sap.ui.define([
             if (isNaN(fValue)) {
                 return "";
             }
-            return formatVnd(toDisplayPrice(fValue) * 1000, sCurrency);
+            return formatVnd(toDisplayPrice(fValue), sCurrency);
         },
 
         formatLineAmount: function (fUnitPrice, iQuantity, sCurrency) {
-            var fValue = toDisplayPrice(fUnitPrice) * (parseInt(iQuantity, 10) || 0) * 1000;
+            var fValue = toDisplayPrice(fUnitPrice) * (parseInt(iQuantity, 10) || 0);
             return formatVnd(fValue, sCurrency);
         },
 

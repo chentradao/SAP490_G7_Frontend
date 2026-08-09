@@ -3,7 +3,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     displayBlock="true">
-    <Page title="Order Detail" showNavButton="true" navButtonPress=".onBack">
+    <Page title="Order Detail" showNavButton="true" navButtonPress=".onBack" showFooter="true">
         <content>
             <VBox class="sapUiMediumMargin">
                 <ObjectHeader
@@ -17,14 +17,6 @@
                         <ObjectAttribute title="Trạng thái thanh toán" text="{orders>/selectedOrder/paymentStatus}" />
                     </attributes>
                 </ObjectHeader>
-                <Button
-                    text="Checkout"
-                    type="Emphasized"
-                    icon="sap-icon://cart"
-                    visible="{= ${orders>/selectedOrder/orderStatus} === 'CREATED' }"
-                    press=".onCheckout"
-                    class="sapUiSmallMarginTop" />
-
                 <Panel headerText="Thông tin đơn hàng" class="sapUiSmallMarginTop">
                     <VBox class="sapUiSmallMargin">
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
@@ -62,5 +54,16 @@
                 </Panel>
             </VBox>
         </content>
+        <footer>
+            <Toolbar>
+                <ToolbarSpacer />
+                <Button
+                    text="Checkout"
+                    type="Emphasized"
+                    icon="sap-icon://cart"
+                    visible="{= ${orders>/selectedOrder/orderStatus} === 'CREATED' }"
+                    press=".onCheckout" />
+            </Toolbar>
+        </footer>
     </Page>
 </mvc:View>

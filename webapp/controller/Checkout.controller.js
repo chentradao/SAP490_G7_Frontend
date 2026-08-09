@@ -3,8 +3,9 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
-    "sap/ui/model/Sorter"
-], function (Controller, JSONModel, Filter, FilterOperator, Sorter) {
+    "sap/ui/model/Sorter",
+    "sap490g7fioriapp/model/cartUtils"
+], function (Controller, JSONModel, Filter, FilterOperator, Sorter, cartUtils) {
     "use strict";
 
     // createCheckout is a static RAP action bound to the Payments collection.
@@ -72,14 +73,34 @@ sap.ui.define([
                 var oPayment = getPaymentResult(oResult);
                 var sOrderId = oPayment.OrderID || oPayment.order_id || "";
                 var sPaymentId = oPayment.PaymentID || oPayment.payment_id || "";
-                var pOrder = this._loadCheckoutOrder(sUserId, sOrderId);
-                if (sPaymentId) {
-                    return Promise.all([pOrder, this._loadPaymentGateway(sPaymentId)]);
-                } else if (sOrderId) {
-                    return Promise.all([pOrder, this._loadPaymentForOrder(sOrderId)]);
-                } else {
+                var pOrder;
+                var pPayment;
+                var sCartId;
+                var pClearCart;
+
+                if (!sPaymentId && !sOrderId) {
                     throw new Error("createCheckout did not return PaymentID or OrderID.");
                 }
+
+                pOrder = this._loadCheckoutOrder(sUserId, sOrderId);
+                if (sPaymentId) {
+                    pPayment = this._loadPaymentGateway(sPaymentId);
+                } else {
+                    pPayment = this._loadPaymentForOrder(sOrderId);
+                }
+
+                // createCheckout has already consumed the cart at this point, so it
+                // is now safe to remove every item from the current active cart.
+                sCartId = oSession && oSession.getProperty("/cartId");
+                pClearCart = cartUtils.clearCartItems(
+                    this.getOwnerComponent().getModel(), oSession, sCartId
+                ).catch(function (oError) {
+                    // Do not report the successfully created order as failed only
+                    // because the follow-up cart cleanup could not be completed.
+                    console.error("Order was created but cart cleanup failed:", oError);
+                });
+
+                return Promise.all([pOrder, pPayment, pClearCart]);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not create PayOS checkout:", oError);
                 oQrModel.setProperty("/statusText", "Không thể tạo đơn hàng/thanh toán PayOS. Vui lòng thử lại.");
@@ -115,12 +136,14 @@ sap.ui.define([
                 $$groupId: "$auto"
             }).requestContexts(0, 1).then(function (aContexts) {
                 if (!aContexts || !aContexts.length) {
+                    oQrModel.setProperty("/loading", false);
                     oQrModel.setProperty("/statusText", "Đơn hàng chưa có thông tin thanh toán PayOS.");
                     return;
                 }
                 return this._loadPaymentGateway(aContexts[0].getObject().PaymentID);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not load payment for order:", oError);
+                oQrModel.setProperty("/loading", false);
                 oQrModel.setProperty("/statusText", "Không thể tải thông tin thanh toán của đơn hàng.");
             });
         },
@@ -147,8 +170,16 @@ sap.ui.define([
 
         _getQrUrl: function (sPayload, bFallback) {
             return bFallback ?
-                "https://quickchart.io/qr?size=220&text=" + encodeURIComponent(sPayload) :
-                "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(sPayload);
+                "https://quickchart.io/qr?size=220&text=" + encodeURIComponent(sPayload) + "&_=" + Date.now() :
+                "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(sPayload) + "&_=" + Date.now();
+        },
+
+        onRegenerateQr: function () {
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+            var sOrderId = oCheckoutData && oCheckoutData.getProperty("/orderId");
+            if (sOrderId) {
+                this._loadPaymentForOrder(sOrderId);
+            }
         },
 
         onQrImageError: function () {

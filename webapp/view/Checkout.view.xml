@@ -37,6 +37,7 @@
                             <Text text="{qrModel>/statusText}" textAlign="Center" class="sapUiTinyMarginBottom" />
                             <Text text="Mã giao dịch: {qrModel>/transactionRef}" visible="{qrModel>/hasQr}" />
                             <Button text="Mở trang thanh toán PayOS" visible="{= !!${qrModel>/checkoutUrl} }" type="Transparent" press=".onOpenCheckoutUrl" class="sapUiTinyMarginTop" />
+                            <Button text="Tạo lại mã QR" icon="sap-icon://refresh" enabled="{= !${qrModel>/loading} &amp;&amp; !!${checkoutData>/orderId} }" type="Emphasized" press=".onRegenerateQr" class="sapUiTinyMarginTop" />
                         </VBox>
                     </Panel>
                 </VBox>
