@@ -112,7 +112,13 @@ sap.ui.define([
             }
 
             if (sStatus && sStatus !== "All") {
-                aFilters.push(new Filter("Status", FilterOperator.EQ, sStatus));
+                aFilters.push(new Filter({
+                    filters: [
+                        new Filter("Status", FilterOperator.EQ, sStatus),
+                        new Filter("Status", FilterOperator.EQ, sStatus === "ACTIVE" ? "1" : "0")
+                    ],
+                    and: false
+                }));
             }
 
             if (oBinding) {

@@ -10,33 +10,34 @@
                     title="{= 'Order ' + ${orders>/selectedOrder/orderId} }"
                     number="{orders>/selectedOrder/totalAmountText}"
                     numberUnit="{orders>/selectedOrder/currency}"
-                    intro="{= 'Ngày ' + ${orders>/selectedOrder/orderDateDisplay} + ' ' + ${orders>/selectedOrder/orderTime} }"
+                    intro="{= 'Date ' + ${orders>/selectedOrder/orderDateDisplay} + ' ' + ${orders>/selectedOrder/orderTime} }"
                     backgroundDesign="Solid">
                     <attributes>
-                        <ObjectAttribute title="Trạng thái đơn" text="{orders>/selectedOrder/orderStatus}" />
-                        <ObjectAttribute title="Trạng thái thanh toán" text="{orders>/selectedOrder/paymentStatus}" />
+                        <ObjectAttribute title="Order Status" text="{orders>/selectedOrder/orderStatus}" />
+                        <ObjectAttribute title="Payment Status" text="{orders>/selectedOrder/paymentStatus}" />
                     </attributes>
                 </ObjectHeader>
-                <Panel headerText="Thông tin đơn hàng" class="sapUiSmallMarginTop">
+
+                <Panel headerText="Order Information" class="sapUiSmallMarginTop">
                     <VBox class="sapUiSmallMargin">
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                            <Text text="Mã đơn hàng" />
+                            <Text text="Order ID" />
                             <Text text="{orders>/selectedOrder/orderId}" />
                         </HBox>
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                            <Text text="Ghi chú" />
+                            <Text text="Note" />
                             <Text text="{orders>/selectedOrder/note}" />
                         </HBox>
                     </VBox>
                 </Panel>
 
-                <Panel headerText="Sản phẩm trong đơn" class="sapUiSmallMarginTop">
+                <Panel headerText="Order Items" class="sapUiSmallMarginTop">
                     <Table items="{orders>/selectedOrder/items}" class="orderItemsTable">
                         <columns>
                             <Column width="38%"><Text text="Product" /></Column>
-                            <Column hAlign="End" width="18%"><Text text="Unit price" /></Column>
+                            <Column hAlign="End" width="18%"><Text text="Unit Price" /></Column>
                             <Column hAlign="Center" width="12%"><Text text="Quantity" /></Column>
-                            <Column hAlign="End" width="20%"><Text text="Line amount" /></Column>
+                            <Column hAlign="End" width="20%"><Text text="Line Amount" /></Column>
                             <Column width="12%"><Text text="Status" /></Column>
                         </columns>
                         <items>

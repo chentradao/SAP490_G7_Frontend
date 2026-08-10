@@ -1,10 +1,14 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
     "sap/m/MessageBox"
-], function (Controller, JSONModel, MessageToast, MessageBox) {
+], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, MessageBox) {
     "use strict";
+
+    var SERVICE_NAMESPACE = "com.sap.gateway.srvd.zsd_g7_canteen.v0001";
 
     return Controller.extend("sap490g7fioriapp.controller.CashierOrderDetail", {
 
@@ -53,8 +57,8 @@ sap.ui.define([
                     oOrdersModel.setProperty("/selectedOrder", null);
                     oOrdersModel.setProperty("/busy", false);
                     MessageBox.error(
-                        "Không tải được chi tiết đơn hàng '" + sOrderId + "'.\n\nLỗi: " + sMsg,
-                        { title: "Lỗi tải chi tiết" }
+                        "Could not load order detail '" + sOrderId + "'.\n\nError: " + sMsg,
+                        { title: "Detail Load Error" }
                     );
                 });
         },
@@ -62,11 +66,16 @@ sap.ui.define([
         _loadOrderFromBackend: function (sOrderId) {
             var oModel = this.getOwnerComponent().getModel();
             var oContext = oModel.bindContext("/Orders('" + sOrderId + "')");
+            this._oOrderContext = oContext;
 
             return oContext.requestObject().then(function (oRow) {
                 var oOrder = this._normalizeOrderHeader(oRow);
                 return this._loadOrderItems(sOrderId).then(function (aItems) {
                     oOrder.items = aItems;
+                    oOrder.hasStockIssue = aItems.some(function (oItem) {
+                        return oItem.availableQuantity !== null &&
+                            Number(oItem.quantity || 0) > Number(oItem.availableQuantity || 0);
+                    });
                     return oOrder;
                 });
             }.bind(this));
@@ -90,13 +99,28 @@ sap.ui.define([
                             currency: oItem.Currency || "VND",
                             lineAmount: parseFloat(oItem.LineAmount) || 0,
                             itemStatus: oItem.ItemStatus || "",
+                            availableQuantity: null,
+                            availableUnit: "",
+                            availableDisplay: "-",
+                            stockState: "None",
                             bomItems: [],
                             bomDisplay: "-"
                         };
 
-                        return that._loadBomForItem(oCtx).then(function (aBomItems) {
+                        var pBom = that._loadBomForItem(oCtx).then(function (aBomItems) {
                             oNormalizedItem.bomItems = aBomItems;
                             oNormalizedItem.bomDisplay = that._formatBomItems(aBomItems);
+                        });
+
+                        var pStock = that._loadAvailableForFood(oNormalizedItem.foodId).then(function (oStock) {
+                            oNormalizedItem.availableQuantity = oStock.quantity;
+                            oNormalizedItem.availableUnit = oStock.unit;
+                            oNormalizedItem.availableDisplay = that._formatAvailableStock(oStock);
+                            oNormalizedItem.stockState = oStock.quantity !== null &&
+                                Number(oNormalizedItem.quantity || 0) > Number(oStock.quantity || 0) ? "Error" : "Success";
+                        });
+
+                        return Promise.all([pBom, pStock]).then(function () {
                             return oNormalizedItem;
                         }).catch(function () {
                             return oNormalizedItem;
@@ -113,7 +137,7 @@ sap.ui.define([
 
         _loadBomForItem: function (oItemContext) {
             var oModel = this.getOwnerComponent().getModel();
-            var sPath = oItemContext.getPath() + "/com.sap.gateway.srvd.zsd_g7_canteen.v0001.getBOM(...)";
+            var sPath = oItemContext.getPath() + "/" + SERVICE_NAMESPACE + ".getBOM(...)";
             var oAction = oModel.bindContext(sPath);
 
             return oAction.execute().then(function () {
@@ -124,6 +148,46 @@ sap.ui.define([
                 console.warn("[CashierOrderDetail] Could not load BOM:", oError);
                 return [];
             });
+        },
+
+        _loadAvailableForFood: function (sFoodId) {
+            if (!sFoodId) {
+                return Promise.resolve({ quantity: null, unit: "" });
+            }
+
+            var oModel = this.getOwnerComponent().getModel();
+            return oModel.bindList("/Food2", undefined, undefined, [
+                new Filter("MaterialNumber", FilterOperator.EQ, sFoodId)
+            ], {
+                $$groupId: "$auto"
+            }).requestContexts(0, 1).then(function (aContexts) {
+                if (!aContexts || !aContexts.length) {
+                    return { quantity: null, unit: "" };
+                }
+
+                var oFood = aContexts[0].getObject();
+                var vAvailable = oFood.AvailableStock !== undefined ? oFood.AvailableStock :
+                    oFood.Labst !== undefined ? oFood.Labst :
+                    oFood.LABST !== undefined ? oFood.LABST :
+                    oFood.labst;
+
+                return {
+                    quantity: vAvailable === undefined || vAvailable === null ? null : Number(vAvailable),
+                    unit: oFood.BaseUnit || oFood.Unit || oFood.unit || ""
+                };
+            }).catch(function (oError) {
+                console.warn("[CashierOrderDetail] Could not load available stock:", oError);
+                return { quantity: null, unit: "" };
+            });
+        },
+
+        _formatAvailableStock: function (oStock) {
+            if (!oStock || oStock.quantity === null) { return "-"; }
+
+            var sQuantity = Number(oStock.quantity).toLocaleString("vi-VN", {
+                maximumFractionDigits: 3
+            });
+            return [sQuantity, oStock.unit].filter(Boolean).join(" ");
         },
 
         _normalizeBomResult: function (oResponse) {
@@ -176,6 +240,7 @@ sap.ui.define([
                 orderStatus: String(oRow.OrderStatus || "PENDING").toUpperCase(),
                 paymentStatus: String(oRow.PaymentStatus || "UNPAID").toUpperCase(),
                 note: oRow.Note || "",
+                hasStockIssue: false,
                 items: []
             };
         },
@@ -278,24 +343,20 @@ sap.ui.define([
         },
 
         onConfirmOrder: function () {
-            this._runAction("confirmOrder", "Đã xác nhận đơn hàng");
+            this._runOrderAction("confirmOrder", "Order confirmed");
         },
 
         onCancelOrder: function () {
-            MessageBox.confirm("Bạn có chắc muốn hủy đơn hàng này?", {
+            MessageBox.confirm("Are you sure you want to cancel this order?", {
                 onClose: function (sAction) {
                     if (sAction === MessageBox.Action.OK) {
-                        this._runAction("cancelOrder", "Đã hủy đơn hàng");
+                        this._runOrderAction("cancelOrder", "Order cancelled");
                     }
                 }.bind(this)
             });
         },
 
-        onMarkAsPaid: function () {
-            this._runAction("markAsPaid", "Đã đánh dấu thanh toán");
-        },
-
-        _runAction: function (sActionName, sSuccessMsg) {
+        _runOrderAction: function (sActionName, sSuccessMsg) {
             var sOrderId = this._sCurrentOrderId;
             if (!sOrderId) { return; }
 
@@ -303,17 +364,19 @@ sap.ui.define([
             oOrdersModel.setProperty("/busy", true);
 
             var oModel = this.getOwnerComponent().getModel();
-            var sActionPath = "com.sap.gateway.srvd.zsd_g7_canteen.v0001." + sActionName + "(...)";
-            var sPath = "/Orders('" + sOrderId + "')/" + sActionPath;
+            var sPath = SERVICE_NAMESPACE + "." + sActionName + "(...)";
+            var oAction = this._oOrderContext ?
+                oModel.bindContext(sPath, this._oOrderContext) :
+                oModel.bindContext("/Orders('" + sOrderId + "')/" + sPath);
 
-            oModel.bindContext(sPath).execute()
+            oAction.execute()
                 .then(function () {
                     MessageToast.show(sSuccessMsg);
                     this._loadOrderDetail(sOrderId);
                 }.bind(this))
                 .catch(function (oError) {
                     oOrdersModel.setProperty("/busy", false);
-                    MessageBox.error("Thao tác thất bại: " + (oError.message || String(oError)));
+                    MessageBox.error("Action failed: " + (oError.message || String(oError)));
                 });
         },
 

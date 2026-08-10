@@ -3,7 +3,7 @@
         <content>
             <HBox width="100%" class="sapUiMediumMargin" renderType="Div">
                 <VBox width="65%" class="sapUiMediumMarginEnd">
-                    <Title text="Chi tiết đơn hàng mới nhất" level="H3" class="sapUiSmallMarginBottom" />
+                    <Title text="Latest Order Details" level="H3" class="sapUiSmallMarginBottom" />
                     <Text text="Order: {checkoutData>/orderId}" class="sapUiTinyMarginBottom" />
                     <Table items="{checkoutData>/items}" class="checkoutItemsTable">
                         <columns>
@@ -24,20 +24,20 @@
                         </items>
                     </Table>
                     <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginTop">
-                        <Text text="Tổng thanh toán" class="sapMTitleStyle" />
+                        <Text text="Payment Total" class="sapMTitleStyle" />
                         <Title text="{= ${checkoutData>/totalAmountText} + ' ' + ${checkoutData>/currency} }" level="H3" />
                     </HBox>
                     <VBox class="sapUiSmallMarginTop">
-                        <Label text="Ghi chú đơn hàng" labelFor="orderNoteInput" />
+                        <Label text="Order Note" labelFor="orderNoteInput" />
                         <TextArea
                             id="orderNoteInput"
                             value="{checkoutData>/note}"
                             rows="3"
                             maxLength="255"
                             width="100%"
-                            placeholder="Nhập ghi chú cho đơn hàng..." />
+                            placeholder="Enter an order note..." />
                         <Button
-                            text="Lưu ghi chú"
+                            text="Save Note"
                             icon="sap-icon://save"
                             type="Emphasized"
                             busy="{checkoutData>/noteBusy}"
@@ -47,14 +47,14 @@
                     </VBox>
                 </VBox>
                 <VBox width="35%" alignItems="Center" class="sapUiSmallPaddingTop">
-                    <Panel headerText="Mã QR PayOS" width="100%">
+                    <Panel headerText="PayOS QR Code" width="100%">
                         <VBox alignItems="Center" class="sapUiMediumMargin">
                             <BusyIndicator visible="{qrModel>/loading}" class="sapUiMediumMarginBottom" />
                             <Image src="{qrModel>/qrCodeUrl}" width="220px" height="220px" visible="{qrModel>/hasQr}" error=".onQrImageError" class="sapUiMediumMarginBottom" />
                             <Text text="{qrModel>/statusText}" textAlign="Center" class="sapUiTinyMarginBottom" />
-                            <Text text="Mã giao dịch: {qrModel>/transactionRef}" visible="{qrModel>/hasQr}" />
-                            <Button text="Mở trang thanh toán PayOS" visible="{= !!${qrModel>/checkoutUrl} }" type="Transparent" press=".onOpenCheckoutUrl" class="sapUiTinyMarginTop" />
-                            <Button text="Tạo lại mã QR" icon="sap-icon://refresh" enabled="{= !${qrModel>/loading} &amp;&amp; !!${checkoutData>/orderId} }" type="Emphasized" press=".onRegenerateQr" class="sapUiTinyMarginTop" />
+                            <Text text="Transaction ID: {qrModel>/transactionRef}" visible="{qrModel>/hasQr}" />
+                            <Button text="Open PayOS Payment Page" visible="{= !!${qrModel>/checkoutUrl} }" type="Transparent" press=".onOpenCheckoutUrl" class="sapUiTinyMarginTop" />
+                            <Button text="Regenerate QR Code" icon="sap-icon://refresh" enabled="{= !${qrModel>/loading} &amp;&amp; !!${checkoutData>/orderId} }" type="Emphasized" press=".onRegenerateQr" class="sapUiTinyMarginTop" />
                         </VBox>
                     </Panel>
                 </VBox>

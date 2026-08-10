@@ -5,7 +5,7 @@
     displayBlock="true">
 
     <Page
-        title="Quản lý đơn hàng"
+        title="Order Management"
         showNavButton="true"
         navButtonPress=".onBack"
         busy="{orders>/busy}"
@@ -15,7 +15,7 @@
         <headerContent>
             <Button
                 icon="sap-icon://refresh"
-                tooltip="Làm mới danh sách"
+                tooltip="Refresh list"
                 type="Transparent"
                 press=".onRefresh" />
             <Button
@@ -29,7 +29,7 @@
             <OverflowToolbar>
                 <SearchField
                     id="searchField"
-                    placeholder="Tìm theo mã đơn hoặc khách hàng..."
+                    placeholder="Search by order ID or customer..."
                     liveChange=".onSearch"
                     width="320px" />
             </OverflowToolbar>
@@ -39,7 +39,7 @@
             <Table
                 id="cashierOrderTable"
                 items="{orders>/filteredOrders}"
-                noDataText="Không có đơn hàng đã thanh toán nào phù hợp"
+                noDataText="No paid orders match your filters"
                 growing="true"
                 growingThreshold="25"
                 sticky="HeaderToolbar,ColumnHeaders"
@@ -47,16 +47,16 @@
 
                 <headerToolbar>
                     <OverflowToolbar>
-                        <Title text="Danh sách đơn đã thanh toán" level="H3" />
+                        <Title text="Paid Orders" level="H3" />
                         <ToolbarSpacer />
                         <SegmentedButton
                             id="quickStatusBar"
                             selectionChange=".onQuickStatusChange">
                             <items>
-                                <SegmentedButtonItem key="ALL" text="Tất cả" />
-                                <SegmentedButtonItem key="PENDING" text="Chờ xử lý" />
-                                <SegmentedButtonItem key="CONFIRMED" text="Đã xác nhận" />
-                                <SegmentedButtonItem key="CANCELLED" text="Đã hủy" />
+                                <SegmentedButtonItem key="ALL" text="All" />
+                                <SegmentedButtonItem key="PENDING" text="Pending" />
+                                <SegmentedButtonItem key="CONFIRMED" text="Confirmed" />
+                                <SegmentedButtonItem key="CANCELLED" text="Cancelled" />
                             </items>
                         </SegmentedButton>
                     </OverflowToolbar>
@@ -64,22 +64,22 @@
 
                 <columns>
                     <Column width="14rem">
-                        <Text text="Mã đơn hàng" />
+                        <Text text="Order ID" />
                     </Column>
                     <Column width="13rem">
-                        <Text text="Khách hàng" />
+                        <Text text="Customer" />
                     </Column>
                     <Column width="14rem">
-                        <Text text="Cập nhật lúc" />
+                        <Text text="Updated At" />
                     </Column>
                     <Column width="11rem" hAlign="End">
-                        <Text text="Tổng tiền" />
+                        <Text text="Total Amount" />
                     </Column>
                     <Column width="10rem" hAlign="Center">
-                        <Text text="Trạng thái đơn" />
+                        <Text text="Order Status" />
                     </Column>
                     <Column width="10rem" hAlign="Center">
-                        <Text text="Thanh toán" />
+                        <Text text="Payment" />
                     </Column>
                 </columns>
 
@@ -96,9 +96,9 @@
                                          : ${orders>orderStatus} === 'CANCELLED' ? 'Error'
                                          : 'Warning' }" />
                             <ObjectStatus
-                                text="{= ${orders>orderStatus} === 'PENDING' ? 'Chờ xử lý'
-                                        : ${orders>orderStatus} === 'CONFIRMED' ? 'Đã xác nhận'
-                                        : ${orders>orderStatus} === 'CANCELLED' ? 'Đã hủy'
+                                text="{= ${orders>orderStatus} === 'PENDING' ? 'Pending'
+                                        : ${orders>orderStatus} === 'CONFIRMED' ? 'Confirmed'
+                                        : ${orders>orderStatus} === 'CANCELLED' ? 'Cancelled'
                                         : ${orders>orderStatus} }"
                                 icon="{= ${orders>orderStatus} === 'PENDING' ? 'sap-icon://time-overtime'
                                         : ${orders>orderStatus} === 'CONFIRMED' ? 'sap-icon://accept'
@@ -109,7 +109,7 @@
                                         : ${orders>orderStatus} === 'CANCELLED' ? 'Error'
                                         : 'None' }" />
                             <ObjectStatus
-                                text="Đã thanh toán"
+                                text="Paid"
                                 state="Success" />
                         </cells>
                     </ColumnListItem>

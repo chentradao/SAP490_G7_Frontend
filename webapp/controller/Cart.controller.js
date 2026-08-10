@@ -104,8 +104,7 @@ sap.ui.define([
             });
         },
 
-        // DA SUA: dung oContext.delete() (API dung cho ODataModel v4),
-        // thay vi oModel.remove() (API cua v2, khong ton tai trong v4).
+        // Use the OData V4 context deletion API.
         onRemoveCartItem: function (oEvent) {
             var oSource = oEvent.getSource();
             var oContext = oSource.getBindingContext();
@@ -261,9 +260,9 @@ sap.ui.define([
             this._validateCartStock(aItems).then(function (aInsufficientItems) {
                 if (aInsufficientItems.length) {
                     var sItems = aInsufficientItems.map(function (oItem) {
-                        return oItem.materialDescription + " (còn " + oItem.availableStock + ", chọn " + oItem.requestedQuantity + ")";
+                        return oItem.materialDescription + " (available " + oItem.availableStock + ", selected " + oItem.requestedQuantity + ")";
                     }).join(", ");
-                    MessageToast.show("Không đủ tồn kho để checkout: " + sItems);
+                    MessageToast.show("Insufficient stock for checkout: " + sItems);
                     return;
                 }
 
@@ -280,7 +279,7 @@ sap.ui.define([
                 this.getOwnerComponent().getRouter().navTo("RouteCheckout");
             }.bind(this)).catch(function (oError) {
                 console.error("Could not validate cart stock:", oError);
-                MessageToast.show("Không thể kiểm tra tồn kho. Vui lòng thử lại.");
+                MessageToast.show("Could not check stock. Please try again.");
             }).finally(function () {
                 oViewModel.setProperty("/checkoutBusy", false);
             });

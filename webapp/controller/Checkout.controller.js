@@ -62,12 +62,12 @@ sap.ui.define([
             var sUserId = oSession && oSession.getProperty("/userId");
 
             if (!sUserId) {
-                oQrModel.setProperty("/statusText", "Không xác định được người dùng đang đăng nhập.");
+                oQrModel.setProperty("/statusText", "Could not identify the signed-in user.");
                 return;
             }
 
             oQrModel.setData({ loading: true, hasQr: false, qrCodeUrl: "", qrPayload: "", qrFallbackUsed: false,
-                statusText: "Đang tạo đơn hàng và thanh toán PayOS...", transactionRef: "", checkoutUrl: "" });
+                statusText: "Creating order and PayOS payment...", transactionRef: "", checkoutUrl: "" });
 
             var oAction = this.getOwnerComponent().getModel().bindContext(CREATE_CHECKOUT_ACTION, undefined, {
                 $$groupId: "$direct"
@@ -109,7 +109,7 @@ sap.ui.define([
                 return Promise.all([pPayment, pClearCart]);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not create PayOS checkout:", oError);
-                oQrModel.setProperty("/statusText", "Không thể tạo đơn hàng/thanh toán PayOS. Vui lòng thử lại.");
+                oQrModel.setProperty("/statusText", "Could not create the order or PayOS payment. Please try again.");
             }).finally(function () {
                 oQrModel.setProperty("/loading", false);
             });
@@ -119,7 +119,7 @@ sap.ui.define([
             var oQrModel = this.getView().getModel("qrModel");
             var sQrCode = oPayment.QRCode || oPayment.qr_code || "";
             if (!sQrCode) {
-                oQrModel.setProperty("/statusText", "PayOS chưa trả về dữ liệu QRCode.");
+                oQrModel.setProperty("/statusText", "PayOS has not returned QR code data yet.");
                 return;
             }
             oQrModel.setProperty("/qrPayload", sQrCode);
@@ -127,14 +127,14 @@ sap.ui.define([
             oQrModel.setProperty("/transactionRef",
                 oPayment.TransactionRef || oPayment.transaction_ref || oPayment.PaymentID || oPayment.payment_id || "");
             oQrModel.setProperty("/checkoutUrl", oPayment.CheckoutURL || oPayment.checkout_url || "");
-            oQrModel.setProperty("/statusText", "Quét mã QR PayOS để thanh toán.");
+            oQrModel.setProperty("/statusText", "Scan the PayOS QR code to pay.");
             oQrModel.setProperty("/hasQr", true);
         },
 
         _loadPaymentForOrder: function (sOrderId) {
             var oQrModel = this.getView().getModel("qrModel");
             oQrModel.setData({ loading: true, hasQr: false, qrCodeUrl: "", qrPayload: "", qrFallbackUsed: false,
-                statusText: "Đang tải thông tin thanh toán...", transactionRef: "", checkoutUrl: "" });
+                statusText: "Loading payment information...", transactionRef: "", checkoutUrl: "" });
 
             return this.getOwnerComponent().getModel().bindList("/Payments", undefined, [
                 new Sorter("CreatedAt", true)
@@ -143,14 +143,14 @@ sap.ui.define([
             }).requestContexts(0, 1).then(function (aContexts) {
                 if (!aContexts || !aContexts.length) {
                     oQrModel.setProperty("/loading", false);
-                    oQrModel.setProperty("/statusText", "Đơn hàng chưa có thông tin thanh toán PayOS.");
+                    oQrModel.setProperty("/statusText", "This order does not have PayOS payment information yet.");
                     return;
                 }
                 return this._loadPaymentGateway(aContexts[0].getObject().PaymentID);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not load payment for order:", oError);
                 oQrModel.setProperty("/loading", false);
-                oQrModel.setProperty("/statusText", "Không thể tải thông tin thanh toán của đơn hàng.");
+                oQrModel.setProperty("/statusText", "Could not load payment information for this order.");
             });
         },
 
@@ -162,13 +162,13 @@ sap.ui.define([
                 $$groupId: "$auto"
             }).requestContexts(0, 1).then(function (aContexts) {
                 if (!aContexts || !aContexts.length) {
-                    oQrModel.setProperty("/statusText", "Chưa có QR PayOS cho payment này.");
+                    oQrModel.setProperty("/statusText", "No PayOS QR code is available for this payment yet.");
                     return;
                 }
                 this._displayPayOsQr(aContexts[0].getObject());
             }.bind(this)).catch(function (oError) {
                 console.error("Could not load payment gateway:", oError);
-                oQrModel.setProperty("/statusText", "Không thể tải QR PayOS từ Payment Gateway.");
+                oQrModel.setProperty("/statusText", "Could not load the PayOS QR code from Payment Gateway.");
             }).finally(function () {
                 oQrModel.setProperty("/loading", false);
             });
@@ -197,7 +197,7 @@ sap.ui.define([
                 return;
             }
             oQrModel.setProperty("/hasQr", false);
-            oQrModel.setProperty("/statusText", "Không tải được ảnh QR. Vui lòng mở trang thanh toán PayOS.");
+            oQrModel.setProperty("/statusText", "Could not load the QR image. Please open the PayOS payment page.");
         },
 
         _loadCheckoutOrder: function (sUserId, sOrderId) {
@@ -260,7 +260,7 @@ sap.ui.define([
             var sNote = String(oCheckoutData && oCheckoutData.getProperty("/note") || "").trim();
 
             if (!sOrderId) {
-                MessageToast.show("Chưa xác định được đơn hàng để lưu ghi chú.");
+                MessageToast.show("No order was found for saving the note.");
                 return;
             }
 
@@ -273,10 +273,10 @@ sap.ui.define([
                 oBinding.getBoundContext().setProperty("Note", sNote);
                 return oModel.submitBatch("$auto");
             }).then(function () {
-                MessageToast.show("Đã lưu ghi chú cho đơn hàng.");
+                MessageToast.show("Order note saved.");
             }).catch(function (oError) {
                 console.error("Could not save order note:", oError);
-                MessageToast.show("Không thể lưu ghi chú. Vui lòng thử lại.");
+                MessageToast.show("Could not save the note. Please try again.");
             }).finally(function () {
                 oCheckoutData.setProperty("/noteBusy", false);
             });

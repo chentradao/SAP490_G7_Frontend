@@ -1,9 +1,8 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
-    "sap/m/MessageToast",
     "sap/m/MessageBox"
-], function (Controller, JSONModel, MessageToast, MessageBox) {
+], function (Controller, JSONModel, MessageBox) {
     "use strict";
 
     var AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
@@ -100,9 +99,9 @@ sap.ui.define([
                     if (!bSilent) {
                         oOrdersModel.setProperty("/filteredOrders", []);
                         MessageBox.error(
-                            "Không tải được đơn hàng.\n\nLỗi: " + sMsg +
-                            "\n\nEntity đang dùng: /" + (this._sOrderEntitySet || "Orders"),
-                            { title: "Lỗi tải dữ liệu" }
+                            "Could not load orders.\n\nError: " + sMsg +
+                            "\n\nEntity in use: /" + (this._sOrderEntitySet || "Orders"),
+                            { title: "Data Load Error" }
                         );
                     }
                 }.bind(this));
@@ -176,7 +175,7 @@ sap.ui.define([
                 }
 
                 return true;
-            }.bind(this));
+            });
 
             aFiltered.sort(function (oFirst, oSecond) {
                 return this._getOrderTimestamp(oSecond) - this._getOrderTimestamp(oFirst);
@@ -298,7 +297,7 @@ sap.ui.define([
             var oDate = new Date(sDate);
             if (Number.isNaN(oDate.getTime())) { return sDate; }
 
-            return oDate.toLocaleDateString("vi-VN", {
+            return oDate.toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric"
@@ -335,12 +334,6 @@ sap.ui.define([
             return sTime;
         },
 
-        formatDateTime: function (sDate, sTime) {
-            var sFormattedDate = this.formatDate(sDate);
-            var sFormattedTime = this.formatTime(sTime);
-            return [sFormattedDate, sFormattedTime].filter(Boolean).join(" ");
-        },
-
         formatUpdatedAt: function (sValue) {
             var oParts = this._parseTimestampParts(sValue);
             if (!oParts) { return ""; }
@@ -356,25 +349,6 @@ sap.ui.define([
                     orderId: sOrderId
                 });
             }
-        },
-
-        onQuickConfirm: function (oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("orders");
-            var sOrderId = oContext && oContext.getProperty("orderId");
-            if (!sOrderId) { return; }
-
-            var sEntitySet = this._sOrderEntitySet || "Orders";
-            var oModel = this.getOwnerComponent().getModel();
-            var sPath = "/" + sEntitySet + "('" + sOrderId + "')/com.sap.gateway.srvd.zsd_g7_canteen.v0001.confirmOrder(...)";
-
-            oModel.bindContext(sPath).execute()
-                .then(function () {
-                    MessageToast.show("Đã xác nhận đơn " + sOrderId);
-                    this._refreshOrders();
-                }.bind(this))
-                .catch(function (oError) {
-                    MessageBox.error("Lỗi xác nhận: " + (oError.message || oError));
-                });
         },
 
         onRefresh: function () {

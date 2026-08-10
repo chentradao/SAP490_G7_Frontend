@@ -42,7 +42,7 @@
             <Toolbar class="cartFooter">
                 <ToolbarSpacer />
                 <VBox alignItems="End" class="sapUiTinyMarginEnd">
-                    <Text text="Tổng cộng" class="sapUiTinyMarginBottom" />
+                    <Text text="Total" class="sapUiTinyMarginBottom" />
                     <Title text="{cartView>/totalPriceFormatted}" level="H3" />
                 </VBox>
                 <Button

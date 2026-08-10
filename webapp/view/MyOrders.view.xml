@@ -18,12 +18,12 @@
             </Toolbar>
         </subHeader>
         <content>
-            <Table id="orderList" items="{orders>/filteredOrders}" noDataText="Bạn chưa có đơn hàng nào" class="ordersTable">
+            <Table id="orderList" items="{orders>/filteredOrders}" noDataText="You do not have any orders yet" class="ordersTable">
                 <columns>
                     <Column width="24%"><Text text="Order ID" /></Column>
-                    <Column width="22%"><Text text="Created date" /></Column>
-                    <Column width="20%"><Text text="Order status" /></Column>
-                    <Column hAlign="End" width="22%"><Text text="Total amount" /></Column>
+                    <Column width="22%"><Text text="Created Date" /></Column>
+                    <Column width="20%"><Text text="Order Status" /></Column>
+                    <Column hAlign="End" width="22%"><Text text="Total Amount" /></Column>
                     <Column hAlign="Center" width="12%"><Text text="" /></Column>
                 </columns>
                 <items>
