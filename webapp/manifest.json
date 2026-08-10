@@ -50,7 +50,8 @@
       "libs": {
         "sap.m": {},
         "sap.ui.core": {},
-        "sap.f": {}
+        "sap.f": {},
+        "sap.ui.layout": {}
       }
     },
     "contentDensities": {
@@ -149,6 +150,20 @@
           "target": [
             "TargetMyOrderDetail"
           ]
+        },
+        {
+          "name": "RouteCashierOrders",
+          "pattern": "CashierOrders",
+          "target": [
+            "TargetCashierOrders"
+          ]
+        },
+        {
+          "name": "RouteCashierOrderDetail",
+          "pattern": "CashierOrderDetail/{orderId}",
+          "target": [
+            "TargetCashierOrderDetail"
+          ]
         }
       ],
       "targets": {
@@ -207,6 +222,20 @@
           "clearControlAggregation": false,
           "viewId": "MyOrderDetail",
           "viewName": "MyOrderDetail"
+        },
+        "TargetCashierOrders": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "CashierOrders",
+          "viewName": "CashierOrders"
+        },
+        "TargetCashierOrderDetail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "CashierOrderDetail",
+          "viewName": "CashierOrderDetail"
         }
       }
     },

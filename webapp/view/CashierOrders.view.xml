@@ -1,0 +1,120 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.CashierOrders"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+
+    <Page
+        title="Quản lý đơn hàng"
+        showNavButton="true"
+        navButtonPress=".onBack"
+        busy="{orders>/busy}"
+        busyIndicatorDelay="0"
+        class="sapUiContentPadding">
+
+        <headerContent>
+            <Button
+                icon="sap-icon://refresh"
+                tooltip="Làm mới danh sách"
+                type="Transparent"
+                press=".onRefresh" />
+            <Button
+                icon="sap-icon://log"
+                text="Logout"
+                type="Transparent"
+                press=".onLogout" />
+        </headerContent>
+
+        <subHeader>
+            <OverflowToolbar>
+                <SearchField
+                    id="searchField"
+                    placeholder="Tìm theo mã đơn hoặc khách hàng..."
+                    liveChange=".onSearch"
+                    width="320px" />
+            </OverflowToolbar>
+        </subHeader>
+
+        <content>
+            <Table
+                id="cashierOrderTable"
+                items="{orders>/filteredOrders}"
+                noDataText="Không có đơn hàng đã thanh toán nào phù hợp"
+                growing="true"
+                growingThreshold="25"
+                sticky="HeaderToolbar,ColumnHeaders"
+                alternateRowColors="true">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="Danh sách đơn đã thanh toán" level="H3" />
+                        <ToolbarSpacer />
+                        <SegmentedButton
+                            id="quickStatusBar"
+                            selectionChange=".onQuickStatusChange">
+                            <items>
+                                <SegmentedButtonItem key="ALL" text="Tất cả" />
+                                <SegmentedButtonItem key="PENDING" text="Chờ xử lý" />
+                                <SegmentedButtonItem key="CONFIRMED" text="Đã xác nhận" />
+                                <SegmentedButtonItem key="CANCELLED" text="Đã hủy" />
+                            </items>
+                        </SegmentedButton>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="14rem">
+                        <Text text="Mã đơn hàng" />
+                    </Column>
+                    <Column width="13rem">
+                        <Text text="Khách hàng" />
+                    </Column>
+                    <Column width="14rem">
+                        <Text text="Cập nhật lúc" />
+                    </Column>
+                    <Column width="11rem" hAlign="End">
+                        <Text text="Tổng tiền" />
+                    </Column>
+                    <Column width="10rem" hAlign="Center">
+                        <Text text="Trạng thái đơn" />
+                    </Column>
+                    <Column width="10rem" hAlign="Center">
+                        <Text text="Thanh toán" />
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Navigation" press=".onOrderPress">
+                        <cells>
+                            <ObjectIdentifier title="{orders>orderId}" />
+                            <Text text="{= ${orders>customerName} || ${orders>userId} || 'N/A' }" />
+                            <Text text="{ path: 'orders>updatedAt', formatter: '.formatUpdatedAt' }" />
+                            <ObjectNumber
+                                number="{= (${orders>totalAmount} || 0).toFixed(0) }"
+                                unit="{= ${orders>currency} || 'VND' }"
+                                state="{= ${orders>orderStatus} === 'CONFIRMED' ? 'Success'
+                                         : ${orders>orderStatus} === 'CANCELLED' ? 'Error'
+                                         : 'Warning' }" />
+                            <ObjectStatus
+                                text="{= ${orders>orderStatus} === 'PENDING' ? 'Chờ xử lý'
+                                        : ${orders>orderStatus} === 'CONFIRMED' ? 'Đã xác nhận'
+                                        : ${orders>orderStatus} === 'CANCELLED' ? 'Đã hủy'
+                                        : ${orders>orderStatus} }"
+                                icon="{= ${orders>orderStatus} === 'PENDING' ? 'sap-icon://time-overtime'
+                                        : ${orders>orderStatus} === 'CONFIRMED' ? 'sap-icon://accept'
+                                        : ${orders>orderStatus} === 'CANCELLED' ? 'sap-icon://sys-cancel-2'
+                                        : 'sap-icon://status-inactive' }"
+                                state="{= ${orders>orderStatus} === 'PENDING' ? 'Warning'
+                                        : ${orders>orderStatus} === 'CONFIRMED' ? 'Success'
+                                        : ${orders>orderStatus} === 'CANCELLED' ? 'Error'
+                                        : 'None' }" />
+                            <ObjectStatus
+                                text="Đã thanh toán"
+                                state="Success" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+</mvc:View>

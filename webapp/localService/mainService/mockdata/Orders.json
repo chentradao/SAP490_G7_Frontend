@@ -1,0 +1,72 @@
+[
+  {
+    "OrderID": "ORD001",
+    "UserID": "USR001",
+    "CartID": "CART001",
+    "OrderDate": "2026-08-01",
+    "OrderTime": "08:30:00",
+    "TotalAmount": "85000",
+    "Currency": "VND",
+    "OrderStatus": "PENDING",
+    "PaymentStatus": "PAID",
+    "Note": "Khong cay",
+    "CreatedAt": "20260801",
+    "UpdatedAt": "202608010830"
+  },
+  {
+    "OrderID": "ORD002",
+    "UserID": "USR002",
+    "CartID": "CART002",
+    "OrderDate": "2026-08-02",
+    "OrderTime": "09:15:00",
+    "TotalAmount": "120000",
+    "Currency": "VND",
+    "OrderStatus": "CONFIRMED",
+    "PaymentStatus": "PAID",
+    "Note": "",
+    "CreatedAt": "20260802",
+    "UpdatedAt": "202608020915"
+  },
+  {
+    "OrderID": "ORD003",
+    "UserID": "USR003",
+    "CartID": "CART003",
+    "OrderDate": "2026-08-03",
+    "OrderTime": "11:00:00",
+    "TotalAmount": "65000",
+    "Currency": "VND",
+    "OrderStatus": "PENDING",
+    "PaymentStatus": "PAID",
+    "Note": "Them rau",
+    "CreatedAt": "20260803",
+    "UpdatedAt": "202608031100"
+  },
+  {
+    "OrderID": "ORD004",
+    "UserID": "USR001",
+    "CartID": "CART004",
+    "OrderDate": "2026-08-04",
+    "OrderTime": "10:45:00",
+    "TotalAmount": "45000",
+    "Currency": "VND",
+    "OrderStatus": "CANCELLED",
+    "PaymentStatus": "PAID",
+    "Note": "",
+    "CreatedAt": "20260804",
+    "UpdatedAt": "202608041045"
+  },
+  {
+    "OrderID": "ORD005",
+    "UserID": "USR004",
+    "CartID": "CART005",
+    "OrderDate": "2026-08-04",
+    "OrderTime": "12:00:00",
+    "TotalAmount": "155000",
+    "Currency": "VND",
+    "OrderStatus": "PENDING",
+    "PaymentStatus": "UNPAID",
+    "Note": "Giao nhanh",
+    "CreatedAt": "20260804",
+    "UpdatedAt": "202608041200"
+  }
+]

@@ -116,6 +116,65 @@
                 <Property Name="UpdatedAt" Type="Edm.String" MaxLength="12"/>
                 <NavigationProperty Name="_Food" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
             </EntityType>
+            <EntityType Name="OrdersType">
+                <Key>
+                    <PropertyRef Name="OrderID"/>
+                </Key>
+                <Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+                <Property Name="UserID" Type="Edm.String" MaxLength="20"/>
+                <Property Name="CartID" Type="Edm.String" MaxLength="20"/>
+                <Property Name="OrderDate" Type="Edm.String" MaxLength="10"/>
+                <Property Name="OrderTime" Type="Edm.String" MaxLength="8"/>
+                <Property Name="TotalAmount" Type="Edm.Decimal" Precision="16" Scale="2"/>
+                <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
+                <Property Name="OrderStatus" Type="Edm.String" MaxLength="20"/>
+                <Property Name="PaymentStatus" Type="Edm.String" MaxLength="20"/>
+                <Property Name="Note" Type="Edm.String" MaxLength="255"/>
+                <Property Name="CreatedAt" Type="Edm.String" MaxLength="12"/>
+                <Property Name="UpdatedAt" Type="Edm.String" MaxLength="12"/>
+                <NavigationProperty Name="_Items" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType)" Partner="_Order"/>
+                <NavigationProperty Name="_User" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
+            </EntityType>
+            <EntityType Name="OrderItemsType">
+                <Key>
+                    <PropertyRef Name="OrderID"/>
+                    <PropertyRef Name="ItemNo"/>
+                </Key>
+                <Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+                <Property Name="ItemNo" Type="Edm.String" Nullable="false" MaxLength="6"/>
+                <Property Name="FoodID" Type="Edm.String" MaxLength="20"/>
+                <Property Name="FoodName" Type="Edm.String" MaxLength="100"/>
+                <Property Name="Quantity" Type="Edm.Int32"/>
+                <Property Name="UnitPrice" Type="Edm.Decimal" Precision="16" Scale="2"/>
+                <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
+                <Property Name="LineAmount" Type="Edm.Decimal" Precision="16" Scale="2"/>
+                <Property Name="ItemStatus" Type="Edm.String" MaxLength="20"/>
+                <NavigationProperty Name="_Order" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Partner="_Items"/>
+                <NavigationProperty Name="_Food" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
+            </EntityType>
+            <ComplexType Name="BomComponentType">
+                <Property Name="Component" Type="Edm.String" MaxLength="40"/>
+                <Property Name="ComponentName" Type="Edm.String" MaxLength="100"/>
+                <Property Name="Quantity" Type="Edm.Decimal" Precision="13" Scale="3"/>
+                <Property Name="Unit" Type="Edm.String" MaxLength="3"/>
+                <Property Name="ItemCategory" Type="Edm.String" MaxLength="1"/>
+            </ComplexType>
+            <Action Name="confirmOrder" IsBound="true">
+                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+                <ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
+            </Action>
+            <Action Name="cancelOrder" IsBound="true">
+                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+                <ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
+            </Action>
+            <Action Name="markAsPaid" IsBound="true">
+                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+                <ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
+            </Action>
+            <Action Name="getBOM" IsBound="true">
+                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType" Nullable="false"/>
+                <ReturnType Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.BomComponentType)"/>
+            </Action>
             <EntityContainer Name="Container">
                 <EntitySet Name="Categories" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CategoriesType"/>
                 <EntitySet Name="Food2" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
@@ -127,6 +186,18 @@
                 <EntitySet Name="ZC_G7_CART_ITEM" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartItemsType">
                     <NavigationPropertyBinding Path="_Food" Target="Food2"/>
                 </EntitySet>
+                <EntitySet Name="Orders" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType">
+                    <NavigationPropertyBinding Path="_Items" Target="OrderItems"/>
+                    <NavigationPropertyBinding Path="_User" Target="Users"/>
+                </EntitySet>
+                <EntitySet Name="OrderItems" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType">
+                    <NavigationPropertyBinding Path="_Order" Target="Orders"/>
+                    <NavigationPropertyBinding Path="_Food" Target="Food2"/>
+                </EntitySet>
+                <ActionImport Name="confirmOrder" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.confirmOrder"/>
+                <ActionImport Name="cancelOrder" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.cancelOrder"/>
+                <ActionImport Name="markAsPaid" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.markAsPaid"/>
+                <ActionImport Name="getBOM" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.getBOM"/>
             </EntityContainer>
             <Annotations Target="SAP__self.Food2Type/MaterialNumber">
                 <Annotation Term="SAP__common.Label" String="Material Number"/>

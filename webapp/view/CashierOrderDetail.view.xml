@@ -1,0 +1,169 @@
+<mvc:View
+    controllerName="sap490g7fioriapp.controller.CashierOrderDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    displayBlock="true">
+
+    <Page
+        title="{= 'Chi tiết đơn hàng - ' + (${orders>/selectedOrder/orderId} || '...')}"
+        showNavButton="true"
+        navButtonPress=".onBack"
+        busy="{orders>/busy}"
+        busyIndicatorDelay="0"
+        class="sapUiContentPadding">
+
+        <footer>
+            <OverflowToolbar>
+                <ToolbarSpacer />
+                <Button
+                    id="btnConfirm"
+                    text="Xác nhận đơn"
+                    icon="sap-icon://accept"
+                    type="Accept"
+                    visible="{= ${orders>/selectedOrder/paymentStatus} === 'PAID' }"
+                    enabled="{= ${orders>/selectedOrder/orderStatus} === 'PENDING' }"
+                    press=".onConfirmOrder" />
+                <Button
+                    id="btnCancel"
+                    text="Hủy đơn"
+                    icon="sap-icon://sys-cancel-2"
+                    type="Reject"
+                    visible="{= ${orders>/selectedOrder/paymentStatus} === 'PAID' }"
+                    enabled="{= ${orders>/selectedOrder/orderStatus} === 'PENDING' }"
+                    press=".onCancelOrder" />
+            </OverflowToolbar>
+        </footer>
+
+        <content>
+            <VBox>
+                <Panel
+                    headerText="Thông tin đơn hàng"
+                    expandable="false"
+                    class="sapUiSmallMarginBottom">
+
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="Thông tin đơn hàng" level="H3" />
+                            <ToolbarSpacer />
+                            <ObjectStatus
+                                text="{= ${orders>/selectedOrder/orderStatus} === 'PENDING' ? 'Chờ xử lý'
+                                        : ${orders>/selectedOrder/orderStatus} === 'CONFIRMED' ? 'Đã xác nhận'
+                                        : ${orders>/selectedOrder/orderStatus} === 'CANCELLED' ? 'Đã hủy'
+                                        : ${orders>/selectedOrder/orderStatus} }"
+                                icon="{= ${orders>/selectedOrder/orderStatus} === 'PENDING' ? 'sap-icon://time-overtime'
+                                        : ${orders>/selectedOrder/orderStatus} === 'CONFIRMED' ? 'sap-icon://accept'
+                                        : ${orders>/selectedOrder/orderStatus} === 'CANCELLED' ? 'sap-icon://sys-cancel-2'
+                                        : 'sap-icon://status-inactive' }"
+                                state="{= ${orders>/selectedOrder/orderStatus} === 'PENDING' ? 'Warning'
+                                        : ${orders>/selectedOrder/orderStatus} === 'CONFIRMED' ? 'Success'
+                                        : ${orders>/selectedOrder/orderStatus} === 'CANCELLED' ? 'Error'
+                                        : 'None' }"
+                                class="sapUiSmallMarginEnd" />
+                            <ObjectStatus
+                                text="{= ${orders>/selectedOrder/paymentStatus} === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán' }"
+                                icon="{= ${orders>/selectedOrder/paymentStatus} === 'PAID' ? 'sap-icon://payment-approval' : 'sap-icon://pending' }"
+                                state="{= ${orders>/selectedOrder/paymentStatus} === 'PAID' ? 'Success' : 'Warning' }" />
+                        </OverflowToolbar>
+                    </headerToolbar>
+
+                    <f:SimpleForm
+                        editable="false"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                        emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+                        columnsXL="2" columnsL="2" columnsM="1"
+                        class="sapUiSmallMargin">
+                        <f:content>
+                            <Label text="Mã đơn hàng" />
+                            <Text text="{orders>/selectedOrder/orderId}" />
+
+                            <Label text="Khách hàng" />
+                            <Text text="{= ${orders>/selectedOrder/customerName} || ${orders>/selectedOrder/userId} || 'N/A' }" />
+
+                            <Label text="Cập nhật lúc" />
+                            <Text text="{ path: 'orders>/selectedOrder/updatedAt', formatter: '.formatUpdatedAt' }" />
+
+                            <Label text="Tổng tiền" />
+                            <ObjectNumber
+                                number="{= (${orders>/selectedOrder/totalAmount} || 0).toFixed(0) }"
+                                unit="{= ${orders>/selectedOrder/currency} || 'VND' }"
+                                state="{= ${orders>/selectedOrder/paymentStatus} === 'PAID' ? 'Success' : 'Warning' }"
+                                emphasized="true" />
+
+                            <Label text="Ghi chú" />
+                            <Text text="{= ${orders>/selectedOrder/note} || '-' }" />
+                        </f:content>
+                    </f:SimpleForm>
+                </Panel>
+
+                <Panel
+                    headerText="Sản phẩm trong đơn"
+                    expandable="false">
+
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="Sản phẩm trong đơn" level="H3" />
+                            <ToolbarSpacer />
+                            <Text
+                                text="{= 'Tổng: ' + ((${orders>/selectedOrder/items} || []).length) + ' món' }"
+                                class="sapUiSmallMarginEnd" />
+                        </OverflowToolbar>
+                    </headerToolbar>
+
+                    <Table
+                        id="itemsTable"
+                        items="{orders>/selectedOrder/items}"
+                        noDataText="Không có sản phẩm nào trong đơn"
+                        alternateRowColors="true"
+                        sticky="HeaderToolbar,ColumnHeaders">
+                        <columns>
+                            <Column>
+                                <Text text="Món ăn" />
+                            </Column>
+                            <Column width="18rem">
+                                <Text text="BOM" />
+                            </Column>
+                            <Column width="9rem" hAlign="Center">
+                                <Text text="Số lượng" />
+                            </Column>
+                            <Column width="9rem" hAlign="End">
+                                <Text text="Đơn giá (VND)" />
+                            </Column>
+                            <Column width="10rem" hAlign="End">
+                                <Text text="Thành tiền (VND)" />
+                            </Column>
+                            <Column width="9rem" hAlign="Center">
+                                <Text text="Trạng thái" />
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <ObjectIdentifier
+                                        title="{orders>foodName}"
+                                        text="{orders>foodId}" />
+                                    <Text text="{orders>bomDisplay}" wrapping="true" />
+                                    <Text text="{orders>quantity}" textAlign="Center" />
+                                    <ObjectNumber
+                                        number="{= (${orders>unitPrice} || 0).toFixed(0) }"
+                                        unit="VND" />
+                                    <ObjectNumber
+                                        number="{= (${orders>lineAmount} || 0).toFixed(0) }"
+                                        unit="VND"
+                                        emphasized="true" />
+                                    <ObjectStatus
+                                        text="{orders>itemStatus}"
+                                        state="{= ${orders>itemStatus} === 'PAID' ? 'Success'
+                                                : ${orders>itemStatus} === 'CANCELLED' ? 'Error'
+                                                : ${orders>itemStatus} === 'CREATED' ? 'Information'
+                                                : 'Warning' }" />
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

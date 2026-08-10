@@ -82,19 +82,23 @@ sap.ui.define([
                     });
                     this.getOwnerComponent().setModel(oAppModel, "session");
 
-                    cartUtils.ensureCartForUser(oODataModel, oAppModel, sUserId).then(function (sCartId) {
-                        return cartUtils.refreshCartCount(oODataModel, oAppModel, sCartId);
-                    });
-
                     MessageToast.show(oI18n.getText("msgLoginSuccess"));
 
                     var sTargetRoute = "RouteFoodList";
                     if (sRole === "ADMIN") {
                         sTargetRoute = "RouteUserList";
                     } else if (sRole === "STAFF") {
-                        sTargetRoute = "RouteFoodList";
+                        sTargetRoute = "RouteCashierOrders";
                     } else if (sRole === "EMPLOYEE") {
                         sTargetRoute = "RouteFoodList";
+                    }
+
+                    if (sRole === "EMPLOYEE") {
+                        cartUtils.ensureCartForUser(oODataModel, oAppModel, sUserId).then(function (sCartId) {
+                            return cartUtils.refreshCartCount(oODataModel, oAppModel, sCartId);
+                        }).catch(function (oError) {
+                            console.error("Could not initialize cart:", oError);
+                        });
                     }
 
                     this.getOwnerComponent().getRouter().navTo(sTargetRoute);
