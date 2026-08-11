@@ -1,0 +1,66 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.ProductionGoodsReceiptHistory"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  displayBlock="true">
+
+  <Page title="Production Goods Receipt History" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+    </headerContent>
+    <content>
+      <VBox class="poHistoryShell">
+        <VBox class="poHistoryIntro">
+          <Title text="Finished Goods Receipt History" level="H2" />
+          <Text text="Material documents posted with movement type 101 from Production Orders into FG01." class="poHistorySubtitle" />
+        </VBox>
+
+        <OverflowToolbar class="poHistoryFilterBar">
+          <SearchField id="productionGRSearch" width="24rem" placeholder="Search material document, order or material" search="onSearch" />
+          <ToolbarSpacer />
+          <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClear" />
+          <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+        </OverflowToolbar>
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+          <Table
+            id="productionGoodsReceiptHistoryTable"
+            class="poHistoryTable wideDataTable"
+            sticky="ColumnHeaders"
+            alternateRowColors="true"
+            growing="true"
+            growingThreshold="20"
+            noDataText="No posted Production Goods Receipts found"
+            items="{/ProductionOrderRequests}">
+            <columns>
+              <Column width="13rem"><Text text="Material Document" /></Column>
+              <Column width="11rem"><Text text="Production Order" /></Column>
+              <Column width="11rem"><Text text="Finished Material" /></Column>
+              <Column width="7rem"><Text text="Plant" /></Column>
+              <Column width="10rem"><Text text="Storage" /></Column>
+              <Column width="10rem" hAlign="End"><Text text="Received Qty" /></Column>
+              <Column width="9rem"><Text text="Status" /></Column>
+              <Column width="14rem"><Text text="Received At" /></Column>
+              <Column width="22rem"><Text text="Message" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem highlight="Success">
+                <cells>
+                  <ObjectIdentifier title="{gr_material_document}" text="{gr_material_document_year}" />
+                  <ObjectIdentifier title="{production_order}" text="{request_id}" />
+                  <Text text="{material}" />
+                  <Text text="{plant}" />
+                  <Text text="FG01" />
+                  <ObjectNumber number="{order_quantity}" unit="{unit}" />
+                  <ObjectStatus text="{goods_receipt_status}" state="Success" icon="sap-icon://accept" />
+                  <Text text="{path: 'goods_received_at', formatter: '.formatDateTime'}" />
+                  <Text text="{goods_receipt_message}" wrapping="true" maxLines="3" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

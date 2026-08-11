@@ -1,0 +1,316 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.POHistory"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form"
+  displayBlock="true">
+
+  <Page
+    title="PO History"
+    showNavButton="true"
+    navButtonPress="onNavBack"
+    backgroundDesign="Standard">
+
+    <headerContent>
+      <Button
+        text="GR History"
+        icon="sap-icon://history"
+        type="Transparent"
+        press="onOpenGRHistory" />
+    </headerContent>
+
+    <content>
+      <VBox class="poHistoryShell">
+        <HBox
+          class="poHistoryHero"
+          justifyContent="SpaceBetween"
+          alignItems="Center"
+          wrap="Wrap">
+          <VBox class="poHistoryHeroText">
+            <Title text="Purchase Order History" level="H2" />
+            <Text
+              text="Track purchasing requests, SAP document numbers and processing messages."
+              class="poHistorySubtitle" />
+          </VBox>
+          <ObjectStatus
+            text="SAP S/4HANA"
+            icon="sap-icon://database"
+            state="Information"
+            class="poHistorySystemBadge" />
+        </HBox>
+
+        <OverflowToolbar class="poHistoryFilterBar">
+          <SearchField
+            id="poHistorySearch"
+            width="22rem"
+            placeholder="Search PO, material or vendor"
+            search="onSearch" />
+          <Select
+            id="poStatusFilter"
+            width="11rem"
+            selectedKey="ALL"
+            change="onStatusChange">
+            <core:Item key="ALL" text="All Statuses" />
+            <core:Item key="CREATED" text="Created" />
+            <core:Item key="PENDING" text="Pending" />
+            <core:Item key="ERROR" text="Error" />
+          </Select>
+          <ToolbarSpacer />
+          <Button
+            text="Clear"
+            icon="sap-icon://clear-filter"
+            type="Transparent"
+            press="onClearFilters" />
+          <Button
+            text="Refresh"
+            icon="sap-icon://refresh"
+            type="Transparent"
+            press="onRefresh" />
+        </OverflowToolbar>
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <Table
+          id="poHistoryTable"
+          class="poHistoryTable wideDataTable wideDataTableXL"
+          sticky="ColumnHeaders"
+          alternateRowColors="true"
+          growing="true"
+          growingScrollToLoad="true"
+          growingThreshold="20"
+          noDataText="No purchase orders match the selected filters"
+          items="{/ZP_G7_PO_REQUEST}">
+
+          <columns>
+            <Column width="11rem"><Text text="PO Number" /></Column>
+            <Column width="13rem"><Text text="Source" /></Column>
+            <Column width="10rem"><Text text="Material" /></Column>
+            <Column width="11rem"><Text text="Vendor" /></Column>
+            <Column width="8rem" hAlign="End"><Text text="Quantity" /></Column>
+            <Column width="10rem" hAlign="End"><Text text="Total Amount" /></Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="9rem"><Text text="Delivery Date" /></Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="11rem"><Text text="Created At" /></Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="9rem"><Text text="Location" /></Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="10rem"><Text text="Purchasing" /></Column>
+            <Column width="8rem"><Text text="Status" /></Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="16rem"><Text text="BAPI Message" /></Column>
+          </columns>
+
+          <items>
+            <ColumnListItem
+              type="Active"
+              press="onOpenPODetails"
+              vAlign="Middle"
+              highlight="{parts: ['purchase_order', 'status'], formatter: '.formatStatusState'}">
+              <cells>
+                <ObjectIdentifier title="{= ${purchase_order} || 'Not generated' }" text="{request_id}" />
+                <VBox>
+                  <ObjectStatus text="{path: 'purchase_requisition', formatter: '.formatPurchaseSource'}" state="Information" />
+                  <ObjectIdentifier
+                    title="{purchase_requisition}"
+                    text="{= ${purchase_requisition_item} ? 'PR Item ' + ${purchase_requisition_item} : '' }"
+                    visible="{= !!${purchase_requisition} }" />
+                </VBox>
+                <ObjectIdentifier title="{material}" text="{material_description}" />
+                <ObjectIdentifier title="{vendor}" text="{vendor_name}" />
+                <ObjectNumber number="{quantity}" unit="{unit}" />
+                <ObjectNumber
+                  number="{parts: ['quantity', 'price'], formatter: '.formatTotalAmount'}"
+                  unit="{currency}"
+                  emphasized="true" />
+                <Text text="{path: 'delivery_date', formatter: '.formatDate'}" />
+                <Text text="{path: 'created_at', formatter: '.formatDateTime'}" />
+                <ObjectIdentifier title="{plant}" text="{storage_loc}" />
+                <ObjectIdentifier title="{purch_org}" text="{purch_group}" />
+                <ObjectStatus
+                  text="{parts: ['purchase_order', 'status'], formatter: '.formatStatus'}"
+                  state="{parts: ['purchase_order', 'status'], formatter: '.formatStatusState'}" />
+                <Text text="{bapi_message}" wrapping="true" maxLines="2" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+
+    <dependents>
+      <Dialog
+        id="poDetailsDialog"
+        title="Purchase Order Details"
+        contentWidth="42rem"
+        stretchOnPhone="true"
+        draggable="true"
+        resizable="true">
+        <content>
+          <VBox class="poDetailsContent">
+            <HBox class="poDetailsHeader" justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+              <VBox>
+                <Label text="SAP Purchase Order" />
+                <Title text="{= ${purchase_order} || 'Not generated' }" level="H3" />
+                <Text text="{request_id}" />
+              </VBox>
+              <ObjectStatus
+                text="{parts: ['purchase_order', 'status'], formatter: '.formatStatus'}"
+                state="{parts: ['purchase_order', 'status'], formatter: '.formatStatusState'}"
+                inverted="true" />
+            </HBox>
+
+            <f:SimpleForm
+              editable="false"
+              layout="ResponsiveGridLayout"
+              labelSpanXL="4"
+              labelSpanL="4"
+              labelSpanM="4"
+              labelSpanS="12"
+              columnsXL="2"
+              columnsL="2"
+              columnsM="1">
+              <Label text="Material" /><ObjectIdentifier title="{material}" text="{material_description}" />
+              <Label text="Source" /><ObjectStatus text="{path: 'purchase_requisition', formatter: '.formatPurchaseSource'}" state="Information" />
+              <Label text="Purchase Requisition" />
+              <ObjectIdentifier
+                title="{= ${purchase_requisition} || '-' }"
+                text="{= ${purchase_requisition_item} ? 'Item ' + ${purchase_requisition_item} : '' }" />
+              <Label text="Vendor" /><ObjectIdentifier title="{vendor}" text="{vendor_name}" />
+              <Label text="Quantity" /><ObjectNumber number="{quantity}" unit="{unit}" />
+              <Label text="Unit Price" /><ObjectNumber number="{price}" unit="{currency}" />
+              <Label text="Total Amount" />
+              <ObjectNumber
+                number="{parts: ['quantity', 'price'], formatter: '.formatTotalAmount'}"
+                unit="{currency}"
+                emphasized="true" />
+              <Label text="Company Code" /><Text text="{company_code}" />
+              <Label text="Plant" /><Text text="{plant}" />
+              <Label text="Storage Location" /><Text text="{storage_loc}" />
+              <Label text="Purchasing Organization" /><Text text="{purch_org}" />
+              <Label text="Purchasing Group" /><Text text="{purch_group}" />
+              <Label text="Delivery Date" /><Text text="{path: 'delivery_date', formatter: '.formatDate'}" />
+              <Label text="Created By" /><Text text="{created_by}" />
+              <Label text="Created At" /><Text text="{path: 'created_at', formatter: '.formatDateTime'}" />
+              <Label text="Updated By" /><Text text="{updated_by}" />
+              <Label text="Updated At" /><Text text="{path: 'updated_at', formatter: '.formatDateTime'}" />
+            </f:SimpleForm>
+
+            <MessageStrip
+              text="{= ${bapi_message} || 'No processing message returned by SAP.' }"
+              type="Information"
+              showIcon="true"
+              showCloseButton="false"
+              class="sapUiSmallMarginTop" />
+          </VBox>
+        </content>
+        <endButton>
+          <Button text="Close" press="onClosePODetails" />
+        </endButton>
+        <beginButton>
+          <Button
+            text="Receive Goods"
+            icon="sap-icon://shipping-status"
+            type="Emphasized"
+            visible="{= !!${purchase_order} }"
+            press="onOpenGRDialog" />
+        </beginButton>
+      </Dialog>
+
+      <Dialog
+        id="postGRDialog"
+        title="Post Goods Receipt"
+        contentWidth="38rem"
+        stretchOnPhone="true"
+        draggable="true"
+        resizable="true"
+        busy="{gr>/busy}">
+        <content>
+          <VBox class="poDetailsContent">
+            <MessageStrip
+              text="Goods receipt will be posted with movement type 101 and will increase SAP stock."
+              type="Information"
+              showIcon="true"
+              showCloseButton="false" />
+
+            <HBox class="poDetailsHeader sapUiSmallMarginTop" justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+              <VBox>
+                <Label text="Purchase Order" />
+                <Title text="{gr>/purchaseOrder}" level="H4" />
+                <Text text="{= ${gr>/material} + ' · Item ' + ${gr>/purchaseOrderItem} }" />
+              </VBox>
+              <ObjectStatus text="Movement 101" state="Information" />
+            </HBox>
+
+            <HBox
+              justifyContent="SpaceAround"
+              alignItems="Center"
+              wrap="Wrap"
+              class="sapUiSmallMarginTop sapUiSmallMarginBottom">
+              <VBox alignItems="Center" class="sapUiTinyMarginBeginEnd">
+                <Label text="Ordered" />
+                <ObjectNumber number="{gr>/orderedQuantity}" unit="{gr>/unit}" />
+              </VBox>
+              <VBox alignItems="Center" class="sapUiTinyMarginBeginEnd">
+                <Label text="Received" />
+                <ObjectNumber number="{gr>/receivedQuantity}" unit="{gr>/unit}" />
+              </VBox>
+              <VBox alignItems="Center" class="sapUiTinyMarginBeginEnd">
+                <Label text="Remaining" />
+                <ObjectNumber
+                  number="{gr>/remainingQuantity}"
+                  unit="{gr>/unit}"
+                  state="{path: 'gr>/remainingQuantity', formatter: '.formatRemainingState'}"
+                  emphasized="true" />
+              </VBox>
+            </HBox>
+
+            <f:SimpleForm
+              editable="true"
+              layout="ResponsiveGridLayout"
+              labelSpanXL="4"
+              labelSpanL="4"
+              labelSpanM="4"
+              labelSpanS="12"
+              columnsXL="1"
+              columnsL="1"
+              columnsM="1"
+              class="sapUiSmallMarginTop">
+              <Label text="Material" /><ObjectIdentifier title="{gr>/material}" text="{gr>/materialDescription}" />
+              <Label text="Receiving Location" /><Text text="{= ${gr>/plant} + ' / ' + ${gr>/storageLoc} }" />
+              <Label text="Quantity Received" required="true" />
+              <Input
+                value="{gr>/quantity}"
+                type="Number"
+                description="{gr>/unit}"
+                enabled="{= ${gr>/remainingQuantity} > 0 &amp;&amp; !${gr>/busy} }"
+                placeholder="Enter received quantity" />
+              <Label text="Posting Date" required="true" />
+              <DatePicker
+                value="{gr>/postingDate}"
+                valueFormat="yyyy-MM-dd"
+                displayFormat="medium"
+                minDate="{gr>/minimumPostingDate}" />
+              <Label text="Document Date" required="true" />
+              <DatePicker
+                value="{gr>/documentDate}"
+                valueFormat="yyyy-MM-dd"
+                displayFormat="medium"
+                minDate="{gr>/minimumPostingDate}" />
+            </f:SimpleForm>
+          </VBox>
+        </content>
+        <beginButton>
+          <Button
+            text="Post Goods Receipt"
+            icon="sap-icon://accept"
+            type="Emphasized"
+            press="onPostGRConfirm"
+            enabled="{= !${gr>/busy} }" />
+        </beginButton>
+        <endButton>
+          <Button
+            text="Cancel"
+            press="onCloseGRDialog"
+            enabled="{= !${gr>/busy} }" />
+        </endButton>
+      </Dialog>
+    </dependents>
+  </Page>
+</mvc:View>

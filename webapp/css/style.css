@@ -59,3 +59,245 @@ body, html {
     height: 4.5rem;
     vertical-align: middle;
 }
+
+.materialStockShell {
+    max-width: 92rem;
+    margin: 0 auto;
+    padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.materialStockIntro {
+    margin-bottom: 1rem;
+}
+
+.materialStockSubtitle {
+    margin-top: 0.25rem;
+    color: #475e75;
+    font-size: 0.95rem;
+}
+
+.materialStockFilterBar {
+    min-height: 3.25rem;
+    padding: 0 0.75rem;
+    border: 1px solid #dde4ea;
+    border-bottom: 0;
+    border-radius: 0.5rem 0.5rem 0 0;
+    background: #ffffff;
+}
+
+.materialStockTable {
+    overflow: hidden;
+    border: 1px solid #dde4ea;
+    border-radius: 0 0 0.5rem 0.5rem;
+    background: #ffffff;
+}
+
+.materialStockTable .sapMListTblHeaderCell {
+    background: #f5f7f9;
+}
+
+.poDialogContent,
+.poDetailsContent {
+    padding: 1.25rem 1.5rem;
+}
+
+.poDetailsHeader {
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #dce5ec;
+    border-radius: 0.75rem;
+    background: #f7fafc;
+}
+
+.poDialogHint {
+    display: block;
+    margin-bottom: 1rem;
+    color: #475e75;
+}
+
+.poDialogSummary {
+    margin-bottom: 1.25rem;
+    padding: 0 0 1rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.poDialogSummaryItem {
+    min-width: 12rem;
+}
+
+.poDialogSummaryLabel {
+    margin-bottom: 0.25rem;
+    color: #556b82;
+}
+
+.poHistoryShell {
+    max-width: 92rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    gap: 1rem;
+}
+
+.poHistoryHero {
+    padding: 1.5rem 1.75rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #eaf4ff 0%, #f7fbff 58%, #eef8f4 100%);
+    border: 1px solid #d5e5f2;
+    box-shadow: 0 0.25rem 1rem rgba(34, 53, 72, 0.08);
+}
+
+.poHistoryHeroText {
+    gap: 0.25rem;
+}
+
+.poHistorySubtitle {
+    color: #475e75;
+    font-size: 0.95rem;
+}
+
+.poHistorySystemBadge {
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid #c8dbea;
+}
+
+.poHistoryFilterBar {
+    border-radius: 0.75rem 0.75rem 0 0;
+    border: 1px solid #dde4ea;
+    border-bottom: 0;
+    background: #ffffff;
+    padding: 0 0.5rem;
+}
+
+.poHistoryTable {
+    border: 1px solid #dde4ea;
+    border-radius: 0 0 0.75rem 0.75rem;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 0.25rem 1rem rgba(34, 53, 72, 0.06);
+}
+
+.poHistoryTable .sapMListTblHeaderCell {
+    background: #f5f7f9;
+}
+
+.wideTableScroll {
+    display: block;
+    width: 100%;
+    border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.wideTableScroll .sapMScrollContScroll {
+    min-width: 100%;
+}
+
+.wideDataTable {
+    width: 100% !important;
+    min-width: 82rem;
+}
+
+.wideDataTableMD {
+    width: 100% !important;
+    min-width: 62rem;
+}
+
+.wideDataTableXL {
+    min-width: 108rem;
+}
+
+.wideDataTableXXL {
+    min-width: 124rem;
+}
+
+.staffDashboardShell {
+    max-width: 92rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    gap: 1.25rem;
+}
+
+.staffDashboardHero {
+    gap: 1rem;
+    padding: 1.75rem 2rem;
+    color: #ffffff;
+    border-radius: 1rem;
+    background: linear-gradient(120deg, #0a6ed1 0%, #0854a0 62%, #073763 100%);
+    box-shadow: 0 0.4rem 1.4rem rgba(7, 55, 99, 0.2);
+}
+
+.staffDashboardHero .sapMTitle,
+.staffDashboardHero .sapMText {
+    color: #ffffff;
+}
+
+.staffDashboardHeroText {
+    gap: 0.35rem;
+}
+
+.staffWorkflowPanel {
+    overflow: hidden;
+    border: 1px solid #d9e2ea;
+    border-radius: 0.85rem;
+    background: #ffffff;
+    box-shadow: 0 0.2rem 0.8rem rgba(34, 53, 72, 0.06);
+}
+
+.staffWorkflowPanel .sapMPanelHdr {
+    min-height: 3rem;
+    line-height: 3rem;
+    font-size: 1.05rem;
+    color: #1d2d3e;
+    background: #f7f9fb;
+    border-bottom: 1px solid #e5eaef;
+}
+
+.staffWorkflowDescription {
+    display: block;
+    margin: 0.25rem 0.5rem 1rem;
+    color: #475e75;
+}
+
+.staffTileRow {
+    gap: 1rem;
+}
+
+.staffTileRow .sapMGT {
+    margin: 0;
+}
+
+.staffMenuAction {
+    gap: 1rem;
+    padding: 0.5rem;
+}
+
+@media (max-width: 48rem) {
+    .materialStockShell,
+    .poHistoryShell,
+    .staffDashboardShell {
+        padding: 0.75rem;
+    }
+
+    .staffDashboardHero {
+        padding: 1.25rem;
+    }
+
+    .poHistoryHero {
+        padding: 1rem;
+    }
+
+    .materialStockFilterBar .sapMSF,
+    .poHistoryFilterBar .sapMSF {
+        width: 12rem !important;
+    }
+
+    .poDialogContent,
+    .poDetailsContent {
+        padding: 1rem;
+    }
+
+    .poDialogSummaryItem {
+        width: 100% !important;
+        margin-bottom: 0.75rem;
+    }
+}

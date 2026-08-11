@@ -1,0 +1,90 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.ProductionOrder"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  displayBlock="true">
+
+  <Page title="Production Order" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button text="History" icon="sap-icon://history" type="Transparent" press="onOpenHistory" />
+    </headerContent>
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Title text="Finished Goods" level="H2" />
+        <Text text="Select a finished material from plant P001 / storage FG01." />
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll sapUiSmallMarginTop">
+        <Table id="fgTable" class="wideDataTableMD" items="{/FinishedGoodsStock}" mode="SingleSelectMaster" selectionChange="onFGSelected" growing="true">
+          <columns>
+            <Column><Text text="Material" /></Column>
+            <Column><Text text="Description" /></Column>
+            <Column><Text text="Plant" /></Column>
+            <Column><Text text="Storage" /></Column>
+            <Column hAlign="End"><Text text="Stock" /></Column>
+            <Column><Text text="Unit" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem type="Active">
+              <cells>
+                <ObjectIdentifier title="{Material}" />
+                <Text text="{MaterialDescription}" />
+                <Text text="{Plant}" />
+                <Text text="{StorageLocation}" />
+                <ObjectNumber number="{StockQuantity}" unit="{MaterialBaseUnit}" />
+                <Text text="{MaterialBaseUnit}" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+        </ScrollContainer>
+
+        <Toolbar class="sapUiSmallMarginTop">
+          <Title text="BOM and Raw Material Availability" level="H3" />
+          <ToolbarSpacer />
+          <Button text="Create Production Order" type="Emphasized" press="onCreateProductionOrder" enabled="{ui>/canCreate}" />
+        </Toolbar>
+
+        <ObjectHeader
+          title="{ui>/selectedMaterial}"
+          number="{ui>/selectedStock}"
+          numberUnit="{ui>/selectedUnit}"
+          intro="{ui>/selectedDescription}"
+          visible="{= !!${ui>/selectedMaterial} }" />
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <Table id="bomTable" class="wideDataTableMD" items="{ui>/bom}" noDataText="Select a finished material to view its BOM.">
+          <columns>
+            <Column><Text text="Component" /></Column>
+            <Column><Text text="Description" /></Column>
+            <Column hAlign="End"><Text text="Required" /></Column>
+            <Column hAlign="End"><Text text="Available" /></Column>
+            <Column><Text text="Unit" /></Column>
+            <Column><Text text="Status" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem>
+              <cells>
+                <Text text="{ui>ComponentMaterial}" />
+                <Text text="{ui>ComponentDescription}" />
+                <ObjectNumber number="{ui>ComponentQuantity}" unit="{ui>ComponentUnit}" />
+                <ObjectNumber number="{ui>AvailableQuantity}" unit="{ui>ComponentUnit}" />
+                <Text text="{ui>ComponentUnit}" />
+                <ObjectStatus text="{ui>AvailabilityText}" state="{ui>AvailabilityState}" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+        </ScrollContainer>
+
+        <f:SimpleForm xmlns:f="sap.ui.layout.form" editable="true" class="sapUiSmallMarginTop">
+          <Label text="Order Quantity" required="true" />
+          <Input value="{ui>/orderQuantity}" type="Number" description="{ui>/selectedUnit}" />
+          <Label text="Order Type" />
+          <Input value="{ui>/orderType}" editable="false" />
+          <Label text="Production Version" />
+          <Input value="{ui>/productionVersion}" editable="false" />
+        </f:SimpleForm>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

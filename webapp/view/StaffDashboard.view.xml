@@ -1,0 +1,149 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.StaffDashboard"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  displayBlock="true">
+
+  <Page title="Staff Operations" backgroundDesign="Standard">
+    <headerContent>
+      <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+      <Button text="Log out" icon="sap-icon://log" type="Transparent" press="onLogout" />
+    </headerContent>
+
+    <content>
+      <VBox class="staffDashboardShell">
+        <HBox class="staffDashboardHero" justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+          <VBox class="staffDashboardHeroText">
+            <Title text="Hello, {session>/fullName}" level="H1" />
+            <Text text="Choose a workflow below. Each section follows the actual SAP processing sequence." />
+          </VBox>
+          <ObjectStatus text="Plant P001" icon="sap-icon://factory" state="Information" inverted="true" />
+        </HBox>
+
+        <Panel class="staffWorkflowPanel" headerText="1. Demand Planning" expandable="false">
+          <content>
+            <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="staffMenuAction">
+              <VBox>
+                <Title text="Forecast Tomorrow's Meals" level="H4" />
+                <Text text="Create active PIRs for finished meals before running Material Requirements Planning." />
+              </VBox>
+              <HBox wrap="Wrap">
+                <Button text="Create PIR" icon="sap-icon://business-objects-experience" type="Emphasized" press="onOpenPIRPlanning" class="sapUiTinyMarginEnd" />
+                <Button text="View MRP Results" icon="sap-icon://inventory" press="onOpenMRPResults" />
+              </HBox>
+            </HBox>
+          </content>
+        </Panel>
+
+        <Panel class="staffWorkflowPanel" headerText="2. Raw Material Replenishment" expandable="false">
+          <content>
+            <Text
+              text="Check raw-material availability, create a Purchase Order when stock is low, then post Goods Receipt when the delivery arrives."
+              class="staffWorkflowDescription" />
+            <FlexBox wrap="Wrap" class="staffTileRow">
+              <GenericTile
+                header="Raw Material Stock"
+                subheader="Start here: check availability"
+                frameType="TwoByOne"
+                press="onOpenMaterialStock">
+                <tileContent>
+                  <TileContent footer="Materials below reorder point">
+                    <NumericContent value="{dashboard>/lowStockCount}" icon="sap-icon://inventory" valueColor="{dashboard>/lowStockColor}" />
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+              <GenericTile
+                header="Purchase Orders"
+                subheader="Review purchasing requests"
+                frameType="TwoByOne"
+                press="onOpenPOHistory">
+                <tileContent>
+                  <TileContent footer="Created or pending requests">
+                    <NumericContent value="{dashboard>/purchaseOrderCount}" icon="sap-icon://order-status" valueColor="Neutral" />
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+              <GenericTile
+                header="Goods Receipts"
+                subheader="Review material receipts"
+                frameType="TwoByOne"
+                press="onOpenGRHistory">
+                <tileContent>
+                  <TileContent footer="Posted receipt documents">
+                    <NumericContent value="{dashboard>/goodsReceiptCount}" icon="sap-icon://shipping-status" valueColor="Good" />
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+            </FlexBox>
+          </content>
+        </Panel>
+
+        <Panel class="staffWorkflowPanel" headerText="3. Finished Goods Production" expandable="false">
+          <content>
+            <Text
+              text="Select a finished good, verify its BOM, create and release the order, issue components, then confirm each operation."
+              class="staffWorkflowDescription" />
+            <FlexBox wrap="Wrap" class="staffTileRow">
+              <GenericTile
+                header="Plan Production"
+                subheader="FG stock, BOM and new order"
+                frameType="TwoByOne"
+                press="onOpenProductionOrder">
+                <tileContent>
+                  <TileContent footer="Create Production Order">
+                    <NumericContent icon="sap-icon://factory" value="+" valueColor="Neutral" />
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+              <GenericTile
+                header="Production Worklist"
+                subheader="Release, GI and Confirmation"
+                frameType="TwoByOne"
+                press="onOpenProductionHistory">
+                <tileContent>
+                  <TileContent footer="Active production requests">
+                    <NumericContent value="{dashboard>/activeProductionCount}" icon="sap-icon://process" valueColor="Critical" />
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+              <GenericTile
+                header="Material Documents"
+                subheader="Production Goods Issue history"
+                frameType="TwoByOne"
+                press="onOpenGoodsIssueHistory">
+                <tileContent>
+                  <TileContent footer="Posted Goods Issues">
+                    <NumericContent value="{dashboard>/goodsIssueCount}" icon="sap-icon://document-text" valueColor="Good" />
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+              <GenericTile
+                header="Finished Goods Receipts"
+                subheader="Production GR 101 into FG01"
+                frameType="TwoByOne"
+                press="onOpenGoodsReceiptHistory">
+                <tileContent>
+                  <TileContent footer="Posted Production GR documents">
+                    <NumericContent value="{dashboard>/productionGoodsReceiptCount}" icon="sap-icon://inbox" valueColor="Good" />
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+            </FlexBox>
+          </content>
+        </Panel>
+
+        <Panel class="staffWorkflowPanel" headerText="4. Menu Management" expandable="false">
+          <content>
+            <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="staffMenuAction">
+              <VBox>
+                <Title text="Food Menu" level="H4" />
+                <Text text="View food items, categories, prices and availability separately from SAP operations." />
+              </VBox>
+              <Button text="Open Food List" icon="sap-icon://meal" type="Emphasized" press="onOpenFoodList" />
+            </HBox>
+          </content>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

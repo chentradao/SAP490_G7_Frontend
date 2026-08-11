@@ -152,6 +152,83 @@
           ]
         },
         {
+          "name": "RouteStaffDashboard",
+          "pattern": "StaffDashboard",
+          "target": [
+            "TargetStaffDashboard"
+          ]
+        },
+        {
+          "name": "RouteMaterialStock",
+          "pattern": "MaterialStock",
+          "target": [
+            "TargetMaterialStock"
+          ]
+        },
+        {
+          "name": "RouteMRPResults",
+          "pattern": "MRPResults",
+          "target": [
+            "TargetMRPResults"
+          ]
+        },
+        {
+          "name": "RoutePIRPlanning",
+          "pattern": "PIRPlanning",
+          "target": [
+            "TargetPIRPlanning"
+          ]
+        },
+        {
+          "name": "RoutePOCreate",
+          "pattern": "POCreate",
+          "target": [
+            "TargetPOCreate"
+          ]
+        },
+        {
+          "name": "RoutePOHistory",
+          "pattern": "POHistory",
+          "target": [
+            "TargetPOHistory"
+          ]
+        },
+        {
+          "name": "RouteGRHistory",
+          "pattern": "GRHistory",
+          "target": [
+            "TargetGRHistory"
+          ]
+        },
+        {
+          "name": "RouteProductionOrder",
+          "pattern": "ProductionOrder",
+          "target": [
+            "TargetProductionOrder"
+          ]
+        },
+        {
+          "name": "RouteProductionOrderHistory",
+          "pattern": "ProductionOrderHistory",
+          "target": [
+            "TargetProductionOrderHistory"
+          ]
+        },
+        {
+          "name": "RouteProductionGoodsIssueHistory",
+          "pattern": "ProductionGoodsIssueHistory",
+          "target": [
+            "TargetProductionGoodsIssueHistory"
+          ]
+        },
+        {
+          "name": "RouteProductionGoodsReceiptHistory",
+          "pattern": "ProductionGoodsReceiptHistory",
+          "target": [
+            "TargetProductionGoodsReceiptHistory"
+          ]
+        },
+        {
           "name": "RouteCashierOrders",
           "pattern": "CashierOrders",
           "target": [
@@ -222,6 +299,83 @@
           "clearControlAggregation": false,
           "viewId": "MyOrderDetail",
           "viewName": "MyOrderDetail"
+        },
+        "TargetStaffDashboard": {
+          "viewType": "XML",
+          "transition": "fade",
+          "clearControlAggregation": false,
+          "viewId": "StaffDashboard",
+          "viewName": "StaffDashboard"
+        },
+        "TargetMaterialStock": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "MaterialStock",
+          "viewName": "MaterialStock"
+        },
+        "TargetMRPResults": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "MRPResults",
+          "viewName": "MRPResults"
+        },
+        "TargetPIRPlanning": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "PIRPlanning",
+          "viewName": "PIRPlanning"
+        },
+        "TargetPOCreate": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "POCreate",
+          "viewName": "POCreate"
+        },
+        "TargetPOHistory": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "POHistory",
+          "viewName": "POHistory"
+        },
+        "TargetGRHistory": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "GRHistory",
+          "viewName": "GRHistory"
+        },
+        "TargetProductionOrder": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "ProductionOrder",
+          "viewName": "ProductionOrder"
+        },
+        "TargetProductionOrderHistory": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "ProductionOrderHistory",
+          "viewName": "ProductionOrderHistory"
+        },
+        "TargetProductionGoodsIssueHistory": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "ProductionGoodsIssueHistory",
+          "viewName": "ProductionGoodsIssueHistory"
+        },
+        "TargetProductionGoodsReceiptHistory": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "ProductionGoodsReceiptHistory",
+          "viewName": "ProductionGoodsReceiptHistory"
         },
         "TargetCashierOrders": {
           "viewType": "XML",

@@ -86,7 +86,7 @@ sap.ui.define([
 
                     var sTargetRoute = "RouteFoodList";
                     if (sRole === "ADMIN") {
-                        sTargetRoute = "RouteUserList";
+                        sTargetRoute = "RouteStaffDashboard";
                     } else if (sRole === "STAFF") {
                         sTargetRoute = "RouteCashierOrders";
                     } else if (sRole === "EMPLOYEE") {

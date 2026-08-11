@@ -1,605 +1,3106 @@
 <?xml version="1.0" encoding="utf-8"?>
-<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" xmlns="http://docs.oasis-open.org/odata/ns/edm">
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMUNICATION',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_PERSONALDATA',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.PersonalData.v1" Alias="PersonalData"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_ANALYTICS',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.Analytics.v1" Alias="Analytics"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="SAP__common"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_MEASURES',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="Org.OData.Measures.V1" Alias="SAP__measures"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CORE',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="Org.OData.Core.V1" Alias="SAP__core"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CAPABILITIES',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="Org.OData.Capabilities.V1" Alias="SAP__capabilities"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_AGGREGATION',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="Org.OData.Aggregation.V1" Alias="SAP__aggregation"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_VALIDATION',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="Org.OData.Validation.V1" Alias="SAP__validation"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CODELIST',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.CodeList.v1" Alias="SAP__CodeList"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_UI',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="SAP__UI"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_HTML5',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.HTML5.v1" Alias="SAP__HTML5"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_PDF',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.PDF.v1" Alias="SAP__PDF"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_SESSION',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.Session.v1" Alias="SAP__session"/>
-    </edmx:Reference>
-    <edmx:DataServices>
-        <Schema Namespace="com.sap.gateway.srvd.zsd_g7_canteen.v0001" Alias="SAP__self">
-            <Annotation Term="SAP__core.SchemaVersion" String="1.0.0"/>
-            <EntityType Name="Food2Type">
-                <Key>
-                    <PropertyRef Name="MaterialNumber"/>
-                </Key>
-                <Property Name="MaterialNumber" Type="Edm.String" Nullable="false" MaxLength="18"/>
-                <Property Name="MaterialDescription" Type="Edm.String" MaxLength="40"/>
-                <Property Name="MaterialGroup" Type="Edm.String" MaxLength="9"/>
-                <Property Name="MaterialType" Type="Edm.String" MaxLength="4"/>
-                <Property Name="Plant" Type="Edm.String" MaxLength="4"/>
-                <Property Name="StorageLocation" Type="Edm.String" MaxLength="4"/>
-                <Property Name="AvailableStock" Type="Edm.Decimal" Precision="13" Scale="3"/>
-                <Property Name="BaseUnit" Type="Edm.String" MaxLength="3"/>
-                <Property Name="Price" Type="Edm.Decimal" Precision="15" Scale="variable"/>
-                <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
-                <Property Name="ImageUrl" Type="Edm.String" MaxLength="255"/>
-                <Property Name="Status" Type="Edm.String" MaxLength="20"/>
-                <Property Name="CreatedAt" Type="Edm.String" MaxLength="12"/>
-                <Property Name="UpdatedAt" Type="Edm.String" MaxLength="12"/>
-            </EntityType>
-            <EntityType Name="UsersType">
-                <Key>
-                    <PropertyRef Name="UserID"/>
-                </Key>
-                <Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="Username" Type="Edm.String" Nullable="false" MaxLength="50"/>
-                <Property Name="FullName" Type="Edm.String" Nullable="false" MaxLength="100"/>
-                <Property Name="Email" Type="Edm.String" Nullable="false" MaxLength="100"/>
-                <Property Name="Phone" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="Role" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="1"/>
-                <Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
-                <Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
-            </EntityType>
-            <EntityType Name="CategoriesType">
-                <Key>
-                    <PropertyRef Name="CategoryID"/>
-                </Key>
-                <Property Name="CategoryID" Type="Edm.String" Nullable="false" MaxLength="10"/>
-                <Property Name="CategoryName" Type="Edm.String" Nullable="false" MaxLength="50"/>
-                <Property Name="Description" Type="Edm.String" Nullable="false" MaxLength="255"/>
-                <Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="10"/>
-            </EntityType>
-            <EntityType Name="CartsType">
-                <Key>
-                    <PropertyRef Name="CartID"/>
-                </Key>
-                <Property Name="CartID" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="10"/>
-                <Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
-                <Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
-                <NavigationProperty Name="_User" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
-                <NavigationProperty Name="_Items" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartItemsType)"/>
-            </EntityType>
-            <EntityType Name="CartItemsType">
-                <Key>
-                    <PropertyRef Name="CartID"/>
-                    <PropertyRef Name="ItemNo"/>
-                </Key>
-                <Property Name="CartID" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="ItemNo" Type="Edm.String" Nullable="false" MaxLength="6"/>
-                <Property Name="FoodID" Type="Edm.String" Nullable="false" MaxLength="18"/>
-                <Property Name="Quantity" Type="Edm.Int32" Nullable="false"/>
-                <Property Name="UnitPrice" Type="Edm.Decimal" Precision="16" Scale="2"/>
-                <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
-                <Property Name="LineAmount" Type="Edm.Decimal" Precision="16" Scale="2"/>
-                <Property Name="Status" Type="Edm.String" MaxLength="10"/>
-                <Property Name="CreatedAt" Type="Edm.String" MaxLength="12"/>
-                <Property Name="UpdatedAt" Type="Edm.String" MaxLength="12"/>
-                <NavigationProperty Name="_Food" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
-            </EntityType>
-            <EntityType Name="OrdersType">
-                <Key>
-                    <PropertyRef Name="OrderID"/>
-                </Key>
-                <Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="UserID" Type="Edm.String" MaxLength="20"/>
-                <Property Name="CartID" Type="Edm.String" MaxLength="20"/>
-                <Property Name="OrderDate" Type="Edm.String" MaxLength="10"/>
-                <Property Name="OrderTime" Type="Edm.String" MaxLength="8"/>
-                <Property Name="TotalAmount" Type="Edm.Decimal" Precision="16" Scale="2"/>
-                <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
-                <Property Name="OrderStatus" Type="Edm.String" MaxLength="20"/>
-                <Property Name="PaymentStatus" Type="Edm.String" MaxLength="20"/>
-                <Property Name="Note" Type="Edm.String" MaxLength="255"/>
-                <Property Name="CreatedAt" Type="Edm.String" MaxLength="12"/>
-                <Property Name="UpdatedAt" Type="Edm.String" MaxLength="12"/>
-                <NavigationProperty Name="_Items" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType)" Partner="_Order"/>
-                <NavigationProperty Name="_User" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
-            </EntityType>
-            <EntityType Name="OrderItemsType">
-                <Key>
-                    <PropertyRef Name="OrderID"/>
-                    <PropertyRef Name="ItemNo"/>
-                </Key>
-                <Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="20"/>
-                <Property Name="ItemNo" Type="Edm.String" Nullable="false" MaxLength="6"/>
-                <Property Name="FoodID" Type="Edm.String" MaxLength="20"/>
-                <Property Name="FoodName" Type="Edm.String" MaxLength="100"/>
-                <Property Name="Quantity" Type="Edm.Int32"/>
-                <Property Name="UnitPrice" Type="Edm.Decimal" Precision="16" Scale="2"/>
-                <Property Name="Currency" Type="Edm.String" MaxLength="5"/>
-                <Property Name="LineAmount" Type="Edm.Decimal" Precision="16" Scale="2"/>
-                <Property Name="ItemStatus" Type="Edm.String" MaxLength="20"/>
-                <NavigationProperty Name="_Order" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Partner="_Items"/>
-                <NavigationProperty Name="_Food" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
-            </EntityType>
-            <ComplexType Name="BomComponentType">
-                <Property Name="Component" Type="Edm.String" MaxLength="40"/>
-                <Property Name="ComponentName" Type="Edm.String" MaxLength="100"/>
-                <Property Name="Quantity" Type="Edm.Decimal" Precision="13" Scale="3"/>
-                <Property Name="Unit" Type="Edm.String" MaxLength="3"/>
-                <Property Name="ItemCategory" Type="Edm.String" MaxLength="1"/>
-            </ComplexType>
-            <Action Name="confirmOrder" IsBound="true">
-                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
-                <ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
-            </Action>
-            <Action Name="cancelOrder" IsBound="true">
-                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
-                <ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
-            </Action>
-            <Action Name="markAsPaid" IsBound="true">
-                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
-                <ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
-            </Action>
-            <Action Name="getBOM" IsBound="true">
-                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType" Nullable="false"/>
-                <ReturnType Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.BomComponentType)"/>
-            </Action>
-            <EntityContainer Name="Container">
-                <EntitySet Name="Categories" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CategoriesType"/>
-                <EntitySet Name="Food2" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
-                <EntitySet Name="Users" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
-                <EntitySet Name="ZC_G7_CART" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartsType">
-                    <NavigationPropertyBinding Path="_User" Target="Users"/>
-                    <NavigationPropertyBinding Path="_Items" Target="ZC_G7_CART_ITEM"/>
-                </EntitySet>
-                <EntitySet Name="ZC_G7_CART_ITEM" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartItemsType">
-                    <NavigationPropertyBinding Path="_Food" Target="Food2"/>
-                </EntitySet>
-                <EntitySet Name="Orders" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType">
-                    <NavigationPropertyBinding Path="_Items" Target="OrderItems"/>
-                    <NavigationPropertyBinding Path="_User" Target="Users"/>
-                </EntitySet>
-                <EntitySet Name="OrderItems" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType">
-                    <NavigationPropertyBinding Path="_Order" Target="Orders"/>
-                    <NavigationPropertyBinding Path="_Food" Target="Food2"/>
-                </EntitySet>
-                <ActionImport Name="confirmOrder" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.confirmOrder"/>
-                <ActionImport Name="cancelOrder" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.cancelOrder"/>
-                <ActionImport Name="markAsPaid" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.markAsPaid"/>
-                <ActionImport Name="getBOM" Action="com.sap.gateway.srvd.zsd_g7_canteen.v0001.getBOM"/>
-            </EntityContainer>
-            <Annotations Target="SAP__self.Food2Type/MaterialNumber">
-                <Annotation Term="SAP__common.Label" String="Material Number"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/MaterialGroup">
-                <Annotation Term="SAP__common.Label" String="Material Group"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/MaterialDescription">
-                <Annotation Term="SAP__common.Label" String="Material Description"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/AvailableStock">
-                <Annotation Term="SAP__common.Label" String="Available Stock (Next Day)"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/Price">
-                <Annotation Term="SAP__common.Label" String="Price"/>
-                <Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/Currency">
-                <Annotation Term="SAP__common.IsCurrency"/>
-                <Annotation Term="SAP__UI.Hidden"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/Status">
-                <Annotation Term="SAP__common.Label" String="Status"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Container/Food2">
-                <Annotation Term="SAP__capabilities.SearchRestrictions">
-                    <Record>
-                        <PropertyValue Property="Searchable" Bool="true"/>
-                        <PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.InsertRestrictions">
-                    <Record>
-                        <PropertyValue Property="Insertable" Bool="false"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.DeleteRestrictions">
-                    <Record>
-                        <PropertyValue Property="Deletable" Bool="false"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.UpdateRestrictions">
-                    <Record>
-                        <PropertyValue Property="Updatable" Bool="false"/>
-                        <PropertyValue Property="QueryOptions">
-                            <Record>
-                                <PropertyValue Property="SelectSupported" Bool="true"/>
-                            </Record>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__core.OptimisticConcurrency">
-                    <Collection/>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.FilterRestrictions">
-                    <Record>
-                        <PropertyValue Property="FilterExpressionRestrictions">
-                            <Collection>
-                                <Record>
-                                    <PropertyValue Property="Property" PropertyPath="Price"/>
-                                    <PropertyValue Property="AllowedExpressions" String="MultiValue"/>
-                                </Record>
-                            </Collection>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type">
-                <Annotation Term="SAP__common.Label" String="G7 Food 2 Master CDS View"/>
-                <Annotation Term="SAP__UI.Facets">
-                    <Collection>
-                        <Record Type="SAP__UI.ReferenceFacet">
-                            <PropertyValue Property="Label" String="Food Detail"/>
-                            <PropertyValue Property="ID" String="Food2"/>
-                            <PropertyValue Property="Target" AnnotationPath="@SAP__UI.Identification"/>
-                        </Record>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__UI.HeaderInfo">
-                    <Record>
-                        <PropertyValue Property="TypeName" String="Food Item"/>
-                        <PropertyValue Property="TypeNamePlural" String="Food Items List"/>
-                        <PropertyValue Property="Title">
-                            <Record Type="SAP__UI.DataField">
-                                <PropertyValue Property="Value" Path="MaterialDescription"/>
-                            </Record>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__UI.Identification">
-                    <Collection>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="MaterialNumber"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="MaterialDescription"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="MaterialGroup"/>
-                        </Record>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__UI.LineItem">
-                    <Collection>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="MaterialNumber"/>
-                            <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="MaterialDescription"/>
-                            <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="AvailableStock"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Price"/>
-                            <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Status"/>
-                        </Record>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__UI.SelectionFields">
-                    <Collection>
-                        <PropertyPath>MaterialNumber</PropertyPath>
-                        <PropertyPath>MaterialDescription</PropertyPath>
-                        <PropertyPath>MaterialGroup</PropertyPath>
-                        <PropertyPath>Status</PropertyPath>
-                    </Collection>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="SAP__self.Container">
-                <Annotation Term="SAP__CodeList.CurrencyCodes">
-                    <Record>
-                        <PropertyValue Property="Url" String="../../../../default/iwbep/common/0001/$metadata"/>
-                        <PropertyValue Property="CollectionPath" String="Currencies"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__aggregation.ApplySupported">
-                    <Record>
-                        <PropertyValue Property="Transformations">
-                            <Collection>
-                                <String>aggregate</String>
-                                <String>groupby</String>
-                                <String>filter</String>
-                            </Collection>
-                        </PropertyValue>
-                        <PropertyValue Property="Rollup" EnumMember="SAP__aggregation.RollupType/None"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__common.ApplyMultiUnitBehaviorForSortingAndFiltering" Bool="true"/>
-                <Annotation Term="SAP__capabilities.FilterFunctions">
-                    <Collection>
-                        <String>eq</String>
-                        <String>ne</String>
-                        <String>gt</String>
-                        <String>ge</String>
-                        <String>lt</String>
-                        <String>le</String>
-                        <String>and</String>
-                        <String>or</String>
-                        <String>contains</String>
-                        <String>startswith</String>
-                        <String>endswith</String>
-                        <String>any</String>
-                        <String>all</String>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.SupportedFormats">
-                    <Collection>
-                        <String>application/json</String>
-                        <String>application/pdf</String>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__PDF.Features">
-                    <Record>
-                        <PropertyValue Property="DocumentDescriptionReference" String="../../../../default/iwbep/common/0001/$metadata"/>
-                        <PropertyValue Property="DocumentDescriptionCollection" String="MyDocumentDescriptions"/>
-                        <PropertyValue Property="ArchiveFormat" Bool="true"/>
-                        <PropertyValue Property="Border" Bool="true"/>
-                        <PropertyValue Property="CoverPage" Bool="true"/>
-                        <PropertyValue Property="FitToPage" Bool="true"/>
-                        <PropertyValue Property="FontName" Bool="true"/>
-                        <PropertyValue Property="FontSize" Bool="true"/>
-                        <PropertyValue Property="Margin" Bool="true"/>
-                        <PropertyValue Property="Signature" Bool="true"/>
-                        <PropertyValue Property="ResultSizeDefault" Int="20000"/>
-                        <PropertyValue Property="ResultSizeMaximum" Int="20000"/>
-                    </Record>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/UserID">
-                <Annotation Term="SAP__common.Label" String="User ID"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/Username">
-                <Annotation Term="SAP__common.Label" String="Username"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/FullName">
-                <Annotation Term="SAP__common.Label" String="Full Name"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/Email">
-                <Annotation Term="SAP__common.Label" String="Email"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/Phone">
-                <Annotation Term="SAP__common.Label" String="Phone"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/Role">
-                <Annotation Term="SAP__common.Label" String="Role"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/Status">
-                <Annotation Term="SAP__common.Label" String="Status"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType">
-                <Annotation Term="SAP__common.Label" String="G7 User Master CDS View"/>
-                <Annotation Term="SAP__UI.HeaderInfo">
-                    <Record>
-                        <PropertyValue Property="TypeName" String="User"/>
-                        <PropertyValue Property="TypeNamePlural" String="User List"/>
-                        <PropertyValue Property="Title">
-                            <Record Type="SAP__UI.DataField">
-                                <PropertyValue Property="Value" Path="FullName"/>
-                            </Record>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__UI.Identification">
-                    <Collection>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="FullName"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Email"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Phone"/>
-                        </Record>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__UI.LineItem">
-                    <Collection>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="UserID"/>
-                            <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Username"/>
-                            <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="FullName"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Role"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Status"/>
-                        </Record>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__UI.SelectionFields">
-                    <Collection>
-                        <PropertyPath>UserID</PropertyPath>
-                        <PropertyPath>Username</PropertyPath>
-                        <PropertyPath>Role</PropertyPath>
-                        <PropertyPath>Status</PropertyPath>
-                    </Collection>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="SAP__self.Container/Users">
-                <Annotation Term="SAP__capabilities.SearchRestrictions">
-                    <Record>
-                        <PropertyValue Property="Searchable" Bool="true"/>
-                        <PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.InsertRestrictions">
-                    <Record>
-                        <PropertyValue Property="Insertable" Bool="false"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.DeleteRestrictions">
-                    <Record>
-                        <PropertyValue Property="Deletable" Bool="false"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.UpdateRestrictions">
-                    <Record>
-                        <PropertyValue Property="Updatable" Bool="false"/>
-                        <PropertyValue Property="QueryOptions">
-                            <Record>
-                                <PropertyValue Property="SelectSupported" Bool="true"/>
-                            </Record>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__core.OptimisticConcurrency">
-                    <Collection/>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="SAP__self.CategoriesType/CategoryID">
-                <Annotation Term="SAP__common.Label" String="Category ID"/>
-            </Annotations>
-            <Annotations Target="SAP__self.CategoriesType/CategoryName">
-                <Annotation Term="SAP__common.Label" String="Category Name"/>
-            </Annotations>
-            <Annotations Target="SAP__self.CategoriesType/Description">
-                <Annotation Term="SAP__common.Label" String="Description"/>
-            </Annotations>
-            <Annotations Target="SAP__self.CategoriesType/Status">
-                <Annotation Term="SAP__common.Label" String="Status"/>
-            </Annotations>
-            <Annotations Target="SAP__self.CategoriesType">
-                <Annotation Term="SAP__common.Label" String="G7 Food Category Master CDS View"/>
-                <Annotation Term="SAP__UI.HeaderInfo">
-                    <Record>
-                        <PropertyValue Property="TypeName" String="Category"/>
-                        <PropertyValue Property="TypeNamePlural" String="Category List"/>
-                        <PropertyValue Property="Title">
-                            <Record Type="SAP__UI.DataField">
-                                <PropertyValue Property="Value" Path="CategoryName"/>
-                            </Record>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__UI.Identification">
-                    <Collection>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Description"/>
-                        </Record>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__UI.LineItem">
-                    <Collection>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="CategoryID"/>
-                            <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="CategoryName"/>
-                            <Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
-                        </Record>
-                        <Record Type="SAP__UI.DataField">
-                            <PropertyValue Property="Value" Path="Status"/>
-                        </Record>
-                    </Collection>
-                </Annotation>
-                <Annotation Term="SAP__UI.SelectionFields">
-                    <Collection>
-                        <PropertyPath>CategoryID</PropertyPath>
-                        <PropertyPath>CategoryName</PropertyPath>
-                        <PropertyPath>Status</PropertyPath>
-                    </Collection>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="SAP__self.Container/Categories">
-                <Annotation Term="SAP__capabilities.SearchRestrictions">
-                    <Record>
-                        <PropertyValue Property="Searchable" Bool="true"/>
-                        <PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.InsertRestrictions">
-                    <Record>
-                        <PropertyValue Property="Insertable" Bool="false"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.DeleteRestrictions">
-                    <Record>
-                        <PropertyValue Property="Deletable" Bool="false"/>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__capabilities.UpdateRestrictions">
-                    <Record>
-                        <PropertyValue Property="Updatable" Bool="false"/>
-                        <PropertyValue Property="QueryOptions">
-                            <Record>
-                                <PropertyValue Property="SelectSupported" Bool="true"/>
-                            </Record>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="SAP__core.OptimisticConcurrency">
-                    <Collection/>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/ImageUrl">
-                <Annotation Term="SAP__UI.Hidden"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/CreatedAt">
-                <Annotation Term="SAP__UI.Hidden"/>
-            </Annotations>
-            <Annotations Target="SAP__self.Food2Type/UpdatedAt">
-                <Annotation Term="SAP__UI.Hidden"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/CreatedAt">
-                <Annotation Term="SAP__UI.Hidden"/>
-            </Annotations>
-            <Annotations Target="SAP__self.UsersType/UpdatedAt">
-                <Annotation Term="SAP__UI.Hidden"/>
-            </Annotations>
-        </Schema>
-    </edmx:DataServices>
+
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" xmlns="http://docs.oasis-open.org/odata/ns/edm" Version="4.0">
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMUNICATION',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_PERSONALDATA',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.PersonalData.v1" Alias="PersonalData"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_ANALYTICS',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.Analytics.v1" Alias="Analytics"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="SAP__common"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_MEASURES',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="Org.OData.Measures.V1" Alias="SAP__measures"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CORE',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="Org.OData.Core.V1" Alias="SAP__core"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CAPABILITIES',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="Org.OData.Capabilities.V1" Alias="SAP__capabilities"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_AGGREGATION',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="Org.OData.Aggregation.V1" Alias="SAP__aggregation"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_VALIDATION',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="Org.OData.Validation.V1" Alias="SAP__validation"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CODELIST',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.CodeList.v1" Alias="SAP__CodeList"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_UI',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="SAP__UI"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_HTML5',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.HTML5.v1" Alias="SAP__HTML5"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_PDF',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.PDF.v1" Alias="SAP__PDF"/>
+</edmx:Reference>
+<edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_SESSION',Version='0001',SAP__Origin='LOCAL')/$value">
+<edmx:Include Namespace="com.sap.vocabularies.Session.v1" Alias="SAP__session"/>
+</edmx:Reference>
+<edmx:DataServices>
+<Schema Namespace="com.sap.gateway.srvd.zsd_g7_canteen.v0001" Alias="SAP__self">
+<Annotation Term="SAP__core.SchemaVersion" String="1.0.0"/>
+<EntityType Name="StaffOrdersType">
+<Key>
+<PropertyRef Name="OrderID"/>
+</Key>
+<Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="StaffID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="OrderDate" Type="Edm.String" Nullable="false" MaxLength="8"/>
+<Property Name="OrderTime" Type="Edm.String" Nullable="false" MaxLength="6"/>
+<Property Name="TotalAmount" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="OrderStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="PaymentStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="UpdatedBy" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="LastStatusAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<NavigationProperty Name="_Customer" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
+<NavigationProperty Name="_Items" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType)"/>
+<NavigationProperty Name="_Staff" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
+</EntityType>
+<EntityType Name="OrdersType">
+<Key>
+<PropertyRef Name="OrderID"/>
+</Key>
+<Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="CartID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="OrderDate" Type="Edm.String" Nullable="false" MaxLength="8"/>
+<Property Name="OrderTime" Type="Edm.String" Nullable="false" MaxLength="6"/>
+<Property Name="TotalAmount" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="OrderStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="PaymentStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="StaffID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="UpdatedBy" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="LastStatusAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="Note" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="__EntityControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.EntityControl"/>
+<Property Name="__OperationControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersOperationControl"/>
+<Property Name="SAP__Messages" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.SAP__Message)" Nullable="false"/>
+<NavigationProperty Name="_Cart" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartsType"/>
+<NavigationProperty Name="_Items" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType)"/>
+<NavigationProperty Name="_User" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
+</EntityType>
+<EntityType Name="PaymentsType">
+<Key>
+<PropertyRef Name="PaymentID"/>
+</Key>
+<Property Name="PaymentID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="PaymentMethod" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="PaymentAmount" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="PaymentStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="QRCode" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="PaymentTime" Type="Edm.String" Nullable="false" MaxLength="14"/>
+<Property Name="TransactionRef" Type="Edm.String" Nullable="false" MaxLength="50"/>
+<Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="__EntityControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.EntityControl"/>
+<Property Name="__OperationControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentsOperationControl"/>
+<Property Name="SAP__Messages" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.SAP__Message)" Nullable="false"/>
+<NavigationProperty Name="_Order" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
+<NavigationProperty Name="_User" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
+</EntityType>
+<EntityType Name="RawStockType">
+<Key>
+<PropertyRef Name="Material"/>
+<PropertyRef Name="Plant"/>
+<PropertyRef Name="StorageLocation"/>
+<PropertyRef Name="MaterialBaseUnit"/>
+</Key>
+<Property Name="Material" Type="Edm.String" Nullable="false" MaxLength="18"/>
+<Property Name="Plant" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="StorageLocation" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="MaterialBaseUnit" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Property Name="MaterialDescription" Type="Edm.String" Nullable="false" MaxLength="40"/>
+<Property Name="StockQuantity" Type="Edm.Decimal" Nullable="false" Precision="31" Scale="14"/>
+</EntityType>
+<EntityType Name="RolesType">
+<Key>
+<PropertyRef Name="RoleID"/>
+</Key>
+<Property Name="RoleID" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="RoleName" Type="Edm.String" Nullable="false" MaxLength="30"/>
+<Property Name="Description" Type="Edm.String" Nullable="false" MaxLength="100"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="1"/>
+</EntityType>
+<EntityType Name="Food2Type">
+<Key>
+<PropertyRef Name="MaterialNumber"/>
+</Key>
+<Property Name="MaterialNumber" Type="Edm.String" Nullable="false" MaxLength="18"/>
+<Property Name="MaterialDescription" Type="Edm.String" Nullable="false" MaxLength="40"/>
+<Property Name="MaterialGroup" Type="Edm.String" Nullable="false" MaxLength="9"/>
+<Property Name="MaterialType" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="Plant" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="StorageLocation" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="AvailableStock" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3"/>
+<Property Name="BaseUnit" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Property Name="Price" Type="Edm.Decimal" Nullable="false" Precision="11" Scale="variable"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="ImageUrl" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="1"/>
+<Property Name="CreatedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+<Property Name="UpdatedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+<Property Name="__EntityControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.EntityControl"/>
+<Property Name="__OperationControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2OperationControl"/>
+<Property Name="SAP__Messages" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.SAP__Message)" Nullable="false"/>
+</EntityType>
+<EntityType Name="RawMaterialVHType">
+<Key>
+<PropertyRef Name="Material"/>
+<PropertyRef Name="Plant"/>
+<PropertyRef Name="StorageLocation"/>
+<PropertyRef Name="MaterialBaseUnit"/>
+</Key>
+<Property Name="Material" Type="Edm.String" Nullable="false" MaxLength="18"/>
+<Property Name="Plant" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="StorageLocation" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="MaterialBaseUnit" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Property Name="MaterialDescription" Type="Edm.String" Nullable="false" MaxLength="40"/>
+</EntityType>
+<EntityType Name="CartsType">
+<Key>
+<PropertyRef Name="CartID"/>
+</Key>
+<Property Name="CartID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<NavigationProperty Name="_Items" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartItemsType)"/>
+<NavigationProperty Name="_User" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
+</EntityType>
+<EntityType Name="OrderHistoryType">
+<Key>
+<PropertyRef Name="OrderID"/>
+<PropertyRef Name="HistNo"/>
+</Key>
+<Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="HistNo" Type="Edm.String" Nullable="false" MaxLength="6"/>
+<Property Name="OldStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="NewStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="ChangedBy" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="ChangedAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="Note" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<NavigationProperty Name="_ChangedByUser" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType"/>
+<NavigationProperty Name="_Order" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
+</EntityType>
+<EntityType Name="ZP_G7_PO_REQUESTType">
+<Key>
+<PropertyRef Name="request_id"/>
+</Key>
+<Property Name="request_id" Type="Edm.Guid" Nullable="false"/>
+<Property Name="vendor" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="material" Type="Edm.String" Nullable="false" MaxLength="18"/>
+<Property Name="quantity" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3"/>
+<Property Name="unit" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Property Name="price" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="2"/>
+<Property Name="currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="company_code" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="plant" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="storage_loc" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="purch_org" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="purch_group" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Property Name="purchase_order" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="status" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="__EntityControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.EntityControl"/>
+<Property Name="__OperationControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.ZP_G7_PO_REQUESTOperationControl"/>
+<Property Name="SAP__Messages" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.SAP__Message)" Nullable="false"/>
+</EntityType>
+<EntityType Name="CartItemsType">
+<Key>
+<PropertyRef Name="CartID"/>
+<PropertyRef Name="ItemNo"/>
+</Key>
+<Property Name="CartID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="ItemNo" Type="Edm.String" Nullable="false" MaxLength="6"/>
+<Property Name="FoodID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="Quantity" Type="Edm.Int32" Nullable="false"/>
+<Property Name="UnitPrice" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="LineAmount" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="__EntityControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.EntityControl"/>
+<Property Name="SAP__Messages" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.SAP__Message)" Nullable="false"/>
+<NavigationProperty Name="_Food" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
+</EntityType>
+<EntityType Name="UsersType">
+<Key>
+<PropertyRef Name="UserID"/>
+</Key>
+<Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="Username" Type="Edm.String" Nullable="false" MaxLength="50"/>
+<Property Name="FullName" Type="Edm.String" Nullable="false" MaxLength="100"/>
+<Property Name="Email" Type="Edm.String" Nullable="false" MaxLength="100"/>
+<Property Name="Phone" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="RoleID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="1"/>
+<Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<NavigationProperty Name="_Role" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.RolesType"/>
+</EntityType>
+<EntityType Name="CategoriesType">
+<Key>
+<PropertyRef Name="CategoryID"/>
+</Key>
+<Property Name="CategoryID" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="CategoryName" Type="Edm.String" Nullable="false" MaxLength="50"/>
+<Property Name="Description" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="StatusCriticality" Type="Edm.Byte" Nullable="false"/>
+</EntityType>
+<EntityType Name="PaymentGatewayType">
+<Key>
+<PropertyRef Name="PaymentID"/>
+</Key>
+<Property Name="PaymentID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="PayOSOrderCode" Type="Edm.Int64" Nullable="false"/>
+<Property Name="Amount" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="Description" Type="Edm.String" Nullable="false" MaxLength="100"/>
+<Property Name="CheckoutURL" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="QRCode" Type="Edm.String" Nullable="false" MaxLength="500"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="CreatedAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="UpdatedAt" Type="Edm.String" Nullable="false" MaxLength="15"/>
+<Property Name="__EntityControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.EntityControl"/>
+<Property Name="__OperationControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentGatewayOperationControl"/>
+<Property Name="SAP__Messages" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.SAP__Message)" Nullable="false"/>
+</EntityType>
+<EntityType Name="RawMaterialType">
+<Key>
+<PropertyRef Name="MaterialNumber"/>
+</Key>
+<Property Name="MaterialNumber" Type="Edm.String" Nullable="false" MaxLength="18"/>
+<Property Name="MaterialDescription" Type="Edm.String" Nullable="false" MaxLength="40"/>
+<Property Name="BaseUnit" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Property Name="AvailableStock" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3"/>
+<Property Name="AvailableStockRaw" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3"/>
+<Property Name="StorageLocation" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="Plant" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Property Name="StockCriticality" Type="Edm.Byte" Nullable="false"/>
+<Property Name="MinStock" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3"/>
+<Property Name="DefaultSupplier" Type="Edm.String" Nullable="false" MaxLength="10"/>
+<Property Name="ImageUrl" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="1"/>
+<Property Name="CreatedBy" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="CreatedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+<Property Name="UpdatedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+</EntityType>
+<EntityType Name="OrderItemsType">
+<Key>
+<PropertyRef Name="OrderID"/>
+<PropertyRef Name="ItemNo"/>
+</Key>
+<Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="ItemNo" Type="Edm.String" Nullable="false" MaxLength="6"/>
+<Property Name="FoodID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="FoodName" Type="Edm.String" Nullable="false" MaxLength="100"/>
+<Property Name="Quantity" Type="Edm.Int32" Nullable="false"/>
+<Property Name="UnitPrice" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="LineAmount" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="ItemStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="Note" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="__EntityControl" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.EntityControl"/>
+<NavigationProperty Name="_Order" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType"/>
+</EntityType>
+<ComplexType Name="OrdersOperationControl">
+<Property Name="cancelOrder" Type="Edm.Boolean" Nullable="false"/>
+<Property Name="confirmOrder" Type="Edm.Boolean" Nullable="false"/>
+<Property Name="markAsPaid" Type="Edm.Boolean" Nullable="false"/>
+</ComplexType>
+<ComplexType Name="PaymentsOperationControl">
+<Property Name="confirmPayment" Type="Edm.Boolean" Nullable="false"/>
+</ComplexType>
+<ComplexType Name="Food2OperationControl">
+<Property Name="syncFromMara" Type="Edm.Boolean" Nullable="false"/>
+<Property Name="updateFood2" Type="Edm.Boolean" Nullable="false"/>
+</ComplexType>
+<ComplexType Name="ZP_G7_PO_REQUESTOperationControl">
+<Property Name="CreatePurchaseOrder" Type="Edm.Boolean" Nullable="false"/>
+</ComplexType>
+<ComplexType Name="PaymentGatewayOperationControl">
+<Property Name="confirmPayment" Type="Edm.Boolean" Nullable="false"/>
+<Property Name="createCheckout" Type="Edm.Boolean" Nullable="false"/>
+<Property Name="refreshPaymentStatus" Type="Edm.Boolean" Nullable="false"/>
+</ComplexType>
+<ComplexType Name="EntityControl">
+<Property Name="Deletable" Type="Edm.Boolean" Nullable="false"/>
+<Property Name="Updatable" Type="Edm.Boolean" Nullable="false"/>
+</ComplexType>
+<ComplexType Name="ZC_G7_CHECKOUT_RESULT">
+<Property Name="CheckoutURL" Type="Edm.String" Nullable="false" MaxLength="500"/>
+<Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Property Name="OrderID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="PaymentAmount" Type="Edm.Decimal" Nullable="false" Precision="16" Scale="variable"/>
+<Property Name="PaymentID" Type="Edm.String" Nullable="false" MaxLength="12"/>
+<Property Name="PaymentMethod" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="PaymentStatus" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<Property Name="QRCode" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+</ComplexType>
+<ComplexType Name="SAP__Message">
+<Property Name="code" Type="Edm.String" Nullable="false"/>
+<Property Name="message" Type="Edm.String" Nullable="false"/>
+<Property Name="target" Type="Edm.String"/>
+<Property Name="additionalTargets" Type="Collection(Edm.String)" Nullable="false"/>
+<Property Name="transition" Type="Edm.Boolean" Nullable="false"/>
+<Property Name="numericSeverity" Type="Edm.Byte" Nullable="false"/>
+<Property Name="longtextUrl" Type="Edm.String"/>
+</ComplexType>
+<Action Name="refreshPaymentStatus" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentGatewayType" Nullable="false"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentGatewayType" Nullable="false"/>
+</Action>
+<Action Name="confirmPayment" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentsType" Nullable="false"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentsType" Nullable="false"/>
+</Action>
+<Action Name="CreatePurchaseOrder" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.ZP_G7_PO_REQUESTType" Nullable="false"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.ZP_G7_PO_REQUESTType" Nullable="false"/>
+</Action>
+<Action Name="createCheckout" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentGatewayType" Nullable="false"/>
+</Action>
+<Action Name="markAsPaid" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+</Action>
+<Action Name="confirmOrder" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+</Action>
+<Action Name="syncFromMara" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type" Nullable="false"/>
+</Action>
+<Action Name="updateFood2" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type" Nullable="false"/>
+<Parameter Name="MANDT" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Parameter Name="MATNR" Type="Edm.String" Nullable="false" MaxLength="40"/>
+<Parameter Name="WERKS" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Parameter Name="LGORT" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Parameter Name="MAKTX" Type="Edm.String" Nullable="false" MaxLength="40"/>
+<Parameter Name="MATKL" Type="Edm.String" Nullable="false" MaxLength="9"/>
+<Parameter Name="MTART" Type="Edm.String" Nullable="false" MaxLength="4"/>
+<Parameter Name="MEINS" Type="Edm.String" Nullable="false" MaxLength="3"/>
+<Parameter Name="LABST" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3"/>
+<Parameter Name="PRICE" Type="Edm.Decimal" Nullable="false" Precision="15" Scale="variable"/>
+<Parameter Name="WAERS" Type="Edm.String" Nullable="false" MaxLength="5"/>
+<Parameter Name="IMAGE_URL" Type="Edm.String" Nullable="false" MaxLength="255"/>
+<Parameter Name="STATUS" Type="Edm.String" Nullable="false" MaxLength="1"/>
+<Parameter Name="CREATED_AT" Type="Edm.DateTimeOffset" Nullable="true" Precision="7"/>
+<Parameter Name="UPDATED_AT" Type="Edm.DateTimeOffset" Nullable="true" Precision="7"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type" Nullable="false"/>
+</Action>
+<Action Name="syncFromFG01" IsBound="true">
+<Parameter Name="_it" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type)" Nullable="false"/>
+</Action>
+<Action Name="confirmPayment" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentGatewayType" Nullable="false"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentGatewayType" Nullable="false"/>
+</Action>
+<Action Name="cancelOrder" EntitySetPath="_it" IsBound="true">
+<Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType" Nullable="false"/>
+</Action>
+<Action Name="createCheckout" IsBound="true">
+<Parameter Name="_it" Type="Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentsType)" Nullable="false"/>
+<Parameter Name="UserID" Type="Edm.String" Nullable="false" MaxLength="20"/>
+<ReturnType Type="com.sap.gateway.srvd.zsd_g7_canteen.v0001.ZC_G7_CHECKOUT_RESULT" Nullable="false"/>
+</Action>
+<EntityContainer Name="Container">
+<EntitySet Name="CartItems" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartItemsType">
+<NavigationPropertyBinding Path="_Food" Target="Food2"/>
+</EntitySet>
+<EntitySet Name="Carts" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CartsType">
+<NavigationPropertyBinding Path="_Items" Target="CartItems"/>
+<NavigationPropertyBinding Path="_User" Target="Users"/>
+</EntitySet>
+<EntitySet Name="Categories" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CategoriesType"/>
+<EntitySet Name="Food2" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type"/>
+<EntitySet Name="OrderHistory" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderHistoryType">
+<NavigationPropertyBinding Path="_ChangedByUser" Target="Users"/>
+<NavigationPropertyBinding Path="_Order" Target="Orders"/>
+</EntitySet>
+<EntitySet Name="OrderItems" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrderItemsType">
+<NavigationPropertyBinding Path="_Order" Target="Orders"/>
+</EntitySet>
+<EntitySet Name="Orders" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.OrdersType">
+<NavigationPropertyBinding Path="_Cart" Target="Carts"/>
+<NavigationPropertyBinding Path="_Items" Target="OrderItems"/>
+<NavigationPropertyBinding Path="_User" Target="Users"/>
+</EntitySet>
+<EntitySet Name="PaymentGateway" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentGatewayType"/>
+<EntitySet Name="Payments" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentsType">
+<NavigationPropertyBinding Path="_Order" Target="Orders"/>
+<NavigationPropertyBinding Path="_User" Target="Users"/>
+</EntitySet>
+<EntitySet Name="RawMaterial" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.RawMaterialType"/>
+<EntitySet Name="RawMaterialVH" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.RawMaterialVHType"/>
+<EntitySet Name="RawStock" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.RawStockType"/>
+<EntitySet Name="Roles" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.RolesType"/>
+<EntitySet Name="StaffOrders" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.StaffOrdersType">
+<NavigationPropertyBinding Path="_Customer" Target="Users"/>
+<NavigationPropertyBinding Path="_Items" Target="OrderItems"/>
+<NavigationPropertyBinding Path="_Staff" Target="Users"/>
+</EntitySet>
+<EntitySet Name="Users" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.UsersType">
+<NavigationPropertyBinding Path="_Role" Target="Roles"/>
+</EntitySet>
+<EntitySet Name="ZP_G7_PO_REQUEST" EntityType="com.sap.gateway.srvd.zsd_g7_canteen.v0001.ZP_G7_PO_REQUESTType"/>
+</EntityContainer>
+<Annotations Target="SAP__self.ZC_G7_CHECKOUT_RESULT/PaymentAmount">
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/OrderID">
+<Annotation Term="SAP__common.Label" String="Order ID"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/UserID">
+<Annotation Term="SAP__common.Label" String="Customer User ID"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/StaffID">
+<Annotation Term="SAP__common.Label" String="Staff ID"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/OrderDate">
+<Annotation Term="SAP__common.Label" String="Order Date"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/OrderTime">
+<Annotation Term="SAP__common.Label" String="Order Time"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/TotalAmount">
+<Annotation Term="SAP__common.Label" String="Total Amount"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/Currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/OrderStatus">
+<Annotation Term="SAP__common.Label" String="Order Status"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/PaymentStatus">
+<Annotation Term="SAP__common.Label" String="Payment Status"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/StaffOrders">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Customer"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Items"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Staff"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="FilterExpressionRestrictions">
+<Collection>
+<Record>
+<PropertyValue Property="Property" PropertyPath="TotalAmount"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType">
+<Annotation Term="SAP__common.Label" String="G7 Staff Order CDS View"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Staff Order"/>
+<PropertyValue Property="TypeNamePlural" String="Staff Orders"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="StaffID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderDate"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderTime"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="TotalAmount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentStatus"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>OrderID</PropertyPath>
+<PropertyPath>OrderStatus</PropertyPath>
+<PropertyPath>PaymentStatus</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.Container">
+<Annotation Term="SAP__CodeList.CurrencyCodes">
+<Record>
+<PropertyValue Property="Url" String="../../../../default/iwbep/common/0001/$metadata"/>
+<PropertyValue Property="CollectionPath" String="Currencies"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__CodeList.UnitsOfMeasure">
+<Record>
+<PropertyValue Property="Url" String="../../../../default/iwbep/common/0001/$metadata"/>
+<PropertyValue Property="CollectionPath" String="UnitsOfMeasure"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__aggregation.ApplySupported">
+<Record>
+<PropertyValue Property="Transformations">
+<Collection>
+<String>aggregate</String>
+<String>groupby</String>
+<String>filter</String>
+</Collection>
+</PropertyValue>
+<PropertyValue Property="Rollup" EnumMember="SAP__aggregation.RollupType/None"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__common.ApplyMultiUnitBehaviorForSortingAndFiltering" Bool="true"/>
+<Annotation Term="SAP__capabilities.FilterFunctions">
+<Collection>
+<String>eq</String>
+<String>ne</String>
+<String>gt</String>
+<String>ge</String>
+<String>lt</String>
+<String>le</String>
+<String>and</String>
+<String>or</String>
+<String>contains</String>
+<String>startswith</String>
+<String>endswith</String>
+<String>any</String>
+<String>all</String>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__capabilities.SupportedFormats">
+<Collection>
+<String>application/json</String>
+<String>application/pdf</String>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__PDF.Features">
+<Record>
+<PropertyValue Property="DocumentDescriptionReference" String="../../../../default/iwbep/common/0001/$metadata"/>
+<PropertyValue Property="DocumentDescriptionCollection" String="MyDocumentDescriptions"/>
+<PropertyValue Property="ArchiveFormat" Bool="true"/>
+<PropertyValue Property="Border" Bool="true"/>
+<PropertyValue Property="CoverPage" Bool="true"/>
+<PropertyValue Property="FitToPage" Bool="true"/>
+<PropertyValue Property="FontName" Bool="true"/>
+<PropertyValue Property="FontSize" Bool="true"/>
+<PropertyValue Property="Margin" Bool="true"/>
+<PropertyValue Property="Signature" Bool="true"/>
+<PropertyValue Property="ResultSizeDefault" Int="20000"/>
+<PropertyValue Property="ResultSizeMaximum" Int="20000"/>
+</Record>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/OrderID">
+<Annotation Term="SAP__common.Label" String="Order ID"/>
+<Annotation Term="SAP__core.Computed"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/UserID">
+<Annotation Term="SAP__common.Label" String="User ID"/>
+<Annotation Term="SAP__core.Computed"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/CartID">
+<Annotation Term="SAP__common.Label" String="Cart ID"/>
+<Annotation Term="SAP__core.Computed"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/OrderDate">
+<Annotation Term="SAP__common.Label" String="Order Date"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/OrderTime">
+<Annotation Term="SAP__common.Label" String="Order Time"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/TotalAmount">
+<Annotation Term="SAP__common.Label" String="Total Amount"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/Currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/OrderStatus">
+<Annotation Term="SAP__common.Label" String="Order Status"/>
+<Annotation Term="SAP__common.FieldControl" EnumMember="SAP__common.FieldControlType/Mandatory"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/PaymentStatus">
+<Annotation Term="SAP__common.Label" String="Payment Status"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/StaffID">
+<Annotation Term="SAP__common.Label" String="Staff ID"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/UpdatedBy">
+<Annotation Term="SAP__common.Label" String="Updated By"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/LastStatusAt">
+<Annotation Term="SAP__common.Label" String="Last Status Time"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/Note">
+<Annotation Term="SAP__common.Label" String="Note"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/CreatedAt">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/__EntityControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/__OperationControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/Orders">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Cart"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Items"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_User"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="NonFilterableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SortRestrictions">
+<Record>
+<PropertyValue Property="NonSortableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Path="__EntityControl/Updatable"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection>
+<PropertyPath>UpdatedAt</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.markAsPaid(SAP__self.OrdersType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/markAsPaid"/>
+</Annotations>
+<Annotations Target="SAP__self.confirmOrder(SAP__self.OrdersType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/confirmOrder"/>
+</Annotations>
+<Annotations Target="SAP__self.cancelOrder(SAP__self.OrdersType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/cancelOrder"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType">
+<Annotation Term="SAP__common.Label" String="G7 Order Header CDS View"/>
+<Annotation Term="SAP__UI.Facets">
+<Collection>
+<Record Type="SAP__UI.ReferenceFacet">
+<PropertyValue Property="Label" String="Thông tin đơn hàng"/>
+<PropertyValue Property="ID" String="Header"/>
+<PropertyValue Property="Target" AnnotationPath="@SAP__UI.Identification"/>
+</Record>
+<Record Type="SAP__UI.ReferenceFacet">
+<PropertyValue Property="Label" String="Sản phẩm trong đơn"/>
+<PropertyValue Property="ID" String="Items"/>
+<PropertyValue Property="Target" AnnotationPath="_Items/@SAP__UI.LineItem"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Order"/>
+<PropertyValue Property="TypeNamePlural" String="Orders"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CartID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderDate"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderTime"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="TotalAmount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="StaffID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Note"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UpdatedBy"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="LastStatusAt"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CartID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderDate"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderTime"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="TotalAmount"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderStatus"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="StaffID"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>OrderID</PropertyPath>
+<PropertyPath>UserID</PropertyPath>
+<PropertyPath>CartID</PropertyPath>
+<PropertyPath>OrderStatus</PropertyPath>
+<PropertyPath>PaymentStatus</PropertyPath>
+<PropertyPath>StaffID</PropertyPath>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__common.Messages" Path="SAP__Messages"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/PaymentID">
+<Annotation Term="SAP__common.Label" String="Payment ID"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/OrderID">
+<Annotation Term="SAP__common.Label" String="Order ID"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/UserID">
+<Annotation Term="SAP__common.Label" String="User ID"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/PaymentMethod">
+<Annotation Term="SAP__common.Label" String="Payment Method"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/PaymentAmount">
+<Annotation Term="SAP__common.Label" String="Payment Amount"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/Currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/PaymentStatus">
+<Annotation Term="SAP__common.Label" String="Payment Status"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/QRCode">
+<Annotation Term="SAP__common.Label" String="QR Code"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/PaymentTime">
+<Annotation Term="SAP__common.Label" String="Payment Time"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/TransactionRef">
+<Annotation Term="SAP__common.Label" String="Transaction Reference"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/__EntityControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/__OperationControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/Payments">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Order"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_User"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="NonFilterableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SortRestrictions">
+<Record>
+<PropertyValue Property="NonSortableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Path="__EntityControl/Deletable"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Path="__EntityControl/Updatable"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.confirmPayment(SAP__self.PaymentsType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/confirmPayment"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType">
+<Annotation Term="SAP__common.Label" String="G7 Payment CDS View"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Payment"/>
+<PropertyValue Property="TypeNamePlural" String="Payments"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentID"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentMethod"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentAmount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="QRCode"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentTime"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="TransactionRef"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentID"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentMethod"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentAmount"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentTime"/>
+</Record>
+<Record Type="SAP__UI.DataFieldForAction">
+<PropertyValue Property="Label" String="💳 Checkout"/>
+<PropertyValue Property="Action" String="com.sap.gateway.srvd.zsd_g7_canteen.v0001.createCheckout(Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentsType))"/>
+<PropertyValue Property="InvocationGrouping" EnumMember="SAP__UI.OperationGroupingType/Isolated"/>
+</Record>
+<Record Type="SAP__UI.DataFieldForAction">
+<PropertyValue Property="Label" String="✅ Xác nhận Thanh Toán & Trừ Kho"/>
+<PropertyValue Property="Action" String="com.sap.gateway.srvd.zsd_g7_canteen.v0001.confirmPayment(com.sap.gateway.srvd.zsd_g7_canteen.v0001.PaymentsType)"/>
+<PropertyValue Property="InvocationGrouping" EnumMember="SAP__UI.OperationGroupingType/Isolated"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>PaymentID</PropertyPath>
+<PropertyPath>OrderID</PropertyPath>
+<PropertyPath>UserID</PropertyPath>
+<PropertyPath>PaymentMethod</PropertyPath>
+<PropertyPath>PaymentStatus</PropertyPath>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__common.Messages" Path="SAP__Messages"/>
+</Annotations>
+<Annotations Target="SAP__self.RawStockType/Material">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Stock Material"/>
+<Annotation Term="SAP__common.Heading" String="Material"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material in Respect of Which Stock is Managed"/>
+</Annotations>
+<Annotations Target="SAP__self.RawStockType/Plant">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Plant"/>
+<Annotation Term="SAP__common.Heading" String="Plnt"/>
+</Annotations>
+<Annotations Target="SAP__self.RawStockType/StorageLocation">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Storage Location"/>
+</Annotations>
+<Annotations Target="SAP__self.RawStockType/MaterialBaseUnit">
+<Annotation Term="SAP__common.IsUnit"/>
+<Annotation Term="SAP__common.Label" String="Base Unit of Measure"/>
+<Annotation Term="SAP__common.Heading" String="BUn"/>
+</Annotations>
+<Annotations Target="SAP__self.RawStockType/StockQuantity">
+<Annotation Term="SAP__measures.Unit" Path="MaterialBaseUnit"/>
+</Annotations>
+<Annotations Target="SAP__self.RawStockType">
+<Annotation Term="SAP__common.Label" String="Raw Material Stock"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/RawStock">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="FilterExpressionRestrictions">
+<Collection>
+<Record>
+<PropertyValue Property="Property" PropertyPath="Plant"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+<Record>
+<PropertyValue Property="Property" PropertyPath="StorageLocation"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+<Record>
+<PropertyValue Property="Property" PropertyPath="StockQuantity"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.RolesType">
+<Annotation Term="SAP__common.Label" String="G7 Role Master CDS View"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Role"/>
+<PropertyValue Property="TypeNamePlural" String="Roles"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="RoleName"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="RoleName"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Description"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="RoleID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="RoleName"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>RoleID</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.Container/Roles">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/MaterialNumber">
+<Annotation Term="SAP__common.Label" String="Material Number"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Heading" String="Material"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material Number"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/MaterialDescription">
+<Annotation Term="SAP__common.Label" String="Material Description"/>
+<Annotation Term="SAP__common.Heading" String="Material Description"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material Description"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/MaterialGroup">
+<Annotation Term="SAP__common.Label" String="Material Group"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Heading" String="Matl Group"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material Group"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/MaterialType">
+<Annotation Term="SAP__common.Label" String="Material Type"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Heading" String="MTyp"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material Type"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/Plant">
+<Annotation Term="SAP__common.Label" String="Plant"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Heading" String="Plnt"/>
+<Annotation Term="SAP__common.QuickInfo" String="Plant"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/StorageLocation">
+<Annotation Term="SAP__common.Label" String="Storage Location"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Heading" String="Storage Location"/>
+<Annotation Term="SAP__common.QuickInfo" String="Storage Location"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/AvailableStock">
+<Annotation Term="SAP__common.Label" String="Available Stock (Next Day)"/>
+<Annotation Term="SAP__measures.Unit" Path="BaseUnit"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/BaseUnit">
+<Annotation Term="SAP__common.IsUnit"/>
+<Annotation Term="SAP__UI.Hidden"/>
+<Annotation Term="SAP__common.Label" String="Base Unit of Measure"/>
+<Annotation Term="SAP__common.Heading" String="BUn"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/Price">
+<Annotation Term="SAP__common.Label" String="Standard Price"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+<Annotation Term="SAP__common.Heading" String="Standard price"/>
+<Annotation Term="SAP__common.QuickInfo" String="Standard price"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/Currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/ImageUrl">
+<Annotation Term="SAP__common.Label" String="Image URL"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/Status">
+<Annotation Term="SAP__common.Label" String="Status"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/__EntityControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/__OperationControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.syncFromMara(SAP__self.Food2Type)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/syncFromMara"/>
+</Annotations>
+<Annotations Target="SAP__self.updateFood2(SAP__self.Food2Type)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/updateFood2"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type">
+<Annotation Term="SAP__common.Label" String="G7 Food 2 Master CDS View"/>
+<Annotation Term="SAP__UI.Facets">
+<Collection>
+<Record Type="SAP__UI.ReferenceFacet">
+<PropertyValue Property="Label" String="Food Detail"/>
+<PropertyValue Property="ID" String="FoodDetail"/>
+<PropertyValue Property="Target" AnnotationPath="@SAP__UI.Identification"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Food Item"/>
+<PropertyValue Property="TypeNamePlural" String="Food Items List"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialDescription"/>
+</Record>
+</PropertyValue>
+<PropertyValue Property="Description">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialNumber"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialNumber"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialDescription"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialGroup"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialType"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Plant"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="StorageLocation"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="AvailableStock"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Price"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ImageUrl"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+<Record Type="SAP__UI.DataFieldForAction">
+<PropertyValue Property="Label" String="Sync từ MARA"/>
+<PropertyValue Property="Action" String="com.sap.gateway.srvd.zsd_g7_canteen.v0001.syncFromMara(com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type)"/>
+<PropertyValue Property="InvocationGrouping" EnumMember="SAP__UI.OperationGroupingType/Isolated"/>
+</Record>
+<Record Type="SAP__UI.DataFieldForAction">
+<PropertyValue Property="Label" String="Sync tồn kho từ FG01"/>
+<PropertyValue Property="Action" String="com.sap.gateway.srvd.zsd_g7_canteen.v0001.syncFromFG01(Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type))"/>
+<PropertyValue Property="InvocationGrouping" EnumMember="SAP__UI.OperationGroupingType/Isolated"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialNumber"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialDescription"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialGroup"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialType"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Plant"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="StorageLocation"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="AvailableStock"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Price"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+<Record Type="SAP__UI.DataFieldForAction">
+<PropertyValue Property="Label" String="Sync từ MARA"/>
+<PropertyValue Property="Action" String="com.sap.gateway.srvd.zsd_g7_canteen.v0001.syncFromMara(com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type)"/>
+<PropertyValue Property="InvocationGrouping" EnumMember="SAP__UI.OperationGroupingType/Isolated"/>
+</Record>
+<Record Type="SAP__UI.DataFieldForAction">
+<PropertyValue Property="Label" String="Sync tồn kho từ FG01"/>
+<PropertyValue Property="Action" String="com.sap.gateway.srvd.zsd_g7_canteen.v0001.syncFromFG01(Collection(com.sap.gateway.srvd.zsd_g7_canteen.v0001.Food2Type))"/>
+<PropertyValue Property="InvocationGrouping" EnumMember="SAP__UI.OperationGroupingType/Isolated"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>MaterialNumber</PropertyPath>
+<PropertyPath>MaterialDescription</PropertyPath>
+<PropertyPath>MaterialGroup</PropertyPath>
+<PropertyPath>MaterialType</PropertyPath>
+<PropertyPath>Plant</PropertyPath>
+<PropertyPath>StorageLocation</PropertyPath>
+<PropertyPath>Status</PropertyPath>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__common.Messages" Path="SAP__Messages"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/Food2">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="NonFilterableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SortRestrictions">
+<Record>
+<PropertyValue Property="NonSortableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Path="__EntityControl/Deletable"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Path="__EntityControl/Updatable"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialVHType/Material">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Stock Material"/>
+<Annotation Term="SAP__common.Heading" String="Material"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material in Respect of Which Stock is Managed"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialVHType/Plant">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Plant"/>
+<Annotation Term="SAP__common.Heading" String="Plnt"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialVHType/StorageLocation">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Storage Location"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialVHType/MaterialBaseUnit">
+<Annotation Term="SAP__common.IsUnit"/>
+<Annotation Term="SAP__common.Label" String="Base Unit of Measure"/>
+<Annotation Term="SAP__common.Heading" String="BUn"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialVHType">
+<Annotation Term="SAP__common.Label" String="Raw Material Value Help"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/RawMaterialVH">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="FilterExpressionRestrictions">
+<Collection>
+<Record>
+<PropertyValue Property="Property" PropertyPath="Plant"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+<Record>
+<PropertyValue Property="Property" PropertyPath="StorageLocation"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.CartsType/CartID">
+<Annotation Term="SAP__common.Label" String="Cart ID"/>
+</Annotations>
+<Annotations Target="SAP__self.CartsType/UserID">
+<Annotation Term="SAP__common.Label" String="User ID"/>
+</Annotations>
+<Annotations Target="SAP__self.CartsType/Status">
+<Annotation Term="SAP__common.Label" String="Status"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/Carts">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Items"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_User"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.CartsType">
+<Annotation Term="SAP__common.Label" String="G7 Cart CDS View"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Cart"/>
+<PropertyValue Property="TypeNamePlural" String="Carts"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CartID"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CartID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CartID"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>CartID</PropertyPath>
+<PropertyPath>UserID</PropertyPath>
+<PropertyPath>Status</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType/OrderID">
+<Annotation Term="SAP__common.Label" String="Order ID"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType/HistNo">
+<Annotation Term="SAP__common.Label" String="History No"/>
+<Annotation Term="SAP__common.IsDigitSequence"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType/OldStatus">
+<Annotation Term="SAP__common.Label" String="Old Status"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType/NewStatus">
+<Annotation Term="SAP__common.Label" String="New Status"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType/ChangedBy">
+<Annotation Term="SAP__common.Label" String="Changed By"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType/ChangedAt">
+<Annotation Term="SAP__common.Label" String="Changed At"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType/Note">
+<Annotation Term="SAP__common.Label" String="Note"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/OrderHistory">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_ChangedByUser"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Order"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.OrderHistoryType">
+<Annotation Term="SAP__common.Label" String="G7 Order Status History CDS View"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Order History"/>
+<PropertyValue Property="TypeNamePlural" String="Order History"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Note"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="HistNo"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OldStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="NewStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ChangedBy"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ChangedAt"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>OrderID</PropertyPath>
+<PropertyPath>ChangedBy</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/request_id">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__common.Label" String="UUID"/>
+<Annotation Term="SAP__common.QuickInfo" String="16 Byte UUID in 16 Bytes (Raw Format)"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/vendor">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Supplier"/>
+<Annotation Term="SAP__common.QuickInfo" String="Account Number of Supplier"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/material">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.ValueListReferences">
+<Collection>
+<String>../../../../srvd_f4/sap/zi_g7_raw_material_vh/0001;ps='srvd-zsd_g7_canteen-0001';va='com.sap.gateway.srvd.zsd_g7_canteen.v0001.et-zp_g7_po_request.material'/$metadata</String>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__common.Label" String="Material"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material Number"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/unit">
+<Annotation Term="SAP__common.IsUnit"/>
+<Annotation Term="SAP__common.Label" String="Base Unit of Measure"/>
+<Annotation Term="SAP__common.Heading" String="BUn"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Currency"/>
+<Annotation Term="SAP__common.Heading" String="Crcy"/>
+<Annotation Term="SAP__common.QuickInfo" String="Currency Key"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/company_code">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Company Code"/>
+<Annotation Term="SAP__common.Heading" String="CoCd"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/plant">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Plant"/>
+<Annotation Term="SAP__common.Heading" String="Plnt"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/storage_loc">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Storage Location"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/purch_org">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Purch. Organization"/>
+<Annotation Term="SAP__common.Heading" String="POrg"/>
+<Annotation Term="SAP__common.QuickInfo" String="Purchasing Organization"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/purch_group">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Purchasing Group"/>
+<Annotation Term="SAP__common.Heading" String="PGr"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/purchase_order">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Label" String="Purchasing Document"/>
+<Annotation Term="SAP__common.Heading" String="Pur. Doc."/>
+<Annotation Term="SAP__common.QuickInfo" String="Purchasing Document Number"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/__EntityControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType/__OperationControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.CreatePurchaseOrder(SAP__self.ZP_G7_PO_REQUESTType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/CreatePurchaseOrder"/>
+</Annotations>
+<Annotations Target="SAP__self.ZP_G7_PO_REQUESTType">
+<Annotation Term="SAP__common.Label" String="G7 PO Request Projection"/>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="vendor"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="material"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="quantity"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="unit"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="price"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="currency"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="company_code"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="plant"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="storage_loc"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="purch_org"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="purch_group"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="UUID"/>
+<PropertyValue Property="Value" Path="request_id"/>
+</Record>
+<Record Type="SAP__UI.DataFieldForAction">
+<PropertyValue Property="Label" String="Create Purchase Order"/>
+<PropertyValue Property="Action" String="com.sap.gateway.srvd.zsd_g7_canteen.v0001.CreatePurchaseOrder(com.sap.gateway.srvd.zsd_g7_canteen.v0001.ZP_G7_PO_REQUESTType)"/>
+<PropertyValue Property="InvocationGrouping" EnumMember="SAP__UI.OperationGroupingType/Isolated"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Supplier"/>
+<PropertyValue Property="Value" Path="vendor"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Material"/>
+<PropertyValue Property="Value" Path="material"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Quantity"/>
+<PropertyValue Property="Value" Path="quantity"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Base Unit of Measure"/>
+<PropertyValue Property="Value" Path="unit"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Price"/>
+<PropertyValue Property="Value" Path="price"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="company_code"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Currency"/>
+<PropertyValue Property="Value" Path="currency"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Purchasing Document"/>
+<PropertyValue Property="Value" Path="purchase_order"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="plant"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Label" String="Status"/>
+<PropertyValue Property="Value" Path="status"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="storage_loc"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="purch_org"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="purch_group"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__common.Messages" Path="SAP__Messages"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/ZP_G7_PO_REQUEST">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="NonFilterableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SortRestrictions">
+<Record>
+<PropertyValue Property="NonSortableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Path="__EntityControl/Deletable"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Path="__EntityControl/Updatable"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/CartID">
+<Annotation Term="SAP__common.Label" String="Cart ID"/>
+<Annotation Term="SAP__common.FieldControl" EnumMember="SAP__common.FieldControlType/Mandatory"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/ItemNo">
+<Annotation Term="SAP__common.Label" String="Item No"/>
+<Annotation Term="SAP__common.FieldControl" EnumMember="SAP__common.FieldControlType/Mandatory"/>
+<Annotation Term="SAP__common.IsDigitSequence"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/FoodID">
+<Annotation Term="SAP__common.Label" String="Food ID"/>
+<Annotation Term="SAP__common.FieldControl" EnumMember="SAP__common.FieldControlType/Mandatory"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/Quantity">
+<Annotation Term="SAP__common.Label" String="Quantity"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/UnitPrice">
+<Annotation Term="SAP__common.Label" String="Unit Price"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/Currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/LineAmount">
+<Annotation Term="SAP__common.Label" String="Line Amount"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/Status">
+<Annotation Term="SAP__common.Label" String="Status"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/CreatedAt">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/__EntityControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/CartItems">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Food"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="NonFilterableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SortRestrictions">
+<Record>
+<PropertyValue Property="NonSortableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Path="__EntityControl/Deletable"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Path="__EntityControl/Updatable"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType">
+<Annotation Term="SAP__common.Label" String="G7 Cart Item CDS View"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Cart Item"/>
+<PropertyValue Property="TypeNamePlural" String="Cart Items"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ItemNo"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CartID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ItemNo"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FoodID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Quantity"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UnitPrice"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="LineAmount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>CartID</PropertyPath>
+<PropertyPath>FoodID</PropertyPath>
+<PropertyPath>Status</PropertyPath>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__common.Messages" Path="SAP__Messages"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/UserID">
+<Annotation Term="SAP__common.Label" String="User ID"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/Username">
+<Annotation Term="SAP__common.Label" String="Username"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/FullName">
+<Annotation Term="SAP__common.Label" String="Full Name"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/Email">
+<Annotation Term="SAP__common.Label" String="Email"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/Phone">
+<Annotation Term="SAP__common.Label" String="Phone"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/RoleID">
+<Annotation Term="SAP__common.Label" String="Role"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/Status">
+<Annotation Term="SAP__common.Label" String="Status"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/Users">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Role"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.UsersType">
+<Annotation Term="SAP__common.Label" String="G7 User Master CDS View"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="User"/>
+<PropertyValue Property="TypeNamePlural" String="User List"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FullName"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FullName"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Email"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Phone"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UserID"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Username"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FullName"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="RoleID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>UserID</PropertyPath>
+<PropertyPath>Username</PropertyPath>
+<PropertyPath>RoleID</PropertyPath>
+<PropertyPath>Status</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.CategoriesType/CategoryID">
+<Annotation Term="SAP__common.Label" String="Category ID"/>
+</Annotations>
+<Annotations Target="SAP__self.CategoriesType/CategoryName">
+<Annotation Term="SAP__common.Label" String="Category Name"/>
+</Annotations>
+<Annotations Target="SAP__self.CategoriesType/Description">
+<Annotation Term="SAP__common.Label" String="Description"/>
+</Annotations>
+<Annotations Target="SAP__self.CategoriesType/Status">
+<Annotation Term="SAP__common.Label" String="Status"/>
+</Annotations>
+<Annotations Target="SAP__self.CategoriesType">
+<Annotation Term="SAP__common.Label" String="G7 Food Category Master CDS View"/>
+<Annotation Term="SAP__UI.Facets">
+<Collection>
+<Record Type="SAP__UI.ReferenceFacet">
+<PropertyValue Property="Label" String="General Information"/>
+<PropertyValue Property="ID" String="GeneralInformation"/>
+<PropertyValue Property="Target" AnnotationPath="@SAP__UI.Identification"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Category"/>
+<PropertyValue Property="TypeNamePlural" String="Categories"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CategoryName"/>
+</Record>
+</PropertyValue>
+<PropertyValue Property="Description">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CategoryID"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CategoryID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CategoryName"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Description"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CategoryID"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="CategoryName"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Description"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Criticality" Path="StatusCriticality"/>
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.PresentationVariant">
+<Record>
+<PropertyValue Property="SortOrder">
+<Collection>
+<Record Type="SAP__common.SortOrderType">
+<PropertyValue Property="Property" PropertyPath="CategoryName"/>
+<PropertyValue Property="Descending" Bool="false"/>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>CategoryID</PropertyPath>
+<PropertyPath>CategoryName</PropertyPath>
+<PropertyPath>Description</PropertyPath>
+<PropertyPath>Status</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.Container/Categories">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/PaymentID">
+<Annotation Term="SAP__common.Label" String="Payment ID"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/PayOSOrderCode">
+<Annotation Term="SAP__common.Label" String="PayOS Order Code"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/Amount">
+<Annotation Term="SAP__common.Label" String="Amount"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/Currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__common.Label" String="Currency"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/Description">
+<Annotation Term="SAP__common.Label" String="Description"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/CheckoutURL">
+<Annotation Term="SAP__common.Label" String="Checkout URL"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/QRCode">
+<Annotation Term="SAP__common.Label" String="QR Code"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/Status">
+<Annotation Term="SAP__common.Label" String="Gateway Status"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/__EntityControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/__OperationControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.refreshPaymentStatus(SAP__self.PaymentGatewayType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/refreshPaymentStatus"/>
+</Annotations>
+<Annotations Target="SAP__self.createCheckout(SAP__self.PaymentGatewayType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/createCheckout"/>
+</Annotations>
+<Annotations Target="SAP__self.confirmPayment(SAP__self.PaymentGatewayType)">
+<Annotation Term="SAP__core.OperationAvailable" Path="_it/__OperationControl/confirmPayment"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType">
+<Annotation Term="SAP__common.Label" String="PayOS Gateway"/>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Payment Gateway"/>
+<PropertyValue Property="TypeNamePlural" String="Payment Gateways"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentID"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PayOSOrderCode"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Amount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Description"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PaymentID"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="PayOSOrderCode"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Amount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Description"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Status"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>PaymentID</PropertyPath>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__common.Messages" Path="SAP__Messages"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/PaymentGateway">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="NonFilterableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SortRestrictions">
+<Record>
+<PropertyValue Property="NonSortableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+<PropertyPath>__OperationControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Path="__EntityControl/Deletable"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Path="__EntityControl/Updatable"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/MaterialNumber">
+<Annotation Term="SAP__common.Label" String="Material Number"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Heading" String="Material"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material Number"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/MaterialDescription">
+<Annotation Term="SAP__common.Label" String="Material Description"/>
+<Annotation Term="SAP__common.Heading" String="Material Description"/>
+<Annotation Term="SAP__common.QuickInfo" String="Material Description"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/BaseUnit">
+<Annotation Term="SAP__common.IsUnit"/>
+<Annotation Term="SAP__common.Label" String="Base Unit"/>
+<Annotation Term="SAP__common.Heading" String="BUn"/>
+<Annotation Term="SAP__common.QuickInfo" String="Base Unit of Measure"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/AvailableStock">
+<Annotation Term="SAP__common.Label" String="Available Stock"/>
+<Annotation Term="SAP__measures.Unit" Path="BaseUnit"/>
+<Annotation Term="SAP__common.Heading" String="Unrestricted"/>
+<Annotation Term="SAP__common.QuickInfo" String="Valuated Unrestricted-Use Stock"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/AvailableStockRaw">
+<Annotation Term="SAP__common.Label" String="Stock Raw Debug"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/StorageLocation">
+<Annotation Term="SAP__common.Label" String="Storage Location"/>
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__common.Heading" String="Storage Location"/>
+<Annotation Term="SAP__common.QuickInfo" String="Storage Location"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/Plant">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__UI.Hidden"/>
+<Annotation Term="SAP__common.Label" String="Plant"/>
+<Annotation Term="SAP__common.Heading" String="Plnt"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/CreatedBy">
+<Annotation Term="SAP__common.IsUpperCase"/>
+<Annotation Term="SAP__UI.Hidden"/>
+<Annotation Term="SAP__common.Label" String="User Name"/>
+<Annotation Term="SAP__common.Heading" String="User"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType">
+<Annotation Term="SAP__common.Label" String="G7 Raw Material Stock View"/>
+<Annotation Term="SAP__UI.Facets">
+<Collection>
+<Record Type="SAP__UI.ReferenceFacet">
+<PropertyValue Property="Label" String="Material Detail"/>
+<PropertyValue Property="ID" String="MaterialDetail"/>
+<PropertyValue Property="Target" AnnotationPath="@SAP__UI.Identification"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Raw Material"/>
+<PropertyValue Property="TypeNamePlural" String="Raw Material Stock"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialDescription"/>
+</Record>
+</PropertyValue>
+<PropertyValue Property="Description">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialNumber"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialNumber"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialDescription"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="AvailableStock"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="AvailableStockRaw"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="BaseUnit"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="StorageLocation"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialNumber"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="MaterialDescription"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Criticality" Path="StockCriticality"/>
+<PropertyValue Property="Value" Path="AvailableStock"/>
+<Annotation Term="SAP__UI.Importance" EnumMember="SAP__UI.ImportanceType/High"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="AvailableStockRaw"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="BaseUnit"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="StorageLocation"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>MaterialNumber</PropertyPath>
+<PropertyPath>MaterialDescription</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.Container/RawMaterial">
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Bool="false"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="FilterExpressionRestrictions">
+<Collection>
+<Record>
+<PropertyValue Property="Property" PropertyPath="AvailableStock"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+<Record>
+<PropertyValue Property="Property" PropertyPath="StorageLocation"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+<Record>
+<PropertyValue Property="Property" PropertyPath="Plant"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+<Record>
+<PropertyValue Property="Property" PropertyPath="CreatedBy"/>
+<PropertyValue Property="AllowedExpressions" String="MultiValue"/>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/OrderID">
+<Annotation Term="SAP__common.Label" String="Order ID"/>
+<Annotation Term="SAP__core.Computed"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/ItemNo">
+<Annotation Term="SAP__common.Label" String="Item No"/>
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__common.IsDigitSequence"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/FoodID">
+<Annotation Term="SAP__common.Label" String="Food ID"/>
+<Annotation Term="SAP__core.Computed"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/FoodName">
+<Annotation Term="SAP__common.Label" String="Food Name"/>
+<Annotation Term="SAP__core.Computed"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/Quantity">
+<Annotation Term="SAP__common.Label" String="Quantity"/>
+<Annotation Term="SAP__common.FieldControl" EnumMember="SAP__common.FieldControlType/Mandatory"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/UnitPrice">
+<Annotation Term="SAP__common.Label" String="Unit Price"/>
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/Currency">
+<Annotation Term="SAP__common.IsCurrency"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/LineAmount">
+<Annotation Term="SAP__common.Label" String="Line Amount"/>
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__measures.ISOCurrency" Path="Currency"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/ItemStatus">
+<Annotation Term="SAP__common.Label" String="Item Status"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/Note">
+<Annotation Term="SAP__common.Label" String="Note"/>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType/__EntityControl">
+<Annotation Term="SAP__core.Computed"/>
+<Annotation Term="SAP__UI.HiddenFilter"/>
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.Container/OrderItems">
+<Annotation Term="SAP__capabilities.NavigationRestrictions">
+<Record>
+<PropertyValue Property="RestrictedProperties">
+<Collection>
+<Record>
+<PropertyValue Property="NavigationProperty" NavigationPropertyPath="_Order"/>
+<PropertyValue Property="InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</PropertyValue>
+</Record>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SearchRestrictions">
+<Record>
+<PropertyValue Property="Searchable" Bool="true"/>
+<PropertyValue Property="UnsupportedExpressions" EnumMember="SAP__capabilities.SearchExpressions/AND SAP__capabilities.SearchExpressions/OR SAP__capabilities.SearchExpressions/NOT SAP__capabilities.SearchExpressions/group SAP__capabilities.SearchExpressions/phrase"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.FilterRestrictions">
+<Record>
+<PropertyValue Property="NonFilterableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.SortRestrictions">
+<Record>
+<PropertyValue Property="NonSortableProperties">
+<Collection>
+<PropertyPath>__EntityControl</PropertyPath>
+</Collection>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.InsertRestrictions">
+<Record>
+<PropertyValue Property="Insertable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.DeleteRestrictions">
+<Record>
+<PropertyValue Property="Deletable" Bool="false"/>
+</Record>
+</Annotation>
+<Annotation Term="SAP__capabilities.UpdateRestrictions">
+<Record>
+<PropertyValue Property="Updatable" Path="__EntityControl/Updatable"/>
+<PropertyValue Property="QueryOptions">
+<Record>
+<PropertyValue Property="SelectSupported" Bool="true"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__core.OptimisticConcurrency">
+<Collection/>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.OrderItemsType">
+<Annotation Term="SAP__common.Label" String="G7 Order Item CDS View"/>
+<Annotation Term="SAP__UI.Facets">
+<Collection>
+<Record Type="SAP__UI.ReferenceFacet">
+<PropertyValue Property="Label" String="Chi tiết món trong đơn"/>
+<PropertyValue Property="ID" String="Detail"/>
+<PropertyValue Property="Target" AnnotationPath="@SAP__UI.Identification"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.HeaderInfo">
+<Record>
+<PropertyValue Property="TypeName" String="Order Item"/>
+<PropertyValue Property="TypeNamePlural" String="Order Items"/>
+<PropertyValue Property="Title">
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ItemNo"/>
+</Record>
+</PropertyValue>
+</Record>
+</Annotation>
+<Annotation Term="SAP__UI.Identification">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ItemNo"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FoodID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FoodName"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Quantity"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UnitPrice"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="LineAmount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ItemStatus"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Note"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.LineItem">
+<Collection>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="OrderID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ItemNo"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FoodID"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="FoodName"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="Quantity"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="UnitPrice"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="LineAmount"/>
+</Record>
+<Record Type="SAP__UI.DataField">
+<PropertyValue Property="Value" Path="ItemStatus"/>
+</Record>
+</Collection>
+</Annotation>
+<Annotation Term="SAP__UI.SelectionFields">
+<Collection>
+<PropertyPath>OrderID</PropertyPath>
+<PropertyPath>FoodID</PropertyPath>
+<PropertyPath>ItemStatus</PropertyPath>
+</Collection>
+</Annotation>
+</Annotations>
+<Annotations Target="SAP__self.CartsType/CreatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.CartsType/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.CartItemsType/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.CategoriesType/StatusCriticality">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/CreatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+<Annotation Term="SAP__common.Label" String="Time Stamp"/>
+<Annotation Term="SAP__common.QuickInfo" String="UTC Time Stamp in Long Form (YYYYMMDDhhmmssmmmuuun)"/>
+</Annotations>
+<Annotations Target="SAP__self.Food2Type/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+<Annotation Term="SAP__common.Label" String="Time Stamp"/>
+<Annotation Term="SAP__common.QuickInfo" String="UTC Time Stamp in Long Form (YYYYMMDDhhmmssmmmuuun)"/>
+</Annotations>
+<Annotations Target="SAP__self.OrdersType/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/CreatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentsType/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/CreatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.PaymentGatewayType/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/StockCriticality">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/MinStock">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/DefaultSupplier">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/ImageUrl">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/Status">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/CreatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+<Annotation Term="SAP__common.Label" String="Time Stamp"/>
+<Annotation Term="SAP__common.QuickInfo" String="UTC Time Stamp in Long Form (YYYYMMDDhhmmssmmmuuun)"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialType/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+<Annotation Term="SAP__common.Label" String="Time Stamp"/>
+<Annotation Term="SAP__common.QuickInfo" String="UTC Time Stamp in Long Form (YYYYMMDDhhmmssmmmuuun)"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/UpdatedBy">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.StaffOrdersType/LastStatusAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/CreatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.UsersType/UpdatedAt">
+<Annotation Term="SAP__UI.Hidden"/>
+</Annotations>
+<Annotations Target="SAP__self.RawStockType/MaterialDescription">
+<Annotation Term="SAP__common.Label" String="Product Description"/>
+</Annotations>
+<Annotations Target="SAP__self.RawMaterialVHType/MaterialDescription">
+<Annotation Term="SAP__common.Label" String="Product Description"/>
+</Annotations>
+</Schema>
+</edmx:DataServices>
 </edmx:Edmx>

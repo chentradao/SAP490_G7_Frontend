@@ -1,0 +1,76 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.ProductionGoodsIssueHistory"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  displayBlock="true">
+
+  <Page
+    title="Production Goods Issue History"
+    showNavButton="true"
+    navButtonPress="onNavBack">
+
+    <headerContent>
+      <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+    </headerContent>
+
+    <content>
+      <VBox class="poHistoryShell">
+        <VBox class="poHistoryIntro">
+          <Title text="Production Goods Issue History" level="H2" />
+          <Text
+            text="Material documents posted with movement type 261 for production orders."
+            class="poHistorySubtitle" />
+        </VBox>
+
+        <OverflowToolbar class="poHistoryFilterBar">
+          <SearchField
+            id="goodsIssueHistorySearch"
+            width="24rem"
+            placeholder="Search material document, order or material"
+            search="onSearch" />
+          <ToolbarSpacer />
+          <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClear" />
+          <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+        </OverflowToolbar>
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <Table
+          id="goodsIssueHistoryTable"
+          class="poHistoryTable wideDataTable"
+          sticky="ColumnHeaders"
+          alternateRowColors="true"
+          growing="true"
+          growingScrollToLoad="true"
+          growingThreshold="20"
+          noDataText="No posted production goods issues found"
+          items="{/ProductionOrderRequests}">
+          <columns>
+            <Column width="13rem"><Text text="Material Document" /></Column>
+            <Column width="11rem"><Text text="Production Order" /></Column>
+            <Column width="11rem"><Text text="Material" /></Column>
+            <Column width="7rem"><Text text="Plant" /></Column>
+            <Column width="10rem" hAlign="End"><Text text="Order Quantity" /></Column>
+            <Column width="9rem"><Text text="GI Status" /></Column>
+            <Column width="13rem"><Text text="Posted At" /></Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="22rem"><Text text="Message" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem vAlign="Middle" highlight="Success">
+              <cells>
+                <ObjectIdentifier title="{material_document}" text="{material_document_year}" />
+                <ObjectIdentifier title="{production_order}" text="{request_id}" />
+                <Text text="{material}" />
+                <Text text="{plant}" />
+                <ObjectNumber number="{order_quantity}" unit="{unit}" />
+                <ObjectStatus text="{goods_issue_status}" state="Success" icon="sap-icon://accept" />
+                <Text text="{path: 'goods_issued_at', formatter: '.formatDateTime'}" />
+                <Text text="{goods_issue_message}" wrapping="true" maxLines="3" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

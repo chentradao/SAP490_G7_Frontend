@@ -1,0 +1,98 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.GRHistory"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  displayBlock="true">
+
+  <Page
+    title="Goods Receipt History"
+    showNavButton="true"
+    navButtonPress="onNavBack"
+    backgroundDesign="Standard">
+
+    <headerContent>
+      <Button
+        text="Refresh"
+        icon="sap-icon://refresh"
+        type="Transparent"
+        press="onRefresh" />
+    </headerContent>
+
+    <content>
+      <VBox class="poHistoryShell">
+        <VBox class="poHistoryIntro">
+          <Title text="Goods Receipt History" level="H2" />
+          <Text
+            text="Track posted material documents and received quantities from SAP."
+            class="poHistorySubtitle" />
+        </VBox>
+
+        <OverflowToolbar class="poHistoryFilterBar">
+          <SearchField
+            id="grHistorySearch"
+            width="22rem"
+            placeholder="Search material document, PO or material"
+            search="onSearch" />
+          <Select
+            id="grStatusFilter"
+            width="11rem"
+            selectedKey="ALL"
+            change="onStatusChange">
+            <core:Item key="ALL" text="All Statuses" />
+            <core:Item key="POSTED" text="Posted" />
+            <core:Item key="ERROR" text="Error" />
+            <core:Item key="PENDING" text="Pending" />
+          </Select>
+          <ToolbarSpacer />
+          <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClearFilters" />
+          <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+        </OverflowToolbar>
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <Table
+          id="grHistoryTable"
+          class="poHistoryTable wideDataTable"
+          sticky="ColumnHeaders"
+          alternateRowColors="true"
+          growing="true"
+          growingScrollToLoad="true"
+          growingThreshold="20"
+          noDataText="No goods receipts found"
+          items="{/GoodsReceiptRequests}">
+          <columns>
+            <Column width="12rem"><Text text="Material Document" /></Column>
+            <Column width="11rem"><Text text="Purchase Order" /></Column>
+            <Column width="7rem"><Text text="Item" /></Column>
+            <Column width="10rem"><Text text="Material" /></Column>
+            <Column width="9rem" hAlign="End"><Text text="Received Qty" /></Column>
+            <Column width="8rem"><Text text="Plant" /></Column>
+            <Column width="9rem"><Text text="Storage" /></Column>
+            <Column width="10rem"><Text text="Posting Date" /></Column>
+            <Column width="8rem"><Text text="Status" /></Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="18rem"><Text text="BAPI Message" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem
+              vAlign="Middle"
+              highlight="{path: 'status', formatter: '.formatHighlight'}">
+              <cells>
+                <ObjectIdentifier title="{= ${material_document} || 'Not posted' }" text="{material_document_year}" />
+                <Text text="{purchase_order}" />
+                <Text text="{= ${purchase_order_item} || '00010' }" />
+                <Text text="{material}" />
+                <ObjectNumber number="{gr_quantity}" unit="{unit}" />
+                <Text text="{plant}" />
+                <Text text="{storage_loc}" />
+                <Text text="{path: 'posting_date', formatter: '.formatDate'}" />
+                <ObjectStatus text="{status}" state="{path: 'status', formatter: '.formatState'}" />
+                <Text text="{bapi_message}" wrapping="true" maxLines="2" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

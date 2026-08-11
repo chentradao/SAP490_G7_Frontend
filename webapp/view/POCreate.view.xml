@@ -1,0 +1,90 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.POCreate"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form">
+
+  <Page title="Raw Material Stock" showNavButton="true" navButtonPress="onNavBack">
+    <content>
+      <VBox class="sapUiMediumMargin">
+
+        <Label text="Select Material" labelFor="materialSelect"/>
+        <Select
+          id="materialSelect"
+          width="100%"
+          items="{/RawStock}"
+          change="onMaterialChange">
+          <core:Item key="{Material}" text="{Material} - {MaterialDescription}"/>
+        </Select>
+
+        <Panel visible="{ui>/showStockInfo}" class="sapUiMediumMarginTop" headerText="Stock Information">
+          <f:SimpleForm editable="false" layout="ResponsiveGridLayout">
+            <Label text="Material"/>
+            <Text text="{ui>/material}"/>
+            <Label text="Description"/>
+            <Text text="{ui>/description}"/>
+            <Label text="Plant"/>
+            <Text text="{ui>/plant}"/>
+            <Label text="Storage Loc."/>
+            <Text text="{ui>/storageLoc}"/>
+            <Label text="Unit"/>
+            <Text text="{ui>/unit}"/>
+            <Label text="Stock"/>
+            <Text text="{ui>/stock} {ui>/unit}"/>
+          </f:SimpleForm>
+        </Panel>
+
+        <Button
+          text="Create PO"
+          type="Emphasized"
+          class="sapUiMediumMarginTop"
+          enabled="{ui>/showStockInfo}"
+          press="onOpenPOForm"/>
+
+        <Panel visible="{ui>/showPOForm}" class="sapUiMediumMarginTop" headerText="PO Creation Form">
+          <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12">
+            <Label text="Material"/>
+            <Text text="{ui>/material}"/>
+            <Label text="Description"/>
+            <Text text="{ui>/description}"/>
+            <Label text="Plant"/>
+            <Text text="{ui>/plant}"/>
+            <Label text="Storage Loc."/>
+            <Text text="{ui>/storageLoc}"/>
+            <Label text="Unit"/>
+            <Text text="{ui>/unit}"/>
+            <Label text="Stock"/>
+            <Text text="{ui>/stock} {ui>/unit}"/>
+
+            <Label text="Vendor" required="true"/>
+            <Input id="vendorInput" value="{ui>/vendor}"/>
+
+            <Label text="Quantity" required="true"/>
+            <Input id="quantityInput" value="{ui>/quantity}" type="Number"/>
+
+            <Label text="Price" required="true"/>
+            <Input id="priceInput" value="{ui>/price}" type="Number"/>
+
+            <Label text="Currency" required="true"/>
+            <Input id="currencyInput" value="{ui>/currency}" maxLength="5" placeholder="VND / USD..."/>
+
+            <Label text="Purch. Org" required="true"/>
+            <Input id="purchOrgInput" value="{ui>/purchOrg}"/>
+
+            <Label text="Purch. Group" required="true"/>
+            <Input id="purchGroupInput" value="{ui>/purchGroup}"/>
+          </f:SimpleForm>
+
+          <Button
+            text="Create PO"
+            type="Emphasized"
+            class="sapUiMediumMarginTop sapUiMediumMarginBegin"
+            press="onCreatePOConfirm"
+            busy="{ui>/busy}"/>
+        </Panel>
+
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

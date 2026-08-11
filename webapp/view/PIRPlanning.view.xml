@@ -1,0 +1,169 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.PIRPlanning"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form"
+  displayBlock="true">
+
+  <Page title="Demand Forecast and PIR" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+    </headerContent>
+    <content>
+      <VBox class="poHistoryShell">
+        <HBox class="poHistoryHero" justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+          <VBox class="poHistoryHeroText">
+            <Title text="Tomorrow's Meal Forecast" level="H2" />
+            <Text text="Select a finished meal and create an active Planned Independent Requirement before running MRP." class="poHistorySubtitle" />
+          </VBox>
+          <ObjectStatus text="Strategy 40 · VSF · Version 00" icon="sap-icon://business-objects-experience" state="Information" />
+        </HBox>
+
+        <Panel headerText="1. Select Finished Good" class="staffWorkflowPanel">
+          <content>
+            <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+              <Table
+                id="pirFinishedGoodsTable"
+                class="wideDataTableMD"
+                mode="SingleSelectMaster"
+                selectionChange="onFinishedGoodSelected"
+                growing="true"
+                growingThreshold="15"
+                noDataText="No finished goods found in FG01"
+                items="{/FinishedGoodsStock}">
+                <columns>
+                  <Column width="11rem"><Text text="Material" /></Column>
+                  <Column width="18rem"><Text text="Description" /></Column>
+                  <Column width="8rem"><Text text="Plant" /></Column>
+                  <Column width="9rem"><Text text="Storage" /></Column>
+                  <Column width="12rem" hAlign="End"><Text text="Current FG Stock" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem type="Active">
+                    <cells>
+                      <ObjectIdentifier title="{Material}" text="{MaterialBaseUnit}" />
+                      <Text text="{MaterialDescription}" />
+                      <Text text="{Plant}" />
+                      <Text text="{StorageLocation}" />
+                      <ObjectNumber number="{StockQuantity}" unit="{MaterialBaseUnit}" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </ScrollContainer>
+          </content>
+        </Panel>
+
+        <Panel headerText="2. Enter Forecast" class="staffWorkflowPanel">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <ObjectHeader
+                title="{pir>/material}"
+                intro="{pir>/description}"
+                number="{pir>/currentStock}"
+                numberUnit="{pir>/unit}"
+                visible="{= !!${pir>/material} }" />
+
+              <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3"
+                labelSpanL="3"
+                labelSpanM="4"
+                labelSpanS="12"
+                columnsXL="2"
+                columnsL="2"
+                columnsM="1">
+                <Label text="Requirement Date" required="true" />
+                <DatePicker
+                  value="{pir>/requirementDate}"
+                  valueFormat="yyyy-MM-dd"
+                  displayFormat="medium"
+                  minDate="{pir>/minimumDate}" />
+
+                <Label text="Forecast Quantity" required="true" />
+                <Input value="{pir>/quantity}" type="Number" description="{pir>/unit}" />
+
+                <Label text="Plant" />
+                <Input value="{pir>/plant}" editable="false" />
+
+                <Label text="Requirement Type" />
+                <Input value="{pir>/requirementType}" editable="false" />
+
+                <Label text="Version" />
+                <Input value="{pir>/version}" editable="false" />
+
+                <Label text="Version Active" />
+                <CheckBox selected="{pir>/versionActive}" editable="false" />
+              </f:SimpleForm>
+
+              <Toolbar>
+                <ToolbarSpacer />
+                <Button
+                  id="createPIRButton"
+                  text="Create PIR"
+                  icon="sap-icon://add-document"
+                  type="Emphasized"
+                  press="onCreatePIR"
+                  enabled="{= !!${pir>/material} &amp;&amp; !${pir>/busy} }" />
+              </Toolbar>
+            </VBox>
+          </content>
+        </Panel>
+
+        <Toolbar class="sapUiMediumMarginTop">
+          <Title text="PIR Request History" level="H3" />
+          <ToolbarSpacer />
+          <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+        </Toolbar>
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+          <Table
+            id="pirHistoryTable"
+            class="poHistoryTable wideDataTable"
+            sticky="ColumnHeaders"
+            alternateRowColors="true"
+            growing="true"
+            growingThreshold="20"
+            noDataText="No PIR requests found"
+            items="{/PIRRequests}">
+            <columns>
+              <Column width="11rem"><Text text="Material" /></Column>
+              <Column width="11rem" hAlign="Center"><Text text="MRP Action" /></Column>
+              <Column width="8rem"><Text text="Plant" /></Column>
+              <Column width="12rem"><Text text="Requirement Date" /></Column>
+              <Column width="11rem" hAlign="End"><Text text="Quantity" /></Column>
+              <Column width="9rem"><Text text="Type" /></Column>
+              <Column width="8rem"><Text text="Version" /></Column>
+              <Column width="10rem"><Text text="Status" /></Column>
+              <Column width="14rem"><Text text="Created At" /></Column>
+              <Column width="24rem"><Text text="SAP Message" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem highlight="{path: 'status', formatter: '.formatHighlight'}">
+                <cells>
+                  <ObjectIdentifier title="{material}" text="{pir_request_id}" />
+                  <Button
+                    text="Run MRP"
+                    icon="sap-icon://process"
+                    type="Emphasized"
+                    press="onRunMRP"
+                    enabled="{= (${status} === 'CREATED' || ${status} === 'MRP_ERROR') &amp;&amp; !${pir>/busy} }" />
+                  <Text text="{plant}" />
+                  <Text text="{path: 'requirement_date', formatter: '.formatDate'}" />
+                  <ObjectNumber number="{requirement_quantity}" unit="{unit}" />
+                  <Text text="{requirement_type}" />
+                  <Text text="{version}" />
+                  <ObjectStatus text="{status}" state="{path: 'status', formatter: '.formatState'}" />
+                  <Text text="{path: 'created_at', formatter: '.formatDateTime'}" />
+                  <Text text="{bapi_message}" wrapping="true" maxLines="3" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

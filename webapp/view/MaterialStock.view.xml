@@ -1,0 +1,252 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.MaterialStock"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form"
+  displayBlock="true">
+
+  <Page
+    title="Raw Material Stock"
+    showNavButton="true"
+    navButtonPress="onNavBack"
+    backgroundDesign="Standard">
+
+    <headerContent>
+      <Button
+        text="PO History"
+        icon="sap-icon://history"
+        type="Transparent"
+        press="onOpenPOHistory" />
+    </headerContent>
+
+    <content>
+      <VBox class="materialStockShell">
+        <VBox class="materialStockIntro">
+          <Title text="Raw Material Inventory" level="H2" />
+          <Text
+            text="Monitor stock by plant and create purchase orders for replenishment."
+            class="materialStockSubtitle" />
+        </VBox>
+
+        <OverflowToolbar class="materialStockFilterBar">
+          <SearchField
+            id="materialSearchField"
+            width="20rem"
+            placeholder="Search material code or description"
+            search="onSearchMaterial" />
+          <ToolbarSeparator />
+          <Select
+            id="plantFilter"
+            width="10rem"
+            selectedKey="All"
+            change="onFilterChange">
+            <core:Item key="All" text="All Plants" />
+            <core:Item key="P001" text="Plant P001" />
+          </Select>
+          <Select
+            id="storageLocFilter"
+            width="11rem"
+            selectedKey="All"
+            change="onFilterChange">
+            <core:Item key="All" text="All Storage Loc." />
+            <core:Item key="RM01" text="Storage RM01" />
+          </Select>
+          <ToolbarSpacer />
+          <Button
+            text="Clear"
+            icon="sap-icon://clear-filter"
+            type="Transparent"
+            press="onClearFilters" />
+          <Button
+            text="Refresh"
+            icon="sap-icon://refresh"
+            type="Transparent"
+            press="onRefreshStock" />
+        </OverflowToolbar>
+
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <Table
+          id="stockTable"
+          class="materialStockTable wideDataTable"
+          sticky="ColumnHeaders"
+          alternateRowColors="true"
+          growing="true"
+          growingScrollToLoad="true"
+          growingThreshold="20"
+          items="{/RawStock}"
+          noDataText="No raw materials match the selected filters">
+          <columns>
+            <Column width="8rem"><Text text="Material" /></Column>
+            <Column minScreenWidth="Tablet" demandPopin="true"><Text text="Description" /></Column>
+            <Column width="6rem"><Text text="Plant" /></Column>
+            <Column width="7rem"><Text text="Storage" /></Column>
+            <Column width="8rem" hAlign="End"><Text text="Stock" /></Column>
+            <Column width="8rem" hAlign="End"><Text text="Reserved" /></Column>
+            <Column width="9rem" hAlign="End"><Text text="Available" /></Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="9rem" hAlign="End"><Text text="Reorder Point" /></Column>
+            <Column width="8rem"><Text text="Status" /></Column>
+            <Column width="7rem" hAlign="Center"><Text text="Action" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem
+              vAlign="Middle"
+              highlight="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockHighlight'}">
+              <cells>
+                <ObjectIdentifier title="{Material}" text="{MaterialBaseUnit}" />
+                <Text text="{MaterialDescription}" wrapping="false" />
+                <Text text="{Plant}" />
+                <Text text="{StorageLocation}" />
+                <ObjectNumber number="{path: 'StockQuantity', formatter: '.formatQuantity'}" unit="{MaterialBaseUnit}" />
+                <ObjectNumber number="{path: 'ReservedQuantity', formatter: '.formatQuantity'}" unit="{MaterialBaseUnit}" />
+                <ObjectNumber
+                  number="{path: 'AvailableQuantity', formatter: '.formatQuantity'}"
+                  unit="{MaterialBaseUnit}"
+                  state="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockState'}" />
+                <ObjectNumber number="{path: 'ReorderPoint', formatter: '.formatQuantity'}" unit="{MaterialBaseUnit}" />
+                <ObjectStatus
+                  text="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockStatus'}"
+                  state="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockState'}" />
+                <Button text="Create PO" type="Emphasized" press="onCreatePOForRow" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+
+    <dependents>
+      <Dialog
+        id="createPODialog"
+        title="Create Purchase Order"
+        contentWidth="46rem"
+        stretchOnPhone="true"
+        draggable="true"
+        resizable="true"
+        busy="{ui>/busy}">
+        <content>
+          <VBox class="poDialogContent">
+            <Text
+              text="SAP will create a purchase request and generate the purchase order."
+              class="poDialogHint" />
+
+            <HBox
+              class="poDialogSummary"
+              justifyContent="SpaceBetween"
+              alignItems="Start"
+              wrap="Wrap">
+              <VBox class="poDialogSummaryItem" width="58%">
+                <Label text="Material" class="poDialogSummaryLabel" />
+                <Title text="{ui>/material}" level="H4" />
+                <Text text="{ui>/description}" wrapping="true" />
+              </VBox>
+              <VBox class="poDialogSummaryItem" width="34%">
+                <Label text="Available Stock" class="poDialogSummaryLabel" />
+                <ObjectNumber
+                  number="{path: 'ui>/availableStock', formatter: '.formatQuantity'}"
+                  unit="{ui>/unit}"
+                  state="{parts: ['ui>/availableStock', 'ui>/reorderPoint'], formatter: '.formatStockState'}" />
+                <Text text="{= 'Reserved: ' + ${ui>/reservedStock} + ' ' + ${ui>/unit} }" />
+                <Text text="{= ${ui>/plant} + ' / ' + ${ui>/storageLoc} }" />
+              </VBox>
+            </HBox>
+
+            <f:SimpleForm
+              editable="true"
+              layout="ResponsiveGridLayout"
+              labelSpanXL="4"
+              labelSpanL="4"
+              labelSpanM="4"
+              labelSpanS="12"
+              adjustLabelSpan="false"
+              emptySpanXL="0"
+              emptySpanL="0"
+              emptySpanM="0"
+              columnsXL="2"
+              columnsL="2"
+              columnsM="1">
+              <Label text="Vendor" required="true" />
+              <Input
+                id="vendorInput"
+                value="{ui>/vendor}"
+                description="{ui>/vendorName}"
+                maxLength="10"
+                showValueHelp="true"
+                valueHelpRequest="onVendorValueHelp"
+                placeholder="Select vendor" />
+
+              <Label text="Quantity" required="true" />
+              <Input
+                id="quantityInput"
+                value="{ui>/quantity}"
+                type="Number"
+                description="{ui>/unit}" />
+
+              <Label text="Unit Price" required="true" />
+              <Input
+                id="priceInput"
+                value="{ui>/price}"
+                type="Number"
+                description="{ui>/currency}" />
+
+              <Label text="Currency" required="true" />
+              <Input
+                id="currencyInput"
+                value="{ui>/currency}"
+                maxLength="5"
+                placeholder="VND / USD" />
+
+              <Label text="Delivery Date" required="true" />
+              <DatePicker
+                id="deliveryDateInput"
+                value="{ui>/deliveryDate}"
+                valueFormat="yyyy-MM-dd"
+                displayFormat="medium"
+                minDate="{ui>/minimumDeliveryDate}" />
+
+              <Label text="Company Code" />
+              <Input value="{ui>/companyCode}" editable="false" />
+
+              <Label text="Purchasing Organization" required="true" />
+              <Input
+                id="purchOrgInput"
+                value="{ui>/purchOrg}"
+                maxLength="4"
+                showValueHelp="true"
+                valueHelpRequest="onPurchOrgValueHelp" />
+
+              <Label text="Purchasing Group" required="true" />
+              <Input
+                id="purchGroupInput"
+                value="{ui>/purchGroup}"
+                maxLength="3"
+                showValueHelp="true"
+                valueHelpRequest="onPurchGroupValueHelp" />
+
+              <Label text="Estimated Total" />
+              <ObjectNumber
+                number="{parts: ['ui>/quantity', 'ui>/price'], formatter: '.formatTotalAmount'}"
+                unit="{ui>/currency}"
+                emphasized="true" />
+            </f:SimpleForm>
+          </VBox>
+        </content>
+        <beginButton>
+          <Button
+            text="Create Purchase Order"
+            icon="sap-icon://accept"
+            type="Emphasized"
+            press="onCreatePOConfirm"
+            enabled="{= !${ui>/busy} }" />
+        </beginButton>
+        <endButton>
+          <Button
+            text="Cancel"
+            press="onCancelPOForm"
+            enabled="{= !${ui>/busy} }" />
+        </endButton>
+      </Dialog>
+    </dependents>
+  </Page>
+</mvc:View>
