@@ -17,6 +17,7 @@
                     <Input
                         id="usernameInput"
                         value="{loginModel>/username}"
+                        valueLiveUpdate="true"
                         placeholder="{i18n>labelUsername}"
                         class="sapUiSmallMarginBottom"
                         submit=".onLogin" />
@@ -26,6 +27,7 @@
                         id="passwordInput"
                         type="Password"
                         value="{loginModel>/password}"
+                        valueLiveUpdate="true"
                         placeholder="{i18n>labelPassword}"
                         class="sapUiSmallMarginBottom"
                         submit=".onLogin" />

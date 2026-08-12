@@ -38,8 +38,8 @@
                         selectedKey="All"
                         change=".onStatusChange">
                         <core:Item key="All" text="All Status" />
-                        <core:Item key="ACTIVE" text="Active" />
-                        <core:Item key="INACTIVE" text="Inactive" />
+                        <core:Item key="A" text="Active" />
+                        <core:Item key="I" text="Inactive" />
                     </Select>
                 </contentRight>
             </Bar>
@@ -84,11 +84,11 @@
                             <Text text="{= ${AvailableStock} !== null ? (${AvailableStock} + ' ' + ${BaseUnit}) : '' }" />
                             <Text text="{= ${Price} !== null ? (${Price} + ' ' + ${Currency}) : '' }" />
                             <ObjectStatus
-                                text="{= ${Status} === 'ACTIVE' || ${Status} === '1' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
-                                state="{= ${Status} === 'ACTIVE' || ${Status} === '1' ? 'Success' : 'Error' }" />
+                                text="{= ${Status} === 'A' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
+                                state="{= ${Status} === 'A' ? 'Success' : 'Error' }" />
                             <Button
                                 text="Add to Cart"
-                                enabled="{= ${Status} === 'ACTIVE' || ${Status} === '1' }"
+                                enabled="{= ${Status} === 'A' }"
                                 press=".onAddToCart" />
                         </cells>
                     </ColumnListItem>

@@ -12,14 +12,7 @@
                 <ObjectHeader
                     title="{MaterialDescription}"
                     icon="{ImageUrl}"
-                    number="{
-                        path: 'Price',
-                        type: 'sap.ui.model.type.Float',
-                        formatOptions: {
-                            minFractionDigits: 0,
-                            maxFractionDigits: 0
-                        }
-                    }"
+                    number="{Price}"
                     numberUnit="{Currency}">
                     <attributes>
                         <ObjectAttribute title="{i18n>labelMaterialNumber}" text="{MaterialNumber}" />
@@ -30,8 +23,8 @@
                     </attributes>
                     <statuses>
                         <ObjectStatus
-                            text="{Status}"
-                            state="{= ${Status} === 'ACTIVE' || ${Status} === '1' ? 'Success' : 'None' }" />
+                            text="{= ${Status} === 'A' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
+                            state="{= ${Status} === 'A' ? 'Success' : 'None' }" />
                     </statuses>
                 </ObjectHeader>
 
@@ -45,7 +38,7 @@
                         <StepInput
                             id="quantityInput"
                             min="1"
-                            max="20"
+                            max="{AvailableStock}"
                             value="1"
                             width="200px" />
 
@@ -54,6 +47,7 @@
                                 text="Add to Cart"
                                 type="Emphasized"
                                 icon="sap-icon://cart"
+                                enabled="{= (${Status} === 'A' || ${Status} === 'ACTIVE' || ${Status} === '1') &amp;&amp; ${AvailableStock} > 0 }"
                                 press=".onAddToCart" />
                             <Button
                                 text="View Cart"

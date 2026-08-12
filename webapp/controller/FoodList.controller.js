@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/ui/model/Sorter",
     "sap/m/MessageToast",
-    "sap490g7fioriapp/model/cartUtils"
-], function (Controller, Filter, FilterOperator, Sorter, MessageToast, cartUtils) {
+    "sap490g7fioriapp/model/cartUtils",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, Filter, FilterOperator, Sorter, MessageToast, cartUtils, sessionUtils) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.FoodList", {
@@ -74,7 +75,8 @@ sap.ui.define([
         _onRouteMatched: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             if (!oSession || !oSession.getProperty("/isLoggedIn")) {
-                // this.getOwnerComponent().getRouter().navTo("RouteLogin");
+                this.getOwnerComponent().getRouter().navTo("RouteLogin");
+                return;
             }
             this._updateCartBadge();
             this._updateOrdersBadge();
@@ -114,8 +116,7 @@ sap.ui.define([
             if (sStatus && sStatus !== "All") {
                 aFilters.push(new Filter({
                     filters: [
-                        new Filter("Status", FilterOperator.EQ, sStatus),
-                        new Filter("Status", FilterOperator.EQ, sStatus === "ACTIVE" ? "1" : "0")
+                        new Filter("Status", FilterOperator.EQ, sStatus)
                     ],
                     and: false
                 }));
@@ -182,17 +183,8 @@ sap.ui.define([
 
         onLogout: function () {
             var oSessionModel = this.getOwnerComponent().getModel("session");
-            if (oSessionModel) {
-                oSessionModel.setData({
-                    userId: null,
-                    cartId: null,
-                    username: "",
-                    fullName: "",
-                    role: "",
-                    isLoggedIn: false
-                });
-            }
-            this.getOwnerComponent().getRouter().navTo("RouteLogin");
+            sessionUtils.resetSession(oSessionModel);
+            this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
         }
     });
 });

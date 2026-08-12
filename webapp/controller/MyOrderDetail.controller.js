@@ -1,29 +1,14 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/ui/model/json/JSONModel"
-], function (Controller, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/m/MessageBox",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, JSONModel, MessageBox, sessionUtils) {
     "use strict";
-
-    var UNIT_PRICE_DISPLAY_SCALE = 0.001;
-    var CALCULATED_AMOUNT_DISPLAY_SCALE = 0.00001;
 
     function formatDate(sValue) {
         var sDate = String(sValue || "").replace(/[^0-9]/g, "").slice(0, 8);
         return sDate.length === 8 ? sDate.slice(6, 8) + "/" + sDate.slice(4, 6) + "/" + sDate.slice(0, 4) : sValue || "";
-    }
-
-    function formatAmount(vAmount) {
-        return (parseFloat(vAmount) || 0).toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
-    }
-
-    function formatCalculatedAmount(vAmount) {
-        return ((parseFloat(vAmount) || 0) * CALCULATED_AMOUNT_DISPLAY_SCALE).toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
     }
 
     return Controller.extend("sap490g7fioriapp.controller.MyOrderDetail", {
@@ -33,6 +18,12 @@ sap.ui.define([
         },
 
         _onRouteMatched: function (oEvent) {
+            var oSession = this.getOwnerComponent().getModel("session");
+            if (!sessionUtils.isLoggedIn(oSession) || !sessionUtils.isCustomer(oSession)) {
+                this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
+            }
+
             this._loadOrderDetail(oEvent.getParameter("arguments").orderId);
         },
 
@@ -43,30 +34,43 @@ sap.ui.define([
             });
             oComponent.setModel(oOrdersModel, "orders");
             this.getView().setModel(oOrdersModel, "orders");
+            oOrdersModel.setProperty("/selectedOrder", null);
 
             this._loadOrderFromBackend(sOrderId).then(function (oOrder) {
+                var oSession = oComponent.getModel("session");
+                var sCurrentUserId = String(oSession && oSession.getProperty("/userId") || "");
+                if (!oOrder || String(oOrder.userId || "") !== sCurrentUserId) {
+                    oOrdersModel.setProperty("/selectedOrder", null);
+                    MessageBox.error("You are not authorized to view this order.");
+                    this.getOwnerComponent().getRouter().navTo("RouteMyOrders", {}, true);
+                    return;
+                }
                 oOrdersModel.setProperty("/selectedOrder", oOrder);
-            }).catch(function (oError) {
+            }.bind(this)).catch(function (oError) {
                 console.error("Could not load order detail:", oError);
                 oOrdersModel.setProperty("/selectedOrder", null);
             });
         },
 
         _loadOrderFromBackend: function (sOrderId) {
-            var oContext = this.getOwnerComponent().getModel().bindContext("/Orders('" + sOrderId + "')", null, {
+            var sEscapedOrderId = String(sOrderId || "").replace(/'/g, "''");
+            var oContext = this.getOwnerComponent().getModel().bindContext("/Orders('" + sEscapedOrderId + "')", null, {
                 $expand: "_Items"
             });
             return oContext.requestObject().then(this._normalizeOrder.bind(this));
         },
 
         _normalizeOrder: function (oRow) {
+            if (!oRow) { return null; }
+
             var aItems = Array.isArray(oRow._Items) ? oRow._Items : [];
             var sOrderDate = oRow.OrderDate || oRow.CreatedAt || "";
             return {
                 orderId: oRow.OrderID,
+                userId: oRow.UserID,
                 orderDateDisplay: formatDate(sOrderDate),
                 orderTime: oRow.OrderTime || "",
-                totalAmountText: formatCalculatedAmount(oRow.TotalAmount),
+                totalAmountText: oRow.TotalAmount,
                 currency: oRow.Currency || "VND",
                 orderStatus: oRow.OrderStatus || "Unknown",
                 paymentStatus: oRow.PaymentStatus || "Unknown",
@@ -76,8 +80,8 @@ sap.ui.define([
                         foodId: oItem.FoodID,
                         foodName: oItem.FoodName || oItem.FoodID || "",
                         quantity: oItem.Quantity,
-                        unitPriceText: formatAmount((parseFloat(oItem.UnitPrice) || 0) * UNIT_PRICE_DISPLAY_SCALE),
-                        lineAmountText: formatCalculatedAmount(oItem.LineAmount),
+                        unitPriceText: oItem.UnitPrice,
+                        lineAmountText: oItem.LineAmount,
                         currency: oItem.Currency || "VND",
                         itemStatus: oItem.ItemStatus || ""
                     };

@@ -1,6 +1,7 @@
 sap.ui.define([
-    "sap/ui/core/mvc/Controller"
-], function (Controller) {
+    "sap/ui/core/mvc/Controller",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, sessionUtils) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.UserList", {
@@ -19,19 +20,7 @@ sap.ui.define([
 
         onLogout: function () {
             var oSession = this.getOwnerComponent().getModel("session");
-            if (oSession) {
-                oSession.setData({
-                    userId: null,
-                    cartId: null,
-                    cartItemCount: 0,
-                    username: "",
-                    fullName: "",
-                    role: "",
-                    roleId: "",
-                    status: "",
-                    isLoggedIn: false
-                });
-            }
+            sessionUtils.resetSession(oSession);
             this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
         }
     });

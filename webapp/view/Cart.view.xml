@@ -24,14 +24,14 @@
                             <ObjectIdentifier
                                 title="{parts: [{path: 'FoodID'}, {path: 'cartNames>/'}], formatter: '.formatFoodName'}"
                                 text="{FoodID}" />
-                            <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Currency'}], formatter: '.formatUnitPrice'}" />
+                            <Text text="{= ${UnitPrice} + ' ' + ${Currency} }" />
                             <StepInput
                                 value="{Quantity}"
                                 min="1"
                                 step="1"
                                 width="7rem"
                                 change=".onQuantityChange" />
-                            <Text text="{parts: [{path: 'UnitPrice'}, {path: 'Quantity'}, {path: 'Currency'}], formatter: '.formatLineAmount'}" class="sapMTextBold" />
+                            <Text text="{= ${LineAmount} + ' ' + ${Currency} }" class="sapMTextBold" />
                             <Button icon="sap-icon://decline" tooltip="Remove" type="Reject" press=".onRemoveCartItem" />
                         </cells>
                     </ColumnListItem>

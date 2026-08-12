@@ -4,27 +4,18 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
-    "sap490g7fioriapp/model/cartUtils"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, cartUtils) {
+    "sap490g7fioriapp/model/cartUtils",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, cartUtils, sessionUtils) {
     "use strict";
 
-    // Cart amount fields are exposed by OData in thousands of VND (40),
-    // while the persisted/business amount is full VND (40,000).
-    var PRICE_SCALE = 1000;
-
-    function toDisplayPrice(vPrice) {
-        return (parseFloat(vPrice) || 0) * PRICE_SCALE;
+    function toAmount(vPrice) {
+        return parseFloat(vPrice) || 0;
     }
 
-    function formatVnd(vPrice, sCurrency) {
-        return Number(vPrice).toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }) + (sCurrency ? " " + sCurrency : "");
-    }
-
-    function parseFormattedAmount(sAmount) {
-        return Number(String(sAmount || "").replace(/[^0-9.-]/g, "")) || 0;
+    function getAmountText(vAmount, sCurrency) {
+        var sAmount = vAmount === null || vAmount === undefined || vAmount === "" ? "0" : String(vAmount);
+        return sAmount + (sCurrency ? " " + sCurrency : "");
     }
 
     return Controller.extend("sap490g7fioriapp.controller.Cart", {
@@ -32,7 +23,7 @@ sap.ui.define([
         onInit: function () {
             var oViewModel = new JSONModel({
                 totalPrice: 0,
-                totalPriceFormatted: "0.00",
+                totalPriceFormatted: "0",
                 currency: "",
                 checkoutEnabled: false,
                 checkoutBusy: false
@@ -46,8 +37,27 @@ sap.ui.define([
 
         _onRouteMatched: function () {
             var oSession = this.getOwnerComponent().getModel("session");
-            var sCartId = oSession && oSession.getProperty("/cartId");
             var oBinding = this.byId("cartList").getBinding("items");
+
+            if (!sessionUtils.isLoggedIn(oSession) || !sessionUtils.isCustomer(oSession)) {
+                if (oBinding) {
+                    oBinding.filter([
+                        new Filter("CartID", FilterOperator.EQ, "__NO_ACTIVE_CART__")
+                    ]);
+                }
+                var oViewModel = this.getView().getModel("cartView");
+                if (oViewModel) {
+                    oViewModel.setProperty("/totalPrice", 0);
+                    oViewModel.setProperty("/totalPriceFormatted", "0");
+                    oViewModel.setProperty("/currency", "");
+                    oViewModel.setProperty("/checkoutEnabled", false);
+                    oViewModel.setProperty("/checkoutBusy", false);
+                }
+                this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
+            }
+
+            var sCartId = oSession && oSession.getProperty("/cartId");
 
             if (oBinding) {
                 oBinding.filter([
@@ -131,19 +141,6 @@ sap.ui.define([
             });
         },
 
-        formatUnitPrice: function (fUnitPrice, sCurrency) {
-            var fValue = parseFloat(fUnitPrice);
-            if (isNaN(fValue)) {
-                return "";
-            }
-            return formatVnd(toDisplayPrice(fValue), sCurrency);
-        },
-
-        formatLineAmount: function (fUnitPrice, iQuantity, sCurrency) {
-            var fValue = toDisplayPrice(fUnitPrice) * (parseInt(iQuantity, 10) || 0);
-            return formatVnd(fValue, sCurrency);
-        },
-
         formatFoodName: function (sFoodId, mFoodNames) {
             return (mFoodNames && mFoodNames[sFoodId]) || sFoodId || "";
         },
@@ -197,20 +194,15 @@ sap.ui.define([
                 }
             });
 
-            // OData's raw decimal value uses a different internal scale from the
-            // value passed to the row formatter. Sum the formatted Line Amount
-            // cells so the footer always matches exactly what the user sees.
-            oList.getItems().forEach(function (oItem) {
-                var aCells = oItem.getCells();
-                var oLineAmountCell = aCells[3];
-                if (oLineAmountCell && typeof oLineAmountCell.getText === "function") {
-                    fTotal += parseFormattedAmount(oLineAmountCell.getText());
-                }
+            aContexts.forEach(function (oCtx) {
+                if (!oCtx) { return; }
+                var oData = oCtx.getObject();
+                fTotal += Number(oData.LineAmount) || (toAmount(oData.UnitPrice) * (parseInt(oData.Quantity, 10) || 0));
             });
 
             var oViewModel = this.getView().getModel("cartView");
             oViewModel.setProperty("/totalPrice", fTotal);
-            oViewModel.setProperty("/totalPriceFormatted", formatVnd(fTotal, sCurrency));
+            oViewModel.setProperty("/totalPriceFormatted", getAmountText(fTotal, sCurrency));
             oViewModel.setProperty("/currency", sCurrency);
             oViewModel.setProperty("/checkoutEnabled", aContexts.length > 0);
         },
@@ -250,9 +242,9 @@ sap.ui.define([
                     MaterialNumber: d._Food ? d._Food.MaterialNumber : d.FoodID,
                     MaterialDescription: d._Food ? d._Food.MaterialDescription : "",
                     Quantity: d.Quantity,
-                    UnitPrice: toDisplayPrice(d.UnitPrice),
+                    UnitPrice: toAmount(d.UnitPrice),
                     Currency: d.Currency,
-                    LineAmount: toDisplayPrice(d.UnitPrice) * (parseInt(d.Quantity, 10) || 0)
+                    LineAmount: toAmount(d.UnitPrice) * (parseInt(d.Quantity, 10) || 0)
                 };
             });
 

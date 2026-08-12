@@ -5,21 +5,14 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/ui/model/Sorter",
     "sap/m/MessageToast",
-    "sap490g7fioriapp/model/cartUtils"
-], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageToast, cartUtils) {
+    "sap490g7fioriapp/model/cartUtils",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageToast, cartUtils, sessionUtils) {
     "use strict";
 
     // createCheckout is a static RAP action bound to the Payments collection.
     var CREATE_CHECKOUT_ACTION = "/Payments/com.sap.gateway.srvd.zsd_g7_canteen.v0001.createCheckout(...)";
-    var UNIT_PRICE_DISPLAY_SCALE = 0.0001;
-    var CALCULATED_AMOUNT_DISPLAY_SCALE = 0.00000001;
-
-    function formatAmount(vAmount, fScale) {
-        return ((parseFloat(vAmount) || 0) * fScale).toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
-    }
+    var PAYMENT_STATUS_POLL_INTERVAL_MS = 3000;
 
     return Controller.extend("sap490g7fioriapp.controller.Checkout", {
         onInit: function () {
@@ -31,14 +24,61 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        onExit: function () {
+            this._stopPaymentStatusPolling();
+        },
+
         _onRouteMatched: function () {
+            this._stopPaymentStatusPolling();
+            this._bPaymentSuccessHandled = false;
+
+            var oSession = this.getOwnerComponent().getModel("session");
+            var oRouter = this.getOwnerComponent().getRouter();
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
             var oOrder = oCheckoutData && oCheckoutData.getData();
+
+            if (!sessionUtils.isLoggedIn(oSession) || !sessionUtils.isCustomer(oSession)) {
+                this._resetQrState();
+                oRouter.navTo("RouteLogin", {}, true);
+                return;
+            }
+
             if (oOrder && oOrder.existingOrder && oOrder.orderId) {
                 this._loadPaymentForOrder(oOrder.orderId);
                 return;
             }
+
+            if (!this._isValidCartCheckoutData(oOrder)) {
+                this._resetQrState();
+                oRouter.navTo("RouteCart", {}, true);
+                return;
+            }
+
+            if (oOrder.creatingCheckout || oOrder.orderId) {
+                return;
+            }
+
             this.onGenerateQr();
+        },
+
+        _resetQrState: function () {
+            var oQrModel = this.getView().getModel("qrModel");
+            if (oQrModel) {
+                oQrModel.setData({
+                    loading: false, hasQr: false, qrCodeUrl: "", qrPayload: "", qrFallbackUsed: false,
+                    statusText: "", transactionRef: "", checkoutUrl: ""
+                });
+            }
+        },
+
+        _isValidCartCheckoutData: function (oOrder) {
+            var aItems = oOrder && Array.isArray(oOrder.items) ? oOrder.items : [];
+            var fTotal = Number(oOrder && oOrder.totalAmount);
+            return aItems.length > 0 &&
+                aItems.every(function (oItem) {
+                    return Number(oItem.Quantity || oItem.quantity) > 0;
+                }) &&
+                fTotal > 0;
         },
 
         onBack: function () {
@@ -64,6 +104,14 @@ sap.ui.define([
             if (!sUserId) {
                 oQrModel.setProperty("/statusText", "Could not identify the signed-in user.");
                 return;
+            }
+
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+            if (oCheckoutData) {
+                if (oCheckoutData.getProperty("/creatingCheckout") || oCheckoutData.getProperty("/orderId")) {
+                    return;
+                }
+                oCheckoutData.setProperty("/creatingCheckout", true);
             }
 
             oQrModel.setData({ loading: true, hasQr: false, qrCodeUrl: "", qrPayload: "", qrFallbackUsed: false,
@@ -111,13 +159,75 @@ sap.ui.define([
                 console.error("Could not create PayOS checkout:", oError);
                 oQrModel.setProperty("/statusText", "Could not create the order or PayOS payment. Please try again.");
             }).finally(function () {
+                if (oCheckoutData) {
+                    oCheckoutData.setProperty("/creatingCheckout", false);
+                }
                 oQrModel.setProperty("/loading", false);
             });
+        },
+
+        _startPaymentStatusPolling: function (sOrderId) {
+            if (!sOrderId) {
+                return;
+            }
+
+            this._stopPaymentStatusPolling();
+            this._checkOrderPaymentStatus(sOrderId);
+            this._iPaymentStatusTimer = setInterval(function () {
+                this._checkOrderPaymentStatus(sOrderId);
+            }.bind(this), PAYMENT_STATUS_POLL_INTERVAL_MS);
+        },
+
+        _stopPaymentStatusPolling: function () {
+            if (this._iPaymentStatusTimer) {
+                clearInterval(this._iPaymentStatusTimer);
+                this._iPaymentStatusTimer = null;
+            }
+        },
+
+        _checkOrderPaymentStatus: function (sOrderId) {
+            var sEscapedOrderId = String(sOrderId || "").replace(/'/g, "''");
+            return this.getOwnerComponent().getModel()
+                .bindContext("/Orders('" + sEscapedOrderId + "')", undefined, {
+                    $select: "OrderID,PaymentStatus",
+                    $$groupId: "$direct"
+                })
+                .requestObject()
+                .then(function (oOrder) {
+                    if (String(oOrder && oOrder.PaymentStatus || "").toUpperCase() === "PAID") {
+                        this._handlePaymentPaid(sOrderId);
+                    }
+                }.bind(this))
+                .catch(function (oError) {
+                    console.warn("Could not refresh order payment status:", oError);
+                });
+        },
+
+        _handlePaymentPaid: function (sOrderId) {
+            if (this._bPaymentSuccessHandled) {
+                return;
+            }
+
+            this._bPaymentSuccessHandled = true;
+            this._stopPaymentStatusPolling();
+            this._resetQrState();
+
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+            if (oCheckoutData) {
+                oCheckoutData.setProperty("/paymentStatus", "PAID");
+            }
+
+            MessageToast.show("Payment successful.");
+            this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
         },
 
         _displayPayOsQr: function (oPayment) {
             var oQrModel = this.getView().getModel("qrModel");
             var sQrCode = oPayment.QRCode || oPayment.qr_code || "";
+            if (String(oPayment.PaymentStatus || oPayment.payment_status || oPayment.Status || oPayment.status || "").toUpperCase() === "PAID") {
+                this._handlePaymentPaid(oPayment.OrderID || oPayment.order_id || "");
+                return;
+            }
             if (!sQrCode) {
                 oQrModel.setProperty("/statusText", "PayOS has not returned QR code data yet.");
                 return;
@@ -144,13 +254,21 @@ sap.ui.define([
                 if (!aContexts || !aContexts.length) {
                     oQrModel.setProperty("/loading", false);
                     oQrModel.setProperty("/statusText", "This order does not have PayOS payment information yet.");
+                    this._startPaymentStatusPolling(sOrderId);
                     return;
                 }
-                return this._loadPaymentGateway(aContexts[0].getObject().PaymentID);
+                var oPayment = aContexts[0].getObject();
+                if (String(oPayment.PaymentStatus || oPayment.payment_status || "").toUpperCase() === "PAID") {
+                    this._handlePaymentPaid(sOrderId);
+                    return;
+                }
+                this._startPaymentStatusPolling(sOrderId);
+                return this._loadPaymentGateway(oPayment.PaymentID);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not load payment for order:", oError);
                 oQrModel.setProperty("/loading", false);
                 oQrModel.setProperty("/statusText", "Could not load payment information for this order.");
+                this._startPaymentStatusPolling(sOrderId);
             });
         },
 
@@ -240,17 +358,19 @@ sap.ui.define([
                         foodId: oItem.FoodID,
                         foodName: oItem.FoodName || oItem.FoodID || "",
                         quantity: oItem.Quantity,
-                        unitPriceText: formatAmount(oItem.UnitPrice, UNIT_PRICE_DISPLAY_SCALE),
-                        lineAmountText: formatAmount(oItem.LineAmount, CALCULATED_AMOUNT_DISPLAY_SCALE),
+                        unitPriceText: oItem.UnitPrice,
+                        lineAmountText: oItem.LineAmount,
                         currency: oItem.Currency || oOrder.Currency || "VND"
                     };
                 }),
-                totalAmountText: formatAmount(oOrder.TotalAmount, CALCULATED_AMOUNT_DISPLAY_SCALE),
+                totalAmountText: oOrder.TotalAmount,
                 currency: oOrder.Currency || "VND",
                 note: oOrder.Note || "",
+                paymentStatus: oOrder.PaymentStatus || "",
                 noteBusy: false,
                 sourceRoute: oCurrentData.sourceRoute || "cart",
-                existingOrder: !!oCurrentData.existingOrder
+                existingOrder: true,
+                creatingCheckout: false
             }), "checkoutData");
         },
 

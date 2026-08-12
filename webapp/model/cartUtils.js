@@ -6,10 +6,9 @@ sap.ui.define([
 
     var CART_ENTITY_SET = "/Carts";
     var CART_ITEM_ENTITY_SET = "/CartItems";
-    var MATERIAL_PRICE_SCALE = 1000;
 
     function getCartUnitPrice(vMaterialPrice) {
-        return (Number(vMaterialPrice) || 0) * MATERIAL_PRICE_SCALE;
+        return Number(vMaterialPrice) || 0;
     }
 
     // ------------------------------------------------------------
@@ -151,8 +150,6 @@ sap.ui.define([
                 });
 
                 return oReadBinding.requestContexts(0, 1).then(function (aContexts) {
-                    // Food2 returns prices in thousands of VND. Store the full VND
-                    // amount once here so every later cart/order step uses one value.
                     var fUnitPrice = getCartUnitPrice(oMaterial.Price);
                     var sUnitPriceStr = fUnitPrice.toFixed(2);
 
