@@ -93,9 +93,9 @@ sap.ui.define([
         _loadOrderFromBackend: function (sOrderId) {
             var oModel = this.getOwnerComponent().getModel();
             var oContextBinding = oModel.bindContext("/Orders('" + this._escapeKey(sOrderId) + "')");
-            this._oOrderContext = oContextBinding.getBoundContext();
 
             return oContextBinding.requestObject().then(function (oRow) {
+                this._oOrderContext = oContextBinding.getBoundContext();
                 var oOrder = this._normalizeOrderHeader(oRow);
                 return this._loadOrderItems(sOrderId).then(function (aItems) {
                     oOrder.items = aItems;
@@ -121,8 +121,17 @@ sap.ui.define([
             this._oOrderContext = oContextBinding.getBoundContext();
 
             return oContextBinding.requestObject().then(function () {
+                this._oOrderContext = oContextBinding.getBoundContext();
                 return this._oOrderContext;
             }.bind(this));
+        },
+
+        _executeActionIgnoringETag: function (oAction) {
+            if (typeof oAction.invoke === "function") {
+                return oAction.invoke("$direct", true);
+            }
+
+            return oAction.execute("$direct", true);
         },
 
         _loadOrderItems: function (sOrderId) {
@@ -440,8 +449,8 @@ sap.ui.define([
                 var oAction = oModel.bindContext(sPath, oOrderContext, {
                     $$groupId: "$direct"
                 });
-                return oAction.execute("$direct");
-            })
+                return this._executeActionIgnoringETag(oAction);
+            }.bind(this))
                 .then(function () {
                     MessageToast.show(sSuccessMsg);
                     this._loadOrderDetail(sOrderId);

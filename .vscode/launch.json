@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug SAP Fiori App",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:8080/test/flp.html#app-preview",
+      "webRoot": "${workspaceFolder}/webapp",
+      "sourceMaps": true
+    }
+  ]
+}
