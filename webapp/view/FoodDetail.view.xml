@@ -23,7 +23,7 @@
                     </attributes>
                     <statuses>
                         <ObjectStatus
-                            text="{= ${Status} === 'A' ? 'Active' : 'Inactive' }"
+                            text="{= ${Status} === 'A' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
                             state="{= ${Status} === 'A' ? 'Success' : 'Error' }" />
                     </statuses>
                 </ObjectHeader>
@@ -38,7 +38,7 @@
                         <StepInput
                             id="quantityInput"
                             min="1"
-                            max="20"
+                            max="{AvailableStock}"
                             value="1"
                             width="200px" />
 
@@ -47,7 +47,7 @@
                                 text="Add to Cart"
                                 type="Emphasized"
                                 icon="sap-icon://cart"
-                                enabled="{= ${Status} === 'A' }"
+                                enabled="{= ${Status} === 'A' &amp;&amp; ${AvailableStock} > 0 }"
                                 press=".onAddToCart" />
                             <Button
                                 text="View Cart"

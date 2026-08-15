@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/ui/model/Sorter",
     "sap/m/MessageToast",
-    "sap490g7fioriapp/model/cartUtils"
-], function (Controller, Filter, FilterOperator, Sorter, MessageToast, cartUtils) {
+    "sap490g7fioriapp/model/cartUtils",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, Filter, FilterOperator, Sorter, MessageToast, cartUtils, sessionUtils) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.FoodList", {
@@ -74,12 +75,7 @@ sap.ui.define([
         _onRouteMatched: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             if (!oSession || !oSession.getProperty("/isLoggedIn")) {
-                // this.getOwnerComponent().getRouter().navTo("RouteLogin");
-            }
-
-            if (String(oSession && oSession.getProperty("/role") || "").toUpperCase() === "ADMIN") {
-                MessageToast.show("Food ordering is not available for ADMIN accounts.");
-                this.getOwnerComponent().getRouter().navTo("RouteStaffDashboard", {}, true);
+                this.getOwnerComponent().getRouter().navTo("RouteLogin");
                 return;
             }
             this._updateCartBadge();
@@ -97,34 +93,6 @@ sap.ui.define([
 
         onStatusChange: function () {
             this._applyFilters();
-        },
-
-        formatPrice: function (vPrice, sCurrency) {
-            if (vPrice === null || vPrice === undefined || vPrice === "") {
-                return "";
-            }
-            var fPrice = parseFloat(String(vPrice).replace(/,/g, ""));
-            if (!Number.isFinite(fPrice)) {
-                return "";
-            }
-            return fPrice.toLocaleString("en-US", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }) + (sCurrency ? " " + sCurrency : "");
-        },
-
-        formatAvailableStock: function (vStock, sUnit) {
-            if (vStock === null || vStock === undefined || vStock === "") {
-                return "";
-            }
-            var fStock = parseFloat(String(vStock).replace(/,/g, ""));
-            if (!Number.isFinite(fStock)) {
-                return "";
-            }
-            return fStock.toLocaleString("en-US", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 3
-            }) + (sUnit ? " " + sUnit : "");
         },
 
         _applyFilters: function (sQuery) {
@@ -148,7 +116,6 @@ sap.ui.define([
             if (sStatus && sStatus !== "All") {
                 aFilters.push(new Filter({
                     filters: [
-                        new Filter("Status", FilterOperator.EQ, sStatus),
                         new Filter("Status", FilterOperator.EQ, sStatus === "ACTIVE" ? "A" : "I")
                     ],
                     and: false
@@ -216,17 +183,8 @@ sap.ui.define([
 
         onLogout: function () {
             var oSessionModel = this.getOwnerComponent().getModel("session");
-            if (oSessionModel) {
-                oSessionModel.setData({
-                    userId: null,
-                    cartId: null,
-                    username: "",
-                    fullName: "",
-                    role: "",
-                    isLoggedIn: false
-                });
-            }
-            this.getOwnerComponent().getRouter().navTo("RouteLogin");
+            sessionUtils.resetSession(oSessionModel);
+            this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
         }
     });
 });

@@ -7,9 +7,10 @@ sap.ui.define([
         "sap/ui/Device",
         "sap/ui/model/json/JSONModel",
         "sap490g7fioriapp/model/models",
-        "sap490g7fioriapp/model/cartUtils"
+        "sap490g7fioriapp/model/cartUtils",
+        "sap490g7fioriapp/model/sessionUtils"
     ],
-    function (UIComponent, Device, JSONModel, models, cartUtils) {
+    function (UIComponent, Device, JSONModel, models, cartUtils, sessionUtils) {
         "use strict";
 
         return UIComponent.extend("sap490g7fioriapp.Component", {
@@ -37,14 +38,7 @@ sap.ui.define([
                 });
                 this.setModel(oCartModel, "cart");
 
-                var oSessionModel = new JSONModel({
-                    userId: null,
-                    cartId: null,
-                    username: "",
-                    fullName: "",
-                    role: "",
-                    isLoggedIn: false
-                });
+                var oSessionModel = new JSONModel(sessionUtils.getInitialSessionData());
                 this.setModel(oSessionModel, "session");
 
                 this.getModel("session").attachPropertyChange(function (oEvent) {

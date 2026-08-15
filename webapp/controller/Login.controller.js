@@ -31,7 +31,13 @@ sap.ui.define([
                 errorVisible: false,
                 errorMessage: ""
             });
+
             this.getView().setModel(oLoginModel, "loginModel");
+
+            this.getOwnerComponent()
+                .getRouter()
+                .getRoute("RouteLogin")
+                .attachPatternMatched(this._onLoginRouteMatched, this);
         },
 
         onLogin: function () {

@@ -2,22 +2,14 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator"
-], function (Controller, JSONModel, Filter, FilterOperator) {
+    "sap/ui/model/FilterOperator",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, JSONModel, Filter, FilterOperator, sessionUtils) {
     "use strict";
-
-    var AMOUNT_DISPLAY_SCALE = 0.00001;
 
     function formatDate(sValue) {
         var sDate = String(sValue || "").replace(/[^0-9]/g, "").slice(0, 8);
         return sDate.length === 8 ? sDate.slice(6, 8) + "/" + sDate.slice(4, 6) + "/" + sDate.slice(0, 4) : sValue || "";
-    }
-
-    function formatVnd(vAmount) {
-        return ((parseFloat(vAmount) || 0) * AMOUNT_DISPLAY_SCALE).toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
     }
 
     return Controller.extend("sap490g7fioriapp.controller.MyOrders", {
@@ -27,7 +19,23 @@ sap.ui.define([
         },
 
         _onRouteMatched: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            if (!sessionUtils.isLoggedIn(oSession) || !sessionUtils.isCustomer(oSession)) {
+                this._clearOrders();
+                this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
+            }
             this._refreshOrders();
+        },
+
+        _clearOrders: function () {
+            var oOrdersModel = this.getOwnerComponent().getModel("orders");
+            if (oOrdersModel) {
+                oOrdersModel.setProperty("/orders", []);
+                oOrdersModel.setProperty("/filteredOrders", []);
+                oOrdersModel.setProperty("/statusOptions", []);
+                oOrdersModel.setProperty("/selectedOrder", null);
+            }
         },
 
         _refreshOrders: function () {
@@ -53,7 +61,11 @@ sap.ui.define([
         },
 
         _loadOrdersFromBackend: function (sUserId) {
-            var aFilters = sUserId ? [new Filter("UserID", FilterOperator.EQ, sUserId)] : [];
+            if (!sUserId) {
+                return Promise.resolve([]);
+            }
+
+            var aFilters = [new Filter("UserID", FilterOperator.EQ, sUserId)];
             var oListBinding = this.getOwnerComponent().getModel().bindList("/Orders", null, null, aFilters, {
                 $expand: "_Items"
             });
@@ -76,7 +88,7 @@ sap.ui.define([
                 orderDateDisplay: formatDate(sOrderDate),
                 orderTime: oRow.OrderTime || "",
                 totalAmount: parseFloat(oRow.TotalAmount) || 0,
-                totalAmountText: formatVnd(oRow.TotalAmount),
+                totalAmountText: oRow.TotalAmount,
                 currency: oRow.Currency || "VND",
                 orderStatus: oRow.OrderStatus || "Unknown",
                 paymentStatus: oRow.PaymentStatus || "Unknown",

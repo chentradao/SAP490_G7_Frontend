@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
-    "sap/m/MessageBox"
-], function (Controller, JSONModel, MessageBox) {
+    "sap/m/MessageBox",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, JSONModel, MessageBox, sessionUtils) {
     "use strict";
 
     var AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
@@ -30,7 +31,6 @@ sap.ui.define([
             this.getOwnerComponent().setModel(oOrdersModel, "orders");
             this.getView().setModel(oOrdersModel, "orders");
 
-            this._loadOrderEntitySet();
             this._startAutoRefresh();
         },
 
@@ -42,9 +42,31 @@ sap.ui.define([
         },
 
         _onRouteMatched: function () {
+            if (!this._canAccessOrderManagement()) {
+                this._clearOrders();
+                MessageBox.warning("Only STAFF or ADMIN can access Order Management.");
+                this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
+            }
+
             this._sSearchQuery = "";
             this._sStatusFilter = "ALL";
-            this._refreshOrders();
+            this._loadOrderEntitySet();
+        },
+
+        _canAccessOrderManagement: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            return sessionUtils.isLoggedIn(oSession) && sessionUtils.isStaffOrManager(oSession);
+        },
+
+        _clearOrders: function () {
+            var oOrdersModel = this.getOwnerComponent().getModel("orders");
+            if (oOrdersModel) {
+                oOrdersModel.setProperty("/orders", []);
+                oOrdersModel.setProperty("/filteredOrders", []);
+                oOrdersModel.setProperty("/selectedOrder", null);
+                oOrdersModel.setProperty("/busy", false);
+            }
         },
 
         _loadOrderEntitySet: function () {
@@ -78,6 +100,11 @@ sap.ui.define([
         },
 
         _refreshOrders: function (bSilent) {
+            if (!this._canAccessOrderManagement()) {
+                this._clearOrders();
+                return;
+            }
+
             var oOrdersModel = this.getOwnerComponent().getModel("orders");
             if (!oOrdersModel) { return; }
 
@@ -366,18 +393,7 @@ sap.ui.define([
 
         onLogout: function () {
             var oSessionModel = this.getOwnerComponent().getModel("session");
-            if (oSessionModel) {
-                oSessionModel.setData({
-                    userId: null,
-                    cartId: null,
-                    cartItemCount: 0,
-                    username: "",
-                    fullName: "",
-                    roleId: "",
-                    role: "",
-                    isLoggedIn: false
-                });
-            }
+            sessionUtils.resetSession(oSessionModel);
 
             this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
         },

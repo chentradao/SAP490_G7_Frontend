@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, MessageBox) {
+    "sap/m/MessageBox",
+    "sap490g7fioriapp/model/sessionUtils"
+], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, MessageBox, sessionUtils) {
     "use strict";
 
     var SERVICE_NAMESPACE = "com.sap.gateway.srvd.zsd_g7_canteen.v0001";
@@ -23,15 +24,40 @@ sap.ui.define([
         },
 
         _onRouteMatched: function (oEvent) {
+            if (!this._canAccessOrderDetail()) {
+                this._clearSelectedOrder();
+                MessageBox.warning("Only STAFF or ADMIN can access Order Detail.");
+                this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
+            }
+
             var sOrderId = oEvent.getParameter("arguments") &&
                 oEvent.getParameter("arguments").orderId;
             this._sCurrentOrderId = sOrderId;
             this._loadOrderDetail(sOrderId);
         },
 
+        _canAccessOrderDetail: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            return sessionUtils.isLoggedIn(oSession) && sessionUtils.isStaffOrManager(oSession);
+        },
+
+        _clearSelectedOrder: function () {
+            var oOrdersModel = this.getOwnerComponent().getModel("orders");
+            if (oOrdersModel) {
+                oOrdersModel.setProperty("/selectedOrder", null);
+                oOrdersModel.setProperty("/busy", false);
+            }
+        },
+
         _loadOrderDetail: function (sOrderId) {
             var oComponent = this.getOwnerComponent();
             var oOrdersModel = oComponent.getModel("orders");
+
+            if (!this._canAccessOrderDetail()) {
+                this._clearSelectedOrder();
+                return;
+            }
 
             if (!oOrdersModel) {
                 oOrdersModel = new JSONModel({
@@ -44,6 +70,7 @@ sap.ui.define([
             }
 
             oOrdersModel.setProperty("/busy", true);
+            oOrdersModel.setProperty("/selectedOrder", null);
 
             this._loadOrderFromBackend(sOrderId)
                 .then(function (oOrder) {
@@ -65,28 +92,54 @@ sap.ui.define([
 
         _loadOrderFromBackend: function (sOrderId) {
             var oModel = this.getOwnerComponent().getModel();
-            var oContext = oModel.bindContext("/Orders('" + sOrderId + "')", undefined, {
+            var oContextBinding = oModel.bindContext("/Orders('" + this._escapeKey(sOrderId) + "')", undefined, {
                 $expand: "_User"
             });
-            this._oOrderContext = oContext;
 
-            return oContext.requestObject().then(function (oRow) {
+            return oContextBinding.requestObject().then(function (oRow) {
+                this._oOrderContext = oContextBinding.getBoundContext();
                 var oOrder = this._normalizeOrderHeader(oRow);
                 return this._loadOrderItems(sOrderId).then(function (aItems) {
                     oOrder.items = aItems;
                     oOrder.hasStockIssue = aItems.some(function (oItem) {
-                        return oItem.availableQuantity !== null &&
-                            Number(oItem.quantity || 0) > Number(oItem.availableQuantity || 0);
+                        return oItem.hasInsufficientStock || oItem.stockCheckFailed;
                     });
                     return oOrder;
                 });
             }.bind(this));
         },
 
+        _escapeKey: function (sValue) {
+            return String(sValue || "").replace(/'/g, "''");
+        },
+
+        _getOrderContext: function (sOrderId) {
+            if (this._oOrderContext) {
+                return Promise.resolve(this._oOrderContext);
+            }
+
+            var oModel = this.getOwnerComponent().getModel();
+            var oContextBinding = oModel.bindContext("/Orders('" + this._escapeKey(sOrderId) + "')");
+            this._oOrderContext = oContextBinding.getBoundContext();
+
+            return oContextBinding.requestObject().then(function () {
+                this._oOrderContext = oContextBinding.getBoundContext();
+                return this._oOrderContext;
+            }.bind(this));
+        },
+
+        _executeActionIgnoringETag: function (oAction) {
+            if (typeof oAction.invoke === "function") {
+                return oAction.invoke("$direct", true);
+            }
+
+            return oAction.execute("$direct", true);
+        },
+
         _loadOrderItems: function (sOrderId) {
             var that = this;
             var oModel = this.getOwnerComponent().getModel();
-            return oModel.bindList("/Orders('" + sOrderId + "')/_Items")
+            return oModel.bindList("/Orders('" + this._escapeKey(sOrderId) + "')/_Items")
                 .requestContexts(0, 200)
                 .then(function (aContexts) {
                     var aItemPromises = (aContexts || []).map(function (oCtx) {
@@ -103,8 +156,10 @@ sap.ui.define([
                             itemStatus: oItem.ItemStatus || "",
                             availableQuantity: null,
                             availableUnit: "",
-                            availableDisplay: "-",
-                            stockState: "None",
+                            availableDisplay: "Unknown",
+                            stockState: "Warning",
+                            stockCheckFailed: true,
+                            hasInsufficientStock: false,
                             bomItems: [],
                             bomDisplay: "-"
                         };
@@ -118,8 +173,18 @@ sap.ui.define([
                             oNormalizedItem.availableQuantity = oStock.quantity;
                             oNormalizedItem.availableUnit = oStock.unit;
                             oNormalizedItem.availableDisplay = that._formatAvailableStock(oStock);
-                            oNormalizedItem.stockState = oStock.quantity !== null &&
-                                Number(oNormalizedItem.quantity || 0) > Number(oStock.quantity || 0) ? "Error" : "Success";
+                            if (oStock.quantity === null || oStock.quantity === undefined) {
+                                oNormalizedItem.stockState = "Warning";
+                                oNormalizedItem.stockCheckFailed = true;
+                                oNormalizedItem.availableDisplay = "Unknown";
+                            } else if (Number(oNormalizedItem.quantity || 0) > Number(oStock.quantity || 0)) {
+                                oNormalizedItem.stockState = "Error";
+                                oNormalizedItem.stockCheckFailed = false;
+                                oNormalizedItem.hasInsufficientStock = true;
+                            } else {
+                                oNormalizedItem.stockState = "Success";
+                                oNormalizedItem.stockCheckFailed = false;
+                            }
                         });
 
                         return Promise.all([pBom, pStock]).then(function () {
@@ -362,16 +427,32 @@ sap.ui.define([
             var sOrderId = this._sCurrentOrderId;
             if (!sOrderId) { return; }
 
+            if (!this._canAccessOrderDetail()) {
+                this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
+            }
+
+            var oSelectedOrder = this.getOwnerComponent().getModel("orders") &&
+                this.getOwnerComponent().getModel("orders").getProperty("/selectedOrder");
+            if (sActionName === "confirmOrder" && (!oSelectedOrder ||
+                    oSelectedOrder.paymentStatus !== "PAID" ||
+                    oSelectedOrder.orderStatus !== "PENDING" ||
+                    oSelectedOrder.hasStockIssue)) {
+                MessageBox.error("Cannot confirm this order until payment and stock checks are valid.");
+                return;
+            }
+
             var oOrdersModel = this.getOwnerComponent().getModel("orders");
             oOrdersModel.setProperty("/busy", true);
 
             var oModel = this.getOwnerComponent().getModel();
-            var sPath = SERVICE_NAMESPACE + "." + sActionName + "(...)";
-            var oAction = this._oOrderContext ?
-                oModel.bindContext(sPath, this._oOrderContext) :
-                oModel.bindContext("/Orders('" + sOrderId + "')/" + sPath);
-
-            oAction.execute()
+            this._getOrderContext(sOrderId).then(function (oOrderContext) {
+                var sPath = SERVICE_NAMESPACE + "." + sActionName + "(...)";
+                var oAction = oModel.bindContext(sPath, oOrderContext, {
+                    $$groupId: "$direct"
+                });
+                return this._executeActionIgnoringETag(oAction);
+            }.bind(this))
                 .then(function () {
                     MessageToast.show(sSuccessMsg);
                     this._loadOrderDetail(sOrderId);
@@ -384,13 +465,6 @@ sap.ui.define([
 
         onBack: function () {
             this.getOwnerComponent().getRouter().navTo("RouteCashierOrders", {}, true);
-        },
-
-        formatAmount: function (vAmount) {
-            return Number(vAmount || 0).toLocaleString("en-US", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            });
         }
     });
 });
