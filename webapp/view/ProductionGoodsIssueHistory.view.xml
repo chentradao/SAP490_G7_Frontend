@@ -27,13 +27,14 @@
             id="goodsIssueHistorySearch"
             width="24rem"
             placeholder="Search material document, order or material"
-            search="onSearch" />
+            search="onSearch"
+            liveChange="onSearch" />
           <ToolbarSpacer />
           <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClear" />
           <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
         </OverflowToolbar>
 
-        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <ScrollContainer width="100%" height="58vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
         <Table
           id="goodsIssueHistoryTable"
           class="poHistoryTable wideDataTable"
@@ -43,7 +44,7 @@
           growingScrollToLoad="true"
           growingThreshold="20"
           noDataText="No posted production goods issues found"
-          items="{/ProductionOrderRequests}">
+          items="{path: '/ProductionOrderRequests', sorter: {path: 'goods_issued_at', descending: true}}">
           <columns>
             <Column width="13rem"><Text text="Material Document" /></Column>
             <Column width="11rem"><Text text="Production Order" /></Column>

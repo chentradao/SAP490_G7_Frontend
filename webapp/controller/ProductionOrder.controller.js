@@ -19,8 +19,11 @@ sap.ui.define([
                 selectedPlant: "P001",
                 selectedStorage: "FG01",
                 orderQuantity: "1",
+                hasShortage: false,
+                shortageMessage: "",
                 orderType: "PP01",
-                productionVersion: "0001"
+                productionVersion: "0001",
+                lastStockSyncText: "Not synchronized in this session"
             }), "ui");
 
             this.getOwnerComponent().getRouter().getRoute("RouteProductionOrder")
@@ -50,6 +53,51 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteProductionOrderHistory");
         },
 
+        onSyncFoodStock: async function () {
+            const oSession = this.getOwnerComponent().getModel("session");
+            const sRole = String(
+                oSession && oSession.getProperty("/role") || ""
+            ).toUpperCase();
+
+            if (sRole !== "ADMIN") {
+                MessageBox.warning("Only ADMIN can synchronize Food2 stock.");
+                return;
+            }
+
+            const oButton = this.byId("syncFoodStockButton");
+            const oModel = this.getOwnerComponent().getModel();
+            const oAction = oModel.bindContext(
+                "/Food2/com.sap.gateway.srvd.zsd_g7_canteen.v0001.syncFromFG01(...)",
+                undefined,
+                { $$groupId: "$direct" }
+            );
+
+            if (oButton) {
+                oButton.setBusy(true);
+                oButton.setEnabled(false);
+            }
+
+            try {
+                await oAction.execute();
+                oModel.refresh();
+                this.getView().getModel("ui").setProperty(
+                    "/lastStockSyncText",
+                    "Last synchronized: " + new Date().toLocaleString("vi-VN")
+                );
+                MessageBox.success(
+                    "Food2 stock was synchronized from P001/FG01 successfully."
+                );
+            } catch (oError) {
+                console.error("Food2 stock synchronization failed:", oError);
+                MessageBox.error("Unable to synchronize Food2 stock from P001/FG01.");
+            } finally {
+                if (oButton) {
+                    oButton.setBusy(false);
+                    oButton.setEnabled(true);
+                }
+            }
+        },
+
         onFGSelected: async function (oEvent) {
             const oItem = oEvent.getParameter("listItem");
             const oData = oItem.getBindingContext().getObject();
@@ -73,15 +121,15 @@ sap.ui.define([
                 const aContexts = await oBinding.requestContexts(0, 100);
                 const aBom = aContexts.map((oContext) => {
                     const oBom = oContext.getObject();
-                    const nAvailable = Number(oBom.AvailableQuantity || 0);
-                    const nRequired = Number(oBom.ComponentQuantity || 0);
                     return Object.assign({}, oBom, {
-                        AvailabilityText: nAvailable >= nRequired ? "Available" : "Shortage",
-                        AvailabilityState: nAvailable >= nRequired ? "Success" : "Error"
+                        RequiredForOrder: 0,
+                        ShortageQuantity: 0,
+                        AvailabilityText: "",
+                        AvailabilityState: "None"
                     });
                 });
                 oUi.setProperty("/bom", aBom);
-                oUi.setProperty("/canCreate", aBom.length > 0);
+                this._recalculateMaterialAvailability();
 
                 if (aBom.length === 0) {
                     MessageBox.warning("No BOM was found for the selected finished material.");
@@ -91,6 +139,56 @@ sap.ui.define([
             }
         },
 
+        onOrderQuantityChange: function (oEvent) {
+            const sValue = oEvent.getParameter("value");
+            this.getView().getModel("ui").setProperty("/orderQuantity", sValue);
+            this._recalculateMaterialAvailability();
+        },
+
+        _recalculateMaterialAvailability: function () {
+            const oUi = this.getView().getModel("ui");
+            const nOrderQuantity = Number(oUi.getProperty("/orderQuantity"));
+            const aBom = oUi.getProperty("/bom") || [];
+            const bValidQuantity = Number.isFinite(nOrderQuantity) && nOrderQuantity > 0;
+            const aShortages = [];
+
+            const aCalculatedBom = aBom.map(function (oBom) {
+                const nAvailable = Number(oBom.AvailableQuantity || 0);
+                const nRequiredPerUnit = Number(oBom.ComponentQuantity || 0);
+                const nRequiredForOrder = bValidQuantity ? nRequiredPerUnit * nOrderQuantity : 0;
+                const nShortage = Math.max(0, nRequiredForOrder - nAvailable);
+
+                if (nShortage > 0) {
+                    aShortages.push(
+                        (oBom.ComponentDescription || oBom.ComponentMaterial) + ": short by " +
+                        this._formatQuantity(nShortage) + " " + (oBom.ComponentUnit || "")
+                    );
+                }
+
+                return Object.assign({}, oBom, {
+                    RequiredForOrder: this._formatQuantity(nRequiredForOrder),
+                    ShortageQuantity: this._formatQuantity(nShortage),
+                    AvailabilityText: nShortage > 0 ?
+                        "Shortage " + this._formatQuantity(nShortage) + " " + (oBom.ComponentUnit || "") :
+                        "Available",
+                    AvailabilityState: nShortage > 0 ? "Error" : "Success"
+                });
+            }.bind(this));
+
+            oUi.setProperty("/bom", aCalculatedBom);
+            oUi.setProperty("/hasShortage", aShortages.length > 0);
+            oUi.setProperty("/shortageMessage", aShortages.length ?
+                "Insufficient material stock to create this Production Order: " + aShortages.join("; ") : "");
+            oUi.setProperty("/canCreate", Boolean(aCalculatedBom.length && bValidQuantity && !aShortages.length));
+        },
+
+        _formatQuantity: function (vQuantity) {
+            return Number(vQuantity || 0).toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 3
+            });
+        },
+
         onCreateProductionOrder: async function () {
             const oUi = this.getView().getModel("ui");
             const sMaterial = oUi.getProperty("/selectedMaterial");
@@ -98,6 +196,18 @@ sap.ui.define([
 
             if (!sMaterial || !nQuantity || nQuantity <= 0) {
                 MessageBox.warning("Select a finished material and enter a quantity greater than zero.");
+                return;
+            }
+
+            this._recalculateMaterialAvailability();
+            if (!(oUi.getProperty("/bom") || []).length) {
+                MessageBox.warning("Cannot create a Production Order because no BOM is available.");
+                return;
+            }
+            if (oUi.getProperty("/hasShortage")) {
+                MessageBox.warning(oUi.getProperty("/shortageMessage"), {
+                    title: "Insufficient Material Stock"
+                });
                 return;
             }
 

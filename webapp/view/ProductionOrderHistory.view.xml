@@ -6,7 +6,7 @@
   displayBlock="true">
 
   <Page
-    title="Production Order History"
+    title="Production Work Queue"
     showNavButton="true"
     navButtonPress="onNavBack">
 
@@ -17,8 +17,8 @@
     <content>
       <VBox class="poHistoryShell">
         <VBox class="poHistoryIntro">
-          <Title text="Production Order History" level="H2" />
-          <Text text="Track production-order requests, SAP results and release status." class="poHistorySubtitle" />
+          <Title text="Production Work Queue" level="H2" />
+          <Text text="Complete the highlighted next action. Open Details only when you need SAP documents or messages." class="poHistorySubtitle" />
         </VBox>
 
         <OverflowToolbar class="poHistoryFilterBar">
@@ -26,11 +26,12 @@
             id="productionHistorySearch"
             width="22rem"
             placeholder="Search order, material or request ID"
-            search="onSearch" />
+            search="onSearch"
+            liveChange="onSearch" />
           <Select
             id="productionStatusFilter"
             width="12rem"
-            selectedKey="ALL"
+            selectedKey="ACTIVE"
             change="onStatusChange">
             <core:Item key="ACTIVE" text="Needs Action" />
             <core:Item key="ALL" text="All Statuses" />
@@ -47,30 +48,25 @@
           <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
         </OverflowToolbar>
 
-        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="false" class="wideTableScroll productionWorkQueueScroll">
         <Table
           id="productionHistoryTable"
-          class="poHistoryTable wideDataTable wideDataTableXXL"
+          class="poHistoryTable wideDataTable"
           sticky="ColumnHeaders"
           alternateRowColors="true"
           growing="true"
           growingScrollToLoad="true"
           growingThreshold="20"
           noDataText="No production-order requests found"
-          items="{/ProductionOrderRequests}">
+          items="{path: '/ProductionOrderRequests', sorter: {path: 'created_at', descending: true}}">
           <columns>
             <Column width="14rem"><Text text="Production Order" /></Column>
-            <Column width="12rem"><Text text="Source" /></Column>
-            <Column width="11rem"><Text text="Material" /></Column>
-            <Column width="7rem"><Text text="Plant" /></Column>
+            <Column width="16rem"><Text text="Material" /></Column>
             <Column width="10rem" hAlign="End"><Text text="Quantity" /></Column>
-            <Column width="8rem"><Text text="Order Type" /></Column>
-            <Column width="10rem"><Text text="Status" /></Column>
-            <Column width="15rem"><Text text="Next Step" /></Column>
-            <Column width="14rem"><Text text="Goods Issue" /></Column>
-            <Column width="14rem"><Text text="Production GR" /></Column>
-            <Column width="12rem"><Text text="Created At" /></Column>
-            <Column minScreenWidth="Desktop" demandPopin="true" width="20rem"><Text text="BAPI Message" /></Column>
+            <Column width="11rem"><Text text="Status" /></Column>
+            <Column width="29rem"><Text text="Workflow Progress" /></Column>
+            <Column width="16rem"><Text text="Next Action" /></Column>
+            <Column width="8rem" hAlign="Center"><Text text="Details" /></Column>
           </columns>
           <items>
             <ColumnListItem
@@ -79,118 +75,72 @@
               <cells>
                 <VBox>
                   <ObjectIdentifier title="{= ${production_order} || 'Not created' }" text="{request_id}" />
-                  <Button
-                    text="Release"
-                    icon="sap-icon://play"
-                    type="Emphasized"
-                    class="sapUiTinyMarginTop"
-                    press="onRelease"
-                    enabled="{parts: [{path: 'production_order'}, {path: 'status'}], formatter: '.canRelease'}" />
-                  <Button
-                    text="Post Goods Issue"
-                    icon="sap-icon://outbox"
-                    type="Accept"
-                    class="sapUiTinyMarginTop"
-                    press="onPostGoodsIssue"
-                    enabled="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'material_document'}], formatter: '.canPostGoodsIssue'}" />
-                  <Button
-                    text="Confirm Operation"
-                    icon="sap-icon://complete"
-                    type="Emphasized"
-                    class="sapUiTinyMarginTop"
-                    press="onConfirmOperation"
-                    enabled="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'confirmationState>/version'}], formatter: '.canConfirmOperation'}" />
-                  <Button
-                    text="Post Goods Receipt"
-                    icon="sap-icon://inbox"
-                    type="Accept"
-                    class="sapUiTinyMarginTop"
-                    press="onPostProductionGoodsReceipt"
-                    enabled="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'gr_material_document'}, {path: 'goods_receipt_status'}, {path: 'confirmationState>/version'}], formatter: '.canPostProductionGoodsReceipt'}" />
-                  <Button
-                    text="Complete Order"
-                    icon="sap-icon://complete"
-                    type="Accept"
-                    class="sapUiTinyMarginTop"
-                    press="onCompleteProductionOrder"
-                    enabled="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'gr_material_document'}, {path: 'goods_receipt_status'}], formatter: '.canCompleteProductionOrder'}" />
-                </VBox>
-                <VBox>
                   <ObjectStatus text="{path: 'planned_order', formatter: '.formatProductionSource'}" state="Information" />
-                  <ObjectIdentifier title="{planned_order}" text="Planned Order" visible="{= !!${planned_order} }" />
                 </VBox>
-                <Text text="{material}" />
-                <Text text="{plant}" />
+                <ObjectIdentifier title="{material}" text="{= ${plant} + ' / ' + ${order_type} }" />
                 <ObjectNumber number="{order_quantity}" unit="{unit}" />
-                <Text text="{order_type}" />
-                <ObjectStatus text="{status}" state="{path: 'status', formatter: '.formatState'}" />
-                <ObjectStatus
-                  text="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'goods_receipt_status'}, {path: 'confirmationState>/version'}], formatter: '.formatNextStep'}"
-                  state="{parts: [{path: 'production_order'}, {path: 'status'}], formatter: '.formatNextStepState'}" />
+                <ObjectStatus text="{path: 'status', formatter: '.formatFriendlyOrderStatus'}" state="{path: 'status', formatter: '.formatState'}" />
                 <VBox>
-                  <ObjectStatus text="{= ${goods_issue_status} || 'Not posted' }" state="{path: 'goods_issue_status', formatter: '.formatGoodsIssueState'}" />
-                  <ObjectIdentifier title="{material_document}" text="{material_document_year}" visible="{= !!${material_document} }" />
-                  <Text text="{path: 'goods_issued_at', formatter: '.formatDateTime'}" visible="{= !!${goods_issued_at} }" />
-                  <Text text="{goods_issue_message}" wrapping="true" maxLines="2" />
+                  <Text
+                    text="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'goods_receipt_status'}, {path: 'confirmationState>/version'}], formatter: '.formatWorkflowProgress'}"
+                    wrapping="true" />
+                  <ObjectStatus
+                    text="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'goods_receipt_status'}, {path: 'confirmationState>/version'}], formatter: '.formatNextStep'}"
+                    state="{parts: [{path: 'production_order'}, {path: 'status'}], formatter: '.formatNextStepState'}"
+                    class="sapUiTinyMarginTop" />
                 </VBox>
-                <VBox>
-                  <ObjectStatus text="{= ${goods_receipt_status} || 'Not posted' }" state="{path: 'goods_receipt_status', formatter: '.formatGoodsReceiptState'}" />
-                  <ObjectIdentifier title="{gr_material_document}" text="{gr_material_document_year}" visible="{= !!${gr_material_document} }" />
-                  <Text text="{path: 'goods_received_at', formatter: '.formatDateTime'}" visible="{= !!${goods_received_at} }" />
-                  <Text text="{goods_receipt_message}" wrapping="true" maxLines="2" />
-                </VBox>
-                <Text text="{path: 'created_at', formatter: '.formatDateTime'}" />
-                <Text text="{bapi_message}" wrapping="true" maxLines="2" />
+                <Button
+                  text="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'material_document'}, {path: 'gr_material_document'}, {path: 'goods_receipt_status'}, {path: 'bapi_message'}, {path: 'confirmationState>/version'}], formatter: '.formatNextActionText'}"
+                  icon="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'material_document'}, {path: 'gr_material_document'}, {path: 'goods_receipt_status'}, {path: 'bapi_message'}, {path: 'confirmationState>/version'}], formatter: '.formatNextActionIcon'}"
+                  type="Emphasized"
+                  class="workflowActionButton"
+                  press="onExecuteNextStep"
+                  visible="{parts: [{path: 'production_order'}, {path: 'status'}, {path: 'goods_issue_status'}, {path: 'material_document'}, {path: 'gr_material_document'}, {path: 'goods_receipt_status'}, {path: 'bapi_message'}, {path: 'confirmationState>/version'}], formatter: '.hasNextAction'}" />
+                <Button text="View" icon="sap-icon://inspect" type="Transparent" press="onOpenProductionDetails" />
               </cells>
             </ColumnListItem>
           </items>
         </Table>
         </ScrollContainer>
 
-        <Toolbar class="sapUiMediumMarginTop">
-          <Title text="Operation Confirmation History" level="H3" />
-          <ToolbarSpacer />
-          <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefreshConfirmations" />
-        </Toolbar>
-
-        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
-        <Table
-          id="productionConfirmationHistoryTable"
-          class="poHistoryTable wideDataTable wideDataTableXL"
-          alternateRowColors="true"
-          growing="true"
-          growingThreshold="15"
-          noDataText="No operation confirmations found"
-          items="{/ProductionConfirmationHistory}">
-          <columns>
-            <Column width="11rem"><Text text="Production Order" /></Column>
-            <Column width="7rem"><Text text="Operation" /></Column>
-            <Column width="11rem"><Text text="Yield" /></Column>
-            <Column width="11rem"><Text text="Scrap" /></Column>
-            <Column width="9rem"><Text text="Type" /></Column>
-            <Column width="11rem"><Text text="Status" /></Column>
-            <Column width="13rem"><Text text="Confirmation" /></Column>
-            <Column width="14rem"><Text text="Confirmed At" /></Column>
-            <Column minScreenWidth="Desktop" demandPopin="true" width="20rem"><Text text="Message" /></Column>
-          </columns>
-          <items>
-            <ColumnListItem>
-              <cells>
-                <ObjectIdentifier title="{production_order}" text="{request_id}" />
-                <Text text="{operation}" />
-                <ObjectNumber number="{yield_quantity}" unit="{unit}" />
-                <ObjectNumber number="{scrap_quantity}" unit="{unit}" />
-                <ObjectStatus text="{path: 'final_confirmation', formatter: '.formatConfirmationType'}" />
-                <ObjectStatus text="{confirmation_status}" state="{path: 'confirmation_status', formatter: '.formatConfirmationState'}" />
-                <ObjectIdentifier title="{confirmation_number}" text="{confirmation_counter}" />
-                <Text text="{path: 'confirmed_at', formatter: '.formatDateTime'}" />
-                <Text text="{confirmation_message}" wrapping="true" maxLines="2" />
-              </cells>
-            </ColumnListItem>
-          </items>
-        </Table>
-        </ScrollContainer>
       </VBox>
     </content>
+
+    <dependents>
+      <Dialog id="productionDetailsDialog" title="Production Order Details" contentWidth="48rem" stretchOnPhone="true">
+        <content>
+          <VBox class="poDetailsContent">
+            <ObjectHeader
+              title="{= ${production_order} || 'Not created' }"
+              intro="Production Order"
+              number="{order_quantity}"
+              numberUnit="{unit}">
+              <statuses>
+                <ObjectStatus text="{path: 'status', formatter: '.formatFriendlyOrderStatus'}" state="{path: 'status', formatter: '.formatState'}" />
+              </statuses>
+              <attributes>
+                <ObjectAttribute title="Material" text="{material}" />
+                <ObjectAttribute title="Plant" text="{plant}" />
+                <ObjectAttribute title="Request ID" text="{request_id}" />
+                <ObjectAttribute title="Planned Order" text="{planned_order}" />
+              </attributes>
+            </ObjectHeader>
+
+            <Title text="SAP Document Flow" level="H4" class="sapUiSmallMarginTop" />
+            <List showSeparators="Inner">
+              <StandardListItem title="Goods Issue (261)" description="{= ${goods_issue_message} || 'Not posted' }" info="{material_document}" infoState="{path: 'goods_issue_status', formatter: '.formatGoodsIssueState'}" />
+              <StandardListItem title="Production Goods Receipt (101)" description="{= ${goods_receipt_message} || 'Not posted' }" info="{gr_material_document}" infoState="{path: 'goods_receipt_status', formatter: '.formatGoodsReceiptState'}" />
+            </List>
+
+            <Title text="Processing Message" level="H4" class="sapUiSmallMarginTop" />
+            <MessageStrip text="{= ${bapi_message} || 'No SAP processing message.' }" type="Information" showIcon="true" />
+            <Text text="{path: 'created_at', formatter: '.formatDateTime'}" class="sapUiSmallMarginTop" />
+          </VBox>
+        </content>
+        <endButton>
+          <Button text="Close" press="onCloseProductionDetails" />
+        </endButton>
+      </Dialog>
+    </dependents>
   </Page>
 </mvc:View>

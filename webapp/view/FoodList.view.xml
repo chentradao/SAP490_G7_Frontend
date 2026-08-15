@@ -81,14 +81,14 @@
                                 title="{MaterialDescription}"
                                 text="{MaterialNumber}" />
                             <Text text="{MaterialGroup}" />
-                            <Text text="{= ${AvailableStock} !== null ? (${AvailableStock} + ' ' + ${BaseUnit}) : '' }" />
-                            <Text text="{= ${Price} !== null ? (${Price} + ' ' + ${Currency}) : '' }" />
+                            <Text text="{parts: [{path: 'AvailableStock'}, {path: 'BaseUnit'}], formatter: '.formatAvailableStock'}" />
+                            <Text text="{parts: [{path: 'Price'}, {path: 'Currency'}], formatter: '.formatPrice'}" />
                             <ObjectStatus
-                                text="{= ${Status} === 'ACTIVE' || ${Status} === '1' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
-                                state="{= ${Status} === 'ACTIVE' || ${Status} === '1' ? 'Success' : 'Error' }" />
+                                text="{= ${Status} === 'A' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
+                                state="{= ${Status} === 'A' ? 'Success' : 'Error' }" />
                             <Button
                                 text="Add to Cart"
-                                enabled="{= ${Status} === 'ACTIVE' || ${Status} === '1' }"
+                                enabled="{= ${Status} === 'A' }"
                                 press=".onAddToCart" />
                         </cells>
                     </ColumnListItem>

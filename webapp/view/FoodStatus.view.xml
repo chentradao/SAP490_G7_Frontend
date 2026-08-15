@@ -1,0 +1,35 @@
+<mvc:View controllerName="sap490g7fioriapp.controller.FoodStatus"
+    xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" displayBlock="true">
+    <Page title="Edit Food" showNavButton="true" navButtonPress=".onBack">
+        <subHeader>
+            <Bar>
+                <contentMiddle>
+                    <SearchField width="100%" placeholder="Search by food name or material number"
+                        liveChange=".onSearch" search=".onSearch" />
+                </contentMiddle>
+            </Bar>
+        </subHeader>
+        <content>
+            <Table id="foodStatusTable" items="{path: '/Food2', sorter: {path: 'MaterialDescription'}}"
+                growing="true" growingScrollToLoad="true" noDataText="No food items found">
+                <columns>
+                    <Column><Text text="Food" /></Column>
+                    <Column width="10rem"><Text text="Category" /></Column>
+                    <Column width="10rem" hAlign="End"><Text text="Price" /></Column>
+                    <Column width="9rem" hAlign="Center"><Text text="Status" /></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <ObjectIdentifier title="{MaterialDescription}" text="{MaterialNumber}" />
+                            <Text text="{MaterialGroup}" />
+                            <ObjectNumber number="{path: 'Price', formatter: '.formatPrice'}" unit="{Currency}" />
+                            <Switch state="{= ${Status} === 'A' }"
+                                customTextOn="Active" customTextOff="Inactive" change=".onStatusChange" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+</mvc:View>

@@ -90,7 +90,7 @@
                             <Text text="{= ${orders>customerName} || ${orders>userId} || 'N/A' }" />
                             <Text text="{ path: 'orders>updatedAt', formatter: '.formatUpdatedAt' }" />
                             <ObjectNumber
-                                number="{= (${orders>totalAmount} || 0).toFixed(0) }"
+                                number="{ path: 'orders>totalAmount', formatter: '.formatAmount' }"
                                 unit="{= ${orders>currency} || 'VND' }"
                                 state="{= ${orders>orderStatus} === 'CONFIRMED' ? 'Success'
                                          : ${orders>orderStatus} === 'CANCELLED' ? 'Error'

@@ -132,14 +132,44 @@
           </content>
         </Panel>
 
-        <Panel class="staffWorkflowPanel" headerText="4. Menu Management" expandable="false">
+        <Panel
+          class="staffWorkflowPanel"
+          headerText="4. Menu Management"
+          expandable="false"
+          visible="{= ${session>/role} !== 'ADMIN' }">
           <content>
             <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="staffMenuAction">
               <VBox>
-                <Title text="Food Menu" level="H4" />
-                <Text text="View food items, categories, prices and availability separately from SAP operations." />
+                <Title text="Edit Food" level="H4" />
+                <Text text="Edit food availability by setting items to active or inactive." />
               </VBox>
-              <Button text="Open Food List" icon="sap-icon://meal" type="Emphasized" press="onOpenFoodList" />
+              <Button text="Edit Food" icon="sap-icon://edit" type="Emphasized" press="onOpenFoodStatus" />
+            </HBox>
+          </content>
+        </Panel>
+
+        <Panel class="staffWorkflowPanel" headerText="5. Today's Sales Performance" expandable="false">
+          <content>
+            <FlexBox wrap="Wrap" class="staffSalesKpiRow">
+              <VBox class="staffSalesKpi staffSalesKpiConfirmed">
+                <Text text="Confirmed orders" />
+                <Title text="{dashboard>/todayConfirmedCount}" level="H2" />
+              </VBox>
+              <VBox class="staffSalesKpi staffSalesKpiCancelled">
+                <Text text="Cancelled orders" />
+                <Title text="{dashboard>/todayCancelledCount}" level="H2" />
+              </VBox>
+              <VBox class="staffSalesKpi staffSalesKpiRevenue">
+                <Text text="Paid revenue" />
+                <Title text="{= ${dashboard>/todayRevenueText} + ' VND' }" level="H2" />
+              </VBox>
+              <VBox class="staffSalesKpi staffSalesKpiItems">
+                <Text text="Items sold" />
+                <Title text="{dashboard>/todayItemsSold}" level="H2" />
+              </VBox>
+            </FlexBox>
+            <HBox justifyContent="End" class="sapUiSmallMarginTop">
+              <Button text="View Revenue" icon="sap-icon://line-chart" type="Emphasized" press="onOpenRevenueAnalytics" />
             </HBox>
           </content>
         </Panel>

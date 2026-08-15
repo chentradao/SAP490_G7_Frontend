@@ -45,7 +45,8 @@
             id="poHistorySearch"
             width="22rem"
             placeholder="Search PO, material or vendor"
-            search="onSearch" />
+            search="onSearch"
+            liveChange="onSearch" />
           <Select
             id="poStatusFilter"
             width="11rem"
@@ -69,7 +70,7 @@
             press="onRefresh" />
         </OverflowToolbar>
 
-        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <ScrollContainer width="100%" height="58vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
         <Table
           id="poHistoryTable"
           class="poHistoryTable wideDataTable wideDataTableXL"
@@ -79,7 +80,7 @@
           growingScrollToLoad="true"
           growingThreshold="20"
           noDataText="No purchase orders match the selected filters"
-          items="{/ZP_G7_PO_REQUEST}">
+          items="{path: '/ZP_G7_PO_REQUEST', sorter: {path: 'created_at', descending: true}}">
 
           <columns>
             <Column width="11rem"><Text text="PO Number" /></Column>
@@ -174,7 +175,7 @@
                 text="{= ${purchase_requisition_item} ? 'Item ' + ${purchase_requisition_item} : '' }" />
               <Label text="Vendor" /><ObjectIdentifier title="{vendor}" text="{vendor_name}" />
               <Label text="Quantity" /><ObjectNumber number="{quantity}" unit="{unit}" />
-              <Label text="Unit Price" /><ObjectNumber number="{price}" unit="{currency}" />
+              <Label text="Unit Price" /><ObjectNumber number="{path: 'price', formatter: '.formatPrice'}" unit="{currency}" />
               <Label text="Total Amount" />
               <ObjectNumber
                 number="{parts: ['quantity', 'price'], formatter: '.formatTotalAmount'}"

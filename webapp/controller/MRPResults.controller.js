@@ -517,14 +517,28 @@ sap.ui.define([
             return Number.isNaN(oDate.getTime()) ? String(vDate) : oDate.toLocaleDateString("vi-VN");
         },
 
-        formatPRStatus: function (sStatus) {
+        formatPRStatus: function (sStatus, vOpenQuantity, vIsClosed, sPurchaseOrder) {
             const sValue = String(sStatus || "").toUpperCase();
-            if (!sValue) { return "Open"; }
-            return sValue;
+            if (sPurchaseOrder || this._parseQuantity(vOpenQuantity) <= 0 || this._isClosed(vIsClosed)) {
+                return "Fully Ordered";
+            }
+            if (!sValue) { return "Open for Ordering"; }
+            const mText = {
+                "05": "Completed",
+                COMPLETED: "Completed",
+                CLOSED: "Closed",
+                "08": "Rejected",
+                REJECTED: "Rejected",
+                ERROR: "SAP Error"
+            };
+            return mText[sValue] || sValue;
         },
 
-        formatPRState: function (sStatus) {
+        formatPRState: function (sStatus, vOpenQuantity, vIsClosed, sPurchaseOrder) {
             const sValue = String(sStatus || "").toUpperCase();
+            if (sPurchaseOrder || this._parseQuantity(vOpenQuantity) <= 0 || this._isClosed(vIsClosed)) {
+                return "Success";
+            }
             if (["05", "COMPLETED", "CLOSED"].includes(sValue)) { return "Success"; }
             if (["08", "REJECTED", "ERROR"].includes(sValue)) { return "Error"; }
             return "Warning";

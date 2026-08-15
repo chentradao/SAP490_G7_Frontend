@@ -65,7 +65,9 @@ sap.ui.define([
 
         _loadOrderFromBackend: function (sOrderId) {
             var oModel = this.getOwnerComponent().getModel();
-            var oContext = oModel.bindContext("/Orders('" + sOrderId + "')");
+            var oContext = oModel.bindContext("/Orders('" + sOrderId + "')", undefined, {
+                $expand: "_User"
+            });
             this._oOrderContext = oContext;
 
             return oContext.requestObject().then(function (oRow) {
@@ -230,7 +232,7 @@ sap.ui.define([
             return {
                 orderId: oRow.OrderID || "",
                 userId: oRow.UserID || "",
-                customerName: oUser.FullName || oRow.UserID || "",
+                customerName: oUser.FullName || oRow.FullName || oRow.UserID || "",
                 cartId: oRow.CartID || "",
                 orderDate: oRow.OrderDate || "",
                 orderTime: oRow.OrderTime || "",
@@ -382,6 +384,13 @@ sap.ui.define([
 
         onBack: function () {
             this.getOwnerComponent().getRouter().navTo("RouteCashierOrders", {}, true);
+        },
+
+        formatAmount: function (vAmount) {
+            return Number(vAmount || 0).toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
         }
     });
 });

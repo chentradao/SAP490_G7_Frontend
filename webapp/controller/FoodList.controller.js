@@ -76,6 +76,12 @@ sap.ui.define([
             if (!oSession || !oSession.getProperty("/isLoggedIn")) {
                 // this.getOwnerComponent().getRouter().navTo("RouteLogin");
             }
+
+            if (String(oSession && oSession.getProperty("/role") || "").toUpperCase() === "ADMIN") {
+                MessageToast.show("Food ordering is not available for ADMIN accounts.");
+                this.getOwnerComponent().getRouter().navTo("RouteStaffDashboard", {}, true);
+                return;
+            }
             this._updateCartBadge();
             this._updateOrdersBadge();
         },
@@ -91,6 +97,34 @@ sap.ui.define([
 
         onStatusChange: function () {
             this._applyFilters();
+        },
+
+        formatPrice: function (vPrice, sCurrency) {
+            if (vPrice === null || vPrice === undefined || vPrice === "") {
+                return "";
+            }
+            var fPrice = parseFloat(String(vPrice).replace(/,/g, ""));
+            if (!Number.isFinite(fPrice)) {
+                return "";
+            }
+            return fPrice.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }) + (sCurrency ? " " + sCurrency : "");
+        },
+
+        formatAvailableStock: function (vStock, sUnit) {
+            if (vStock === null || vStock === undefined || vStock === "") {
+                return "";
+            }
+            var fStock = parseFloat(String(vStock).replace(/,/g, ""));
+            if (!Number.isFinite(fStock)) {
+                return "";
+            }
+            return fStock.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 3
+            }) + (sUnit ? " " + sUnit : "");
         },
 
         _applyFilters: function (sQuery) {
@@ -115,7 +149,7 @@ sap.ui.define([
                 aFilters.push(new Filter({
                     filters: [
                         new Filter("Status", FilterOperator.EQ, sStatus),
-                        new Filter("Status", FilterOperator.EQ, sStatus === "ACTIVE" ? "1" : "0")
+                        new Filter("Status", FilterOperator.EQ, sStatus === "ACTIVE" ? "A" : "I")
                     ],
                     and: false
                 }));

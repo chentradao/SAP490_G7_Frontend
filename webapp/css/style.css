@@ -61,7 +61,9 @@ body, html {
 }
 
 .materialStockShell {
-    max-width: 92rem;
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
     margin: 0 auto;
     padding: 1.25rem 1.5rem 1.5rem;
 }
@@ -132,7 +134,9 @@ body, html {
 }
 
 .poHistoryShell {
-    max-width: 92rem;
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
     margin: 0 auto;
     padding: 1.5rem;
     gap: 1rem;
@@ -173,7 +177,7 @@ body, html {
 .poHistoryTable {
     border: 1px solid #dde4ea;
     border-radius: 0 0 0.75rem 0.75rem;
-    overflow: hidden;
+    overflow: visible;
     background: #ffffff;
     box-shadow: 0 0.25rem 1rem rgba(34, 53, 72, 0.06);
 }
@@ -185,20 +189,37 @@ body, html {
 .wideTableScroll {
     display: block;
     width: 100%;
+    max-width: 100%;
+    overflow: hidden;
     border-radius: 0 0 0.75rem 0.75rem;
 }
 
 .wideTableScroll .sapMScrollContScroll {
+    width: max-content !important;
     min-width: 100%;
 }
 
+/* Keep action buttons clickable: vertical scrolling belongs to the Page/Table.
+   A focusable two-axis ScrollContainer can capture pointer gestures from cells. */
+.productionWorkQueueScroll,
+.productionWorkQueueScroll .sapMScrollCont,
+.productionWorkQueueScroll .sapMScrollContScroll {
+    pointer-events: auto;
+}
+
+.productionWorkQueueScroll .sapMBtn {
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
+}
+
 .wideDataTable {
-    width: 100% !important;
+    width: max-content !important;
     min-width: 82rem;
 }
 
 .wideDataTableMD {
-    width: 100% !important;
+    width: max-content !important;
     min-width: 62rem;
 }
 
@@ -208,6 +229,79 @@ body, html {
 
 .wideDataTableXXL {
     min-width: 124rem;
+}
+
+.wideDataTable .sapMListTbl,
+.wideDataTableMD .sapMListTbl,
+.wideDataTableXL .sapMListTbl,
+.wideDataTableXXL .sapMListTbl {
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+.workflowActionButton.sapMBtnDisabled {
+    opacity: 0.42 !important;
+    filter: grayscale(1);
+}
+
+.workflowActionButton.sapMBtnDisabled .sapMBtnInner {
+    background: #e8e8e8 !important;
+    border-color: #b8b8b8 !important;
+    color: #6a6d70 !important;
+    box-shadow: none !important;
+}
+
+.workflowActionButton.sapMBtnDisabled,
+.workflowActionButton.sapMBtnDisabled * {
+    cursor: not-allowed !important;
+}
+
+.productionOrderShell {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1.25rem 1.5rem 2rem;
+    gap: 1rem;
+}
+
+.productionOrderHero {
+    gap: 1rem;
+    padding: 1.35rem 1.5rem;
+    border: 1px solid #d5e5f2;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #eaf4ff 0%, #f8fbff 60%, #eef8f4 100%);
+    box-shadow: 0 0.25rem 1rem rgba(34, 53, 72, 0.07);
+}
+
+.productionStepCard {
+    overflow: hidden;
+    border: 1px solid #dde4ea;
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 0.2rem 0.75rem rgba(34, 53, 72, 0.05);
+}
+
+.productionStepHint {
+    color: #556b82;
+}
+
+.productionSelectionSummary {
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #dce8f2;
+    border-radius: 0.75rem;
+    background: #f7fbff;
+}
+
+.productionOrderEntry {
+    gap: 1.5rem;
+}
+
+.productionOrderEntry .sapUiForm {
+    flex: 1 1 42rem;
+}
+
+.productionCreateButton {
+    margin: 0 1rem 1rem 0;
 }
 
 .staffDashboardShell {
@@ -270,6 +364,34 @@ body, html {
     gap: 1rem;
     padding: 0.5rem;
 }
+
+.staffSalesKpiRow {
+    gap: 1rem;
+}
+
+.staffSalesKpi {
+    flex: 1 1 13rem;
+    min-height: 6rem;
+    padding: 1rem 1.25rem;
+    border-left: 0.3rem solid #0a6ed1;
+    border-radius: 0.65rem;
+    background: #f7f9fb;
+}
+
+.staffSalesKpiCancelled { border-left-color: #bb0000; }
+.staffSalesKpiRevenue { border-left-color: #107e3e; }
+.staffSalesKpiItems { border-left-color: #925ace; }
+
+.revenueAnalyticsShell {
+    max-width: 92rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    gap: 1rem;
+}
+
+.revenueChartLegend { gap: 1.5rem; }
+.revenueChart { width: 100%; overflow-x: auto; }
+.revenueChart svg { width: 100%; min-width: 42rem; height: auto; }
 
 @media (max-width: 48rem) {
     .materialStockShell,

@@ -117,6 +117,20 @@
           ]
         },
         {
+          "name": "RouteFoodStatus",
+          "pattern": "FoodStatus",
+          "target": [
+            "TargetFoodStatus"
+          ]
+        },
+        {
+          "name": "RouteRevenueAnalytics",
+          "pattern": "RevenueAnalytics",
+          "target": [
+            "TargetRevenueAnalytics"
+          ]
+        },
+        {
           "name": "RouteUserList",
           "pattern": "UserList",
           "target": [
@@ -264,6 +278,20 @@
           "clearControlAggregation": false,
           "viewId": "FoodDetail",
           "viewName": "FoodDetail"
+        },
+        "TargetFoodStatus": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "FoodStatus",
+          "viewName": "FoodStatus"
+        },
+        "TargetRevenueAnalytics": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "RevenueAnalytics",
+          "viewName": "RevenueAnalytics"
         },
         "TargetUserList": {
           "viewType": "XML",

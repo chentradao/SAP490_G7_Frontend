@@ -76,10 +76,10 @@ sap.ui.define([
             if (sQuery) {
                 aFilters.push(new Filter({
                     filters: [
-                        new Filter("production_order", FilterOperator.Contains, sQuery),
-                        new Filter("material_document", FilterOperator.Contains, sQuery),
-                        new Filter("material", FilterOperator.Contains, sQuery),
-                        new Filter("request_id", FilterOperator.Contains, sQuery)
+                        new Filter("production_order", FilterOperator.EQ, sQuery),
+                        new Filter("material_document", FilterOperator.EQ, sQuery),
+                        new Filter("material", FilterOperator.EQ, sQuery.toUpperCase()),
+                        new Filter("request_id", FilterOperator.EQ, sQuery)
                     ],
                     and: false
                 }));
@@ -95,9 +95,25 @@ sap.ui.define([
                 oSearch.setValue("");
             }
             if (oStatus) {
-                oStatus.setSelectedKey("ALL");
+                oStatus.setSelectedKey("ACTIVE");
             }
             this._applyFilters("");
+        },
+
+        onOpenProductionDetails: function (oEvent) {
+            const oContext = oEvent.getSource().getBindingContext();
+            const oDialog = this.byId("productionDetailsDialog");
+            if (oContext && oDialog) {
+                oDialog.setBindingContext(oContext);
+                oDialog.open();
+            }
+        },
+
+        onCloseProductionDetails: function () {
+            const oDialog = this.byId("productionDetailsDialog");
+            if (oDialog) {
+                oDialog.close();
+            }
         },
 
         onRefresh: function () {
@@ -266,8 +282,16 @@ sap.ui.define([
                 await oAction.execute("$direct");
 
                 this._confirmationDialog.close();
-                oContext.refresh();
-                this.onRefreshConfirmations();
+                const oState = this.getView().getModel("confirmationState");
+                const mConfirmedOrders = Object.assign(
+                    {},
+                    oState.getProperty("/confirmedOrders") || {}
+                );
+                mConfirmedOrders[String(sOrder)] = true;
+                oState.setProperty("/confirmedOrders", mConfirmedOrders);
+                oState.setProperty("/version", Number(oState.getProperty("/version") || 0) + 1);
+                await oContext.refresh();
+                await this.onRefreshConfirmations();
                 MessageBox.success(
                     "Operation " + sOperation + " of Production Order " + sOrder +
                     " was confirmed successfully."
@@ -564,29 +588,31 @@ sap.ui.define([
             }
         },
 
-        canRelease: function (sProductionOrder, sStatus) {
-            const sNormalizedStatus = String(sStatus || "").toUpperCase();
+        canRelease: function (sProductionOrder, sStatus, sMessage) {
+            const sNormalizedStatus = String(sStatus || "").trim().toUpperCase();
+            const sNormalizedMessage = String(sMessage || "").trim().toUpperCase();
             return Boolean(sProductionOrder) &&
-                (sNormalizedStatus === "CREATED" || sNormalizedStatus === "PENDING");
+                (sNormalizedStatus === "CREATED" || sNormalizedStatus === "PENDING") &&
+                !sNormalizedMessage.includes("ALREADY RELEASED");
         },
 
         canPostGoodsIssue: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument) {
             return Boolean(sProductionOrder) &&
-                String(sStatus || "").toUpperCase() === "RELEASED" &&
-                String(sGoodsIssueStatus || "").toUpperCase() !== "POSTED" &&
+                String(sStatus || "").trim().toUpperCase() === "RELEASED" &&
+                String(sGoodsIssueStatus || "").trim().toUpperCase() !== "POSTED" &&
                 !sMaterialDocument;
         },
 
         canConfirmOperation: function (sProductionOrder, sStatus, sGoodsIssueStatus) {
-            const sValue = String(sStatus || "").toUpperCase();
+            const sValue = String(sStatus || "").trim().toUpperCase();
             return Boolean(sProductionOrder) &&
                 sValue === "GOODS_ISSUED" &&
-                String(sGoodsIssueStatus || "").toUpperCase() === "POSTED" &&
+                String(sGoodsIssueStatus || "").trim().toUpperCase() === "POSTED" &&
                 !this._isOperation0010Confirmed(sProductionOrder);
         },
 
         canPostProductionGoodsReceipt: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument, sReceiptStatus) {
-            const sOrderStatus = String(sStatus || "").toUpperCase();
+            const sOrderStatus = String(sStatus || "").trim().toUpperCase();
             return Boolean(sProductionOrder) &&
                 (sOrderStatus === "GOODS_ISSUED" || sOrderStatus === "RELEASED") &&
                 String(sGoodsIssueStatus || "").toUpperCase() === "POSTED" &&
@@ -595,11 +621,186 @@ sap.ui.define([
                 !sMaterialDocument;
         },
 
-        canCompleteProductionOrder: function (sProductionOrder, sStatus, sMaterialDocument, sReceiptStatus) {
+        canCompleteProductionOrder: function (sProductionOrder, sStatus, sMaterialDocument, sReceiptStatus, sMessage) {
+            const sNormalizedMessage = String(sMessage || "").toUpperCase();
             return Boolean(sProductionOrder) &&
                 String(sStatus || "").toUpperCase() === "GOODS_RECEIVED" &&
                 Boolean(sMaterialDocument) &&
-                String(sReceiptStatus || "").toUpperCase() === "POSTED";
+                String(sReceiptStatus || "").toUpperCase() === "POSTED" &&
+                !sNormalizedMessage.includes("TECHNICALLY COMPLETE");
+        },
+
+        _getNextAction: function (
+            sProductionOrder,
+            sStatus,
+            sGoodsIssueStatus,
+            sGoodsIssueDocument,
+            sGoodsReceiptDocument,
+            sGoodsReceiptStatus,
+            sMessage
+        ) {
+            if (this.canRelease(sProductionOrder, sStatus, sMessage)) {
+                return "RELEASE";
+            }
+            if (this.canPostGoodsIssue(sProductionOrder, sStatus, sGoodsIssueStatus, sGoodsIssueDocument)) {
+                return "GI";
+            }
+            if (this.canConfirmOperation(sProductionOrder, sStatus, sGoodsIssueStatus)) {
+                return "CONFIRM";
+            }
+            if (this.canPostProductionGoodsReceipt(
+                sProductionOrder,
+                sStatus,
+                sGoodsIssueStatus,
+                sGoodsReceiptDocument,
+                sGoodsReceiptStatus
+            )) {
+                return "GR";
+            }
+            if (this.canCompleteProductionOrder(
+                sProductionOrder,
+                sStatus,
+                sGoodsReceiptDocument,
+                sGoodsReceiptStatus,
+                sMessage
+            )) {
+                return "COMPLETE";
+            }
+            return "";
+        },
+
+        hasNextAction: function () {
+            return Boolean(this._getNextAction.apply(this, arguments));
+        },
+
+        formatNextActionText: function () {
+            const mText = {
+                RELEASE: "Release Order",
+                GI: "Post Goods Issue",
+                CONFIRM: "Confirm Operation",
+                GR: "Post Goods Receipt",
+                COMPLETE: "Complete Order"
+            };
+            return mText[this._getNextAction.apply(this, arguments)] || "";
+        },
+
+        formatNextActionIcon: function () {
+            const mIcon = {
+                RELEASE: "sap-icon://play",
+                GI: "sap-icon://outbox",
+                CONFIRM: "sap-icon://complete",
+                GR: "sap-icon://inbox",
+                COMPLETE: "sap-icon://complete"
+            };
+            return mIcon[this._getNextAction.apply(this, arguments)] || "";
+        },
+
+        onExecuteNextStep: function (oEvent) {
+            const oContext = oEvent.getSource().getBindingContext();
+            if (!oContext) {
+                MessageBox.error("Production Order context is missing.");
+                return;
+            }
+
+            const sAction = this._getNextAction(
+                oContext.getProperty("production_order"),
+                oContext.getProperty("status"),
+                oContext.getProperty("goods_issue_status"),
+                oContext.getProperty("material_document"),
+                oContext.getProperty("gr_material_document"),
+                oContext.getProperty("goods_receipt_status"),
+                oContext.getProperty("bapi_message")
+            );
+            const mHandler = {
+                RELEASE: this.onRelease,
+                GI: this.onPostGoodsIssue,
+                CONFIRM: this.onConfirmOperation,
+                GR: this.onPostProductionGoodsReceipt,
+                COMPLETE: this.onCompleteProductionOrder
+            };
+
+            if (mHandler[sAction]) {
+                mHandler[sAction].call(this, oEvent);
+            }
+        },
+
+        formatWorkflowProgress: function (sProductionOrder, sStatus, sGoodsIssueStatus, sGoodsReceiptStatus) {
+            const sOrderStatus = String(sStatus || "").trim().toUpperCase();
+            const bReleased = Boolean(sProductionOrder) &&
+                !["", "PENDING", "CREATED", "ERROR"].includes(sOrderStatus);
+            const bGoodsIssued = String(sGoodsIssueStatus || "").trim().toUpperCase() === "POSTED" ||
+                ["GOODS_ISSUED", "GOODS_RECEIVED", "COMPLETED"].includes(sOrderStatus);
+            const bConfirmed = this._isOperation0010Confirmed(sProductionOrder);
+            const bGoodsReceived = String(sGoodsReceiptStatus || "").trim().toUpperCase() === "POSTED" ||
+                ["GOODS_RECEIVED", "COMPLETED"].includes(sOrderStatus);
+            const bCompleted = sOrderStatus === "COMPLETED";
+            const aSteps = [
+                ["Release", bReleased],
+                ["GI", bGoodsIssued],
+                ["Confirm", bConfirmed],
+                ["GR", bGoodsReceived],
+                ["Complete", bCompleted]
+            ];
+            let bCurrentFound = false;
+
+            return aSteps.map(function (aStep) {
+                if (aStep[1]) {
+                    return "✓ " + aStep[0];
+                }
+                if (!bCurrentFound) {
+                    bCurrentFound = true;
+                    return "→ " + aStep[0];
+                }
+                return "○ " + aStep[0];
+            }).join("   ");
+        },
+
+        formatFriendlyOrderStatus: function (sStatus) {
+            const sValue = String(sStatus || "").trim().toUpperCase();
+            const mStatus = {
+                PENDING: "Waiting for SAP",
+                CREATED: "Created",
+                RELEASED: "Released",
+                GOODS_ISSUED: "Materials Issued",
+                GOODS_RECEIVED: "Finished Goods Received",
+                COMPLETED: "Completed",
+                ERROR: "SAP Error"
+            };
+            return mStatus[sValue] || sStatus || "Unknown";
+        },
+
+        formatReleaseButtonType: function (sProductionOrder, sStatus, sMessage) {
+            return this.canRelease(sProductionOrder, sStatus, sMessage) ? "Emphasized" : "Default";
+        },
+
+        formatGoodsIssueButtonType: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument) {
+            return this.canPostGoodsIssue(sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument)
+                ? "Accept" : "Default";
+        },
+
+        formatConfirmationButtonType: function (sProductionOrder, sStatus, sGoodsIssueStatus) {
+            return this.canConfirmOperation(sProductionOrder, sStatus, sGoodsIssueStatus)
+                ? "Emphasized" : "Default";
+        },
+
+        formatGoodsReceiptButtonType: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument, sReceiptStatus) {
+            return this.canPostProductionGoodsReceipt(
+                sProductionOrder,
+                sStatus,
+                sGoodsIssueStatus,
+                sMaterialDocument,
+                sReceiptStatus
+            ) ? "Accept" : "Default";
+        },
+
+        formatCompleteButtonType: function (sProductionOrder, sStatus, sMaterialDocument, sReceiptStatus, sMessage) {
+            return this.canCompleteProductionOrder(
+                sProductionOrder,
+                sStatus,
+                sMaterialDocument,
+                sReceiptStatus,
+                sMessage
+            ) ? "Accept" : "Default";
         },
 
         formatNextStep: function (sProductionOrder, sStatus, sGoodsIssueStatus, sGoodsReceiptStatus) {

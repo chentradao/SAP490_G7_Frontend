@@ -92,7 +92,7 @@
 
                             <Label text="Total Amount" />
                             <ObjectNumber
-                                number="{= (${orders>/selectedOrder/totalAmount} || 0).toFixed(0) }"
+                                number="{ path: 'orders>/selectedOrder/totalAmount', formatter: '.formatAmount' }"
                                 unit="{= ${orders>/selectedOrder/currency} || 'VND' }"
                                 state="{= ${orders>/selectedOrder/paymentStatus} === 'PAID' ? 'Success' : 'Warning' }"
                                 emphasized="true" />
@@ -158,10 +158,10 @@
                                         text="{orders>availableDisplay}"
                                         state="{orders>stockState}" />
                                     <ObjectNumber
-                                        number="{= (${orders>unitPrice} || 0).toFixed(0) }"
+                                        number="{ path: 'orders>unitPrice', formatter: '.formatAmount' }"
                                         unit="VND" />
                                     <ObjectNumber
-                                        number="{= (${orders>lineAmount} || 0).toFixed(0) }"
+                                        number="{ path: 'orders>lineAmount', formatter: '.formatAmount' }"
                                         unit="VND"
                                         emphasized="true" />
                                     <ObjectStatus

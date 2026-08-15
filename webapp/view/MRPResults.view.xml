@@ -59,7 +59,7 @@
                 enabled="{= !${mrp>/busy} }"
                 press="onConvertPlannedOrder" />
             </Toolbar>
-            <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+            <ScrollContainer width="100%" height="45vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
               <Table
                 id="plannedOrdersTable"
                 class="poHistoryTable wideDataTable"
@@ -69,7 +69,7 @@
                 growing="true"
                 growingThreshold="20"
                 noDataText="No MRP planned orders found"
-                items="{/MRPPlannedOrders}">
+                items="{path: '/MRPPlannedOrders', sorter: {path: 'PlannedOrder', descending: true}}">
                 <columns>
                   <Column width="13rem"><Text text="Planned Order" /></Column>
                   <Column width="11rem"><Text text="Material" /></Column>
@@ -113,7 +113,7 @@
                 enabled="{= !${mrp>/busy} }"
                 press="onConvertPurchaseRequisition" />
             </Toolbar>
-            <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+            <ScrollContainer width="100%" height="45vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
               <Table
                 id="purchaseRequisitionsTable"
                 class="poHistoryTable wideDataTable"
@@ -123,7 +123,7 @@
                 growing="true"
                 growingThreshold="20"
                 noDataText="No MRP purchase requisitions found"
-                items="{/MRPPurchaseRequisitions}">
+                items="{path: '/MRPPurchaseRequisitions', sorter: {path: 'PurchaseRequisition', descending: true}}">
                 <columns>
                   <Column width="13rem"><Text text="Purchase Requisition" /></Column>
                   <Column width="8rem"><Text text="Item" /></Column>
@@ -161,8 +161,8 @@
                       <Text text="{path: 'DeliveryDate', formatter: '.formatDate'}" />
                       <Text text="{MRPController}" />
                       <ObjectStatus
-                        text="{path: 'ProcessingStatus', formatter: '.formatPRStatus'}"
-                        state="{path: 'ProcessingStatus', formatter: '.formatPRState'}" />
+                        text="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRStatus'}"
+                        state="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRState'}" />
                       <ObjectIdentifier title="{PurchaseOrder}" text="{PurchaseOrderItem}" />
                     </cells>
                   </ColumnListItem>

@@ -102,11 +102,9 @@ sap.ui.define([
             if (sQuery) {
                 aFilters.push(new Filter({
                     filters: [
-                        new Filter("purchase_order", FilterOperator.Contains, sQuery),
-                        new Filter("material", FilterOperator.Contains, sQuery),
-                        new Filter("material_description", FilterOperator.Contains, sQuery),
-                        new Filter("vendor", FilterOperator.Contains, sQuery),
-                        new Filter("vendor_name", FilterOperator.Contains, sQuery)
+                        new Filter("purchase_order", FilterOperator.EQ, sQuery),
+                        new Filter("material", FilterOperator.EQ, sQuery.toUpperCase()),
+                        new Filter("vendor", FilterOperator.EQ, sQuery.toUpperCase())
                     ],
                     and: false
                 }));
@@ -210,10 +208,18 @@ sap.ui.define([
                 return "0";
             }
 
-            return fTotal.toLocaleString("vi-VN", {
+            return fTotal.toLocaleString("en-US", {
                 minimumFractionDigits: 0,
-                maximumFractionDigits: 2
+                maximumFractionDigits: 0
             });
+        },
+
+        formatPrice: function (vPrice) {
+            var fPrice = Number(vPrice);
+            return Number.isFinite(fPrice) ? fPrice.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }) : "0";
         },
 
         onOpenPODetails: function (oEvent) {
@@ -284,6 +290,11 @@ sap.ui.define([
                     oGRModel.setProperty("/orderedQuantity", oOverview.getProperty("ordered_quantity") || "0");
                     oGRModel.setProperty("/receivedQuantity", oOverview.getProperty("received_quantity") || "0");
                     oGRModel.setProperty("/remainingQuantity", oOverview.getProperty("remaining_quantity") || "0");
+
+                    if (Number(oOverview.getProperty("remaining_quantity") || 0) <= 0) {
+                        this.byId("postGRDialog").close();
+                        MessageBox.information("This Purchase Order item has already been received in full.");
+                    }
                 }
             } catch (oError) {
                 console.warn("Unable to load PO receiving overview", oError);
@@ -370,7 +381,7 @@ sap.ui.define([
                 let sStatus = "";
                 let sBapiMessage = "";
 
-                for (let iAttempt = 0; iAttempt < 5; iAttempt += 1) {
+                for (let iAttempt = 0; iAttempt < 15; iAttempt += 1) {
                     await new Promise(function (resolve) {
                         setTimeout(resolve, 1000);
                     });
@@ -392,6 +403,7 @@ sap.ui.define([
                 if (sMaterialDocument) {
                     this.onCloseGRDialog();
                     this.onClosePODetails();
+                    oModel.refresh();
                     this.onRefresh();
 
                     MessageBox.success(

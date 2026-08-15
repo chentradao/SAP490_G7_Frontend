@@ -110,7 +110,9 @@ sap.ui.define([
         _loadAllOrdersFromBackend: function () {
             var oModel = this.getOwnerComponent().getModel();
             var sEntitySet = this._sOrderEntitySet || "Orders";
-            var oListBinding = oModel.bindList("/" + sEntitySet);
+            var oListBinding = oModel.bindList("/" + sEntitySet, undefined, undefined, undefined, {
+                $expand: "_User"
+            });
 
             return oListBinding.requestContexts(0, 5000).then(function (aContexts) {
                 return (aContexts || []).map(function (oCtx) {
@@ -341,6 +343,13 @@ sap.ui.define([
             return this.formatDate(oParts.date) + " " + this.formatTime(oParts.time);
         },
 
+        formatAmount: function (vAmount) {
+            return Number(vAmount || 0).toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        },
+
         onOrderPress: function (oEvent) {
             var oContext = oEvent.getSource().getBindingContext("orders");
             var sOrderId = oContext && oContext.getProperty("orderId");
@@ -374,7 +383,7 @@ sap.ui.define([
         },
 
         onBack: function () {
-            this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
+            this.onLogout();
         }
     });
 });

@@ -118,7 +118,7 @@
           <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
         </Toolbar>
 
-        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <ScrollContainer width="100%" height="58vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
           <Table
             id="pirHistoryTable"
             class="poHistoryTable wideDataTable"
@@ -127,7 +127,7 @@
             growing="true"
             growingThreshold="20"
             noDataText="No PIR requests found"
-            items="{/PIRRequests}">
+            items="{path: '/PIRRequests', sorter: {path: 'created_at', descending: true}}">
             <columns>
               <Column width="11rem"><Text text="Material" /></Column>
               <Column width="11rem" hAlign="Center"><Text text="MRP Action" /></Column>
@@ -147,7 +147,8 @@
                   <Button
                     text="Run MRP"
                     icon="sap-icon://process"
-                    type="Emphasized"
+                    type="{= (${status} === 'CREATED' || ${status} === 'MRP_ERROR') ? 'Emphasized' : 'Default' }"
+                    class="workflowActionButton"
                     press="onRunMRP"
                     enabled="{= (${status} === 'CREATED' || ${status} === 'MRP_ERROR') &amp;&amp; !${pir>/busy} }" />
                   <Text text="{plant}" />

@@ -252,7 +252,7 @@ sap.ui.define([
 
             if (Number.isFinite(fReorderPoint) &&
                 fReorderPoint > 0 &&
-                fAvailable <= fReorderPoint) {
+                fAvailable < fReorderPoint) {
                 return "Low Stock";
             }
 
@@ -291,9 +291,9 @@ sap.ui.define([
                 return "0";
             }
 
-            return fTotal.toLocaleString("vi-VN", {
+            return fTotal.toLocaleString("en-US", {
                 minimumFractionDigits: 0,
-                maximumFractionDigits: 2
+                maximumFractionDigits: 0
             });
         },
 

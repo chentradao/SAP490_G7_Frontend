@@ -65,7 +65,7 @@
             press="onRefreshStock" />
         </OverflowToolbar>
 
-        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <ScrollContainer width="100%" height="68vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
         <Table
           id="stockTable"
           class="materialStockTable wideDataTable"

@@ -5,14 +5,16 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/ui/model/Sorter",
     "sap/m/MessageToast",
+    "sap/m/MessageBox",
     "sap490g7fioriapp/model/cartUtils"
-], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageToast, cartUtils) {
+], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageToast, MessageBox, cartUtils) {
     "use strict";
 
     // createCheckout is a static RAP action bound to the Payments collection.
     var CREATE_CHECKOUT_ACTION = "/Payments/com.sap.gateway.srvd.zsd_g7_canteen.v0001.createCheckout(...)";
     var UNIT_PRICE_DISPLAY_SCALE = 0.0001;
     var CALCULATED_AMOUNT_DISPLAY_SCALE = 0.00000001;
+    var PAYMENT_STATUS_POLL_INTERVAL_MS = 3000;
 
     function formatAmount(vAmount, fScale) {
         return ((parseFloat(vAmount) || 0) * fScale).toLocaleString("en-US", {
@@ -31,7 +33,13 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        onExit: function () {
+            this._stopPaymentStatusPolling();
+        },
+
         _onRouteMatched: function () {
+            this._stopPaymentStatusPolling();
+            this._bPaymentSuccessHandled = false;
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
             var oOrder = oCheckoutData && oCheckoutData.getData();
             if (oOrder && oOrder.existingOrder && oOrder.orderId) {
@@ -42,6 +50,28 @@ sap.ui.define([
         },
 
         onBack: function () {
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+            var sPaymentStatus = String(oCheckoutData && oCheckoutData.getProperty("/paymentStatus") || "").toUpperCase();
+
+            if (sPaymentStatus !== "PAID") {
+                MessageBox.confirm("You have not completed payment. Do you want to go back?", {
+                    title: "Payment not completed",
+                    actions: [MessageBox.Action.YES, MessageBox.Action.NO],
+                    emphasizedAction: MessageBox.Action.NO,
+                    onClose: function (sAction) {
+                        if (sAction === MessageBox.Action.YES) {
+                            this._navigateBack();
+                        }
+                    }.bind(this)
+                });
+                return;
+            }
+
+            this._navigateBack();
+        },
+
+        _navigateBack: function () {
+            this._stopPaymentStatusPolling();
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
             var sSourceRoute = oCheckoutData && oCheckoutData.getProperty("/sourceRoute");
             var sOrderId = oCheckoutData && oCheckoutData.getProperty("/orderId");
@@ -54,6 +84,48 @@ sap.ui.define([
             } else {
                 oRouter.navTo("RouteCart", {}, true);
             }
+        },
+
+        _startPaymentStatusPolling: function (sOrderId) {
+            if (!sOrderId) { return; }
+            this._stopPaymentStatusPolling();
+            this._checkOrderPaymentStatus(sOrderId);
+            this._iPaymentStatusTimer = setInterval(function () {
+                this._checkOrderPaymentStatus(sOrderId);
+            }.bind(this), PAYMENT_STATUS_POLL_INTERVAL_MS);
+        },
+
+        _stopPaymentStatusPolling: function () {
+            if (this._iPaymentStatusTimer) {
+                clearInterval(this._iPaymentStatusTimer);
+                this._iPaymentStatusTimer = null;
+            }
+        },
+
+        _checkOrderPaymentStatus: function (sOrderId) {
+            var sEscapedOrderId = String(sOrderId).replace(/'/g, "''");
+            return this.getOwnerComponent().getModel().bindContext(
+                "/Orders('" + sEscapedOrderId + "')", undefined,
+                { $select: "OrderID,PaymentStatus", $$groupId: "$direct" }
+            ).requestObject().then(function (oOrder) {
+                if (String(oOrder && oOrder.PaymentStatus || "").toUpperCase() === "PAID") {
+                    this._handlePaymentPaid();
+                }
+            }.bind(this)).catch(function (oError) {
+                console.warn("Could not refresh order payment status:", oError);
+            });
+        },
+
+        _handlePaymentPaid: function () {
+            if (this._bPaymentSuccessHandled) { return; }
+            this._bPaymentSuccessHandled = true;
+            this._stopPaymentStatusPolling();
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+            if (oCheckoutData) {
+                oCheckoutData.setProperty("/paymentStatus", "PAID");
+            }
+            MessageToast.show("Checkout successfully.");
+            this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
         },
 
         onGenerateQr: function () {
@@ -144,13 +216,21 @@ sap.ui.define([
                 if (!aContexts || !aContexts.length) {
                     oQrModel.setProperty("/loading", false);
                     oQrModel.setProperty("/statusText", "This order does not have PayOS payment information yet.");
+                    this._startPaymentStatusPolling(sOrderId);
                     return;
                 }
-                return this._loadPaymentGateway(aContexts[0].getObject().PaymentID);
+                var oPayment = aContexts[0].getObject();
+                if (String(oPayment.PaymentStatus || "").toUpperCase() === "PAID") {
+                    this._handlePaymentPaid();
+                    return;
+                }
+                this._startPaymentStatusPolling(sOrderId);
+                return this._loadPaymentGateway(oPayment.PaymentID);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not load payment for order:", oError);
                 oQrModel.setProperty("/loading", false);
                 oQrModel.setProperty("/statusText", "Could not load payment information for this order.");
+                this._startPaymentStatusPolling(sOrderId);
             });
         },
 
@@ -248,6 +328,7 @@ sap.ui.define([
                 totalAmountText: formatAmount(oOrder.TotalAmount, CALCULATED_AMOUNT_DISPLAY_SCALE),
                 currency: oOrder.Currency || "VND",
                 note: oOrder.Note || "",
+                paymentStatus: oOrder.PaymentStatus || "",
                 noteBusy: false,
                 sourceRoute: oCurrentData.sourceRoute || "cart",
                 existingOrder: !!oCurrentData.existingOrder

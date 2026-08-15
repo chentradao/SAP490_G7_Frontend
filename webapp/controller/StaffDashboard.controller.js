@@ -14,7 +14,11 @@ sap.ui.define([
                 goodsReceiptCount: 0,
                 activeProductionCount: 0,
                 goodsIssueCount: 0,
-                productionGoodsReceiptCount: 0
+                productionGoodsReceiptCount: 0,
+                todayConfirmedCount: 0,
+                todayCancelledCount: 0,
+                todayRevenueText: "0",
+                todayItemsSold: 0
             }), "dashboard");
 
             this.getOwnerComponent().getRouter().getRoute("RouteStaffDashboard")
@@ -43,10 +47,11 @@ sap.ui.define([
             const oModel = this.getOwnerComponent().getModel();
             const oDashboard = this.getView().getModel("dashboard");
 
-            const requestObjects = async function (sPath, sSelect) {
+            const requestObjects = async function (sPath, sSelect, mParameters) {
                 const oBinding = oModel.bindList(sPath, undefined, undefined, undefined, {
                     $$groupId: "$direct",
-                    $select: sSelect
+                    $select: sSelect,
+                    ...(mParameters || {})
                 });
                 const aContexts = await oBinding.requestContexts(0, 500);
                 return aContexts.map(function (oContext) {
@@ -60,7 +65,8 @@ sap.ui.define([
                     requestObjects("/ZP_G7_PO_REQUEST", "request_id,status,purchase_order"),
                     requestObjects("/GoodsReceiptRequests", "request_id,status,material_document"),
                     requestObjects("/ProductionOrderRequests", "request_id,status,production_order,goods_issue_status,goods_receipt_status"),
-                    requestObjects("/ProductionConfirmationHistory", "confirmation_id,confirmation_status")
+                    requestObjects("/ProductionConfirmationHistory", "confirmation_id,confirmation_status"),
+                    requestObjects("/Orders", "OrderID,OrderDate,OrderStatus,PaymentStatus,TotalAmount", { $expand: "_Items($select=Quantity)" })
                 ]);
 
                 const iLowStock = aResults[0].filter(function (oItem) {
@@ -84,6 +90,31 @@ sap.ui.define([
                     return String(oItem.goods_receipt_status || "").toUpperCase() === "POSTED";
                 }).length;
 
+                const oToday = new Date();
+                const sTodayCompact = [oToday.getFullYear(), String(oToday.getMonth() + 1).padStart(2, "0"), String(oToday.getDate()).padStart(2, "0")].join("");
+                const sTodayIso = [oToday.getFullYear(), String(oToday.getMonth() + 1).padStart(2, "0"), String(oToday.getDate()).padStart(2, "0")].join("-");
+                const aTodayOrders = aResults[5].filter(function (oOrder) {
+                    const sDate = String(oOrder.OrderDate || "").slice(0, 10);
+                    return sDate === sTodayCompact || sDate === sTodayIso;
+                });
+                const iConfirmed = aTodayOrders.filter(function (oOrder) {
+                    return String(oOrder.OrderStatus || "").toUpperCase() === "CONFIRMED";
+                }).length;
+                const iCancelled = aTodayOrders.filter(function (oOrder) {
+                    return String(oOrder.OrderStatus || "").toUpperCase() === "CANCELLED";
+                }).length;
+                const aPaidOrders = aTodayOrders.filter(function (oOrder) {
+                    return String(oOrder.PaymentStatus || "").toUpperCase() === "PAID";
+                });
+                const fRevenue = aPaidOrders.reduce(function (fTotal, oOrder) {
+                    return fTotal + (Number(oOrder.TotalAmount) || 0);
+                }, 0);
+                const iItemsSold = aPaidOrders.reduce(function (iTotal, oOrder) {
+                    return iTotal + (oOrder._Items || []).reduce(function (iOrderTotal, oItem) {
+                        return iOrderTotal + (Number(oItem.Quantity) || 0);
+                    }, 0);
+                }, 0);
+
                 oDashboard.setData({
                     lowStockCount: iLowStock,
                     lowStockColor: iLowStock > 0 ? "Error" : "Good",
@@ -92,7 +123,11 @@ sap.ui.define([
                     activeProductionCount: iActiveProduction,
                     goodsIssueCount: iGoodsIssues,
                     productionGoodsReceiptCount: iProductionGoodsReceipts,
-                    confirmationCount: aResults[4].length
+                    confirmationCount: aResults[4].length,
+                    todayConfirmedCount: iConfirmed,
+                    todayCancelledCount: iCancelled,
+                    todayRevenueText: fRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 }),
+                    todayItemsSold: iItemsSold
                 });
             } catch (oError) {
                 // Navigation remains usable even when one summary endpoint is unavailable.
@@ -113,7 +148,8 @@ sap.ui.define([
         onOpenProductionHistory: function () { this._navTo("RouteProductionOrderHistory"); },
         onOpenGoodsIssueHistory: function () { this._navTo("RouteProductionGoodsIssueHistory"); },
         onOpenGoodsReceiptHistory: function () { this._navTo("RouteProductionGoodsReceiptHistory"); },
-        onOpenFoodList: function () { this._navTo("RouteFoodList"); },
+        onOpenFoodStatus: function () { this._navTo("RouteFoodStatus"); },
+        onOpenRevenueAnalytics: function () { this._navTo("RouteRevenueAnalytics"); },
 
         onLogout: function () {
             const oSession = this.getOwnerComponent().getModel("session");

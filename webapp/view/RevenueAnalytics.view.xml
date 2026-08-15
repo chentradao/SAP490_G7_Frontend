@@ -1,0 +1,22 @@
+<mvc:View controllerName="sap490g7fioriapp.controller.RevenueAnalytics"
+    xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core" displayBlock="true">
+    <Page title="Revenue Analytics" showNavButton="true" navButtonPress=".onBack">
+        <content>
+            <VBox class="revenueAnalyticsShell">
+                <MessageStrip text="{analytics>/message}"
+                    type="{= ${analytics>/backendAvailable} ? 'Information' : 'Warning' }" showIcon="true" />
+                <HBox wrap="Wrap" class="revenueChartLegend">
+                    <ObjectStatus text="Revenue" state="Information" />
+                    <ObjectStatus text="Material Cost" state="Warning" />
+                    <ObjectStatus text="Profit" state="Success" />
+                </HBox>
+                <Panel headerText="Daily Revenue, Cost and Profit">
+                    <core:HTML content="{analytics>/chartHtml}" sanitizeContent="false" />
+                </Panel>
+                <Panel headerText="Required RAP ABAP Analytics Entity" expandable="true" expanded="true">
+                    <Text text="Expose SalesAnalyticsDaily with BusinessDate, Revenue, MaterialCost, Profit and Currency. MaterialCost should be calculated from paid order quantities multiplied by BOM component quantities and the effective component price; Profit = Revenue - MaterialCost." wrapping="true" />
+                </Panel>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

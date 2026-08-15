@@ -33,7 +33,8 @@
             id="grHistorySearch"
             width="22rem"
             placeholder="Search material document, PO or material"
-            search="onSearch" />
+            search="onSearch"
+            liveChange="onSearch" />
           <Select
             id="grStatusFilter"
             width="11rem"
@@ -49,7 +50,7 @@
           <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
         </OverflowToolbar>
 
-        <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
+        <ScrollContainer width="100%" height="58vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
         <Table
           id="grHistoryTable"
           class="poHistoryTable wideDataTable"
@@ -59,7 +60,7 @@
           growingScrollToLoad="true"
           growingThreshold="20"
           noDataText="No goods receipts found"
-          items="{/GoodsReceiptRequests}">
+          items="{path: '/GoodsReceiptRequests', sorter: {path: 'created_at', descending: true}}">
           <columns>
             <Column width="12rem"><Text text="Material Document" /></Column>
             <Column width="11rem"><Text text="Purchase Order" /></Column>
@@ -71,6 +72,7 @@
             <Column width="10rem"><Text text="Posting Date" /></Column>
             <Column width="8rem"><Text text="Status" /></Column>
             <Column minScreenWidth="Desktop" demandPopin="true" width="18rem"><Text text="BAPI Message" /></Column>
+            <Column width="8rem" hAlign="Center"><Text text="Action" /></Column>
           </columns>
           <items>
             <ColumnListItem
@@ -85,8 +87,16 @@
                 <Text text="{plant}" />
                 <Text text="{storage_loc}" />
                 <Text text="{path: 'posting_date', formatter: '.formatDate'}" />
-                <ObjectStatus text="{status}" state="{path: 'status', formatter: '.formatState'}" />
+                <ObjectStatus text="{path: 'status', formatter: '.formatStatusText'}" state="{path: 'status', formatter: '.formatState'}" />
                 <Text text="{bapi_message}" wrapping="true" maxLines="2" />
+                <Button
+                  text="Retry"
+                  icon="sap-icon://refresh"
+                  type="Emphasized"
+                  press="onRetryGoodsReceipt"
+                  visible="{= ${status} === 'ERROR' }"
+                  enabled="{= ${status} === 'ERROR' &amp;&amp; !${process_gr} }"
+                  class="workflowActionButton" />
               </cells>
             </ColumnListItem>
           </items>

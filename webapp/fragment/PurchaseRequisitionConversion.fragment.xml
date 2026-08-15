@@ -1,0 +1,96 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form">
+  <Dialog
+    id="purchaseRequisitionConversionDialog"
+    title="Convert Purchase Requisition to Purchase Order"
+    contentWidth="48rem"
+    stretchOnPhone="true"
+    busy="{mrp>/busy}"
+    busyIndicatorDelay="0">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip
+          text="Review the open quantity, supplier and purchasing data before creating the Purchase Order in SAP."
+          type="Information"
+          showIcon="true"
+          class="sapUiSmallMarginBottom" />
+        <f:SimpleForm
+          editable="true"
+          layout="ResponsiveGridLayout"
+          labelSpanXL="4"
+          labelSpanL="4"
+          labelSpanM="4"
+          labelSpanS="12"
+          columnsXL="2"
+          columnsL="2"
+          columnsM="1">
+          <Label text="Purchase Requisition" />
+          <Input value="{prConvert>/purchaseRequisition}" editable="false" />
+
+          <Label text="PR Item" />
+          <Input value="{prConvert>/prItem}" editable="false" />
+
+          <Label text="Material" />
+          <Input value="{prConvert>/material}" editable="false" />
+
+          <Label text="Description" />
+          <Input value="{prConvert>/description}" editable="false" />
+
+          <Label text="Open Quantity" required="true" />
+          <Input value="{prConvert>/quantity}" type="Number" description="{prConvert>/unit}" />
+
+          <Label text="Delivery Date" required="true" />
+          <DatePicker
+            value="{prConvert>/deliveryDate}"
+            valueFormat="yyyy-MM-dd"
+            displayFormat="medium" />
+
+          <Label text="Plant" required="true" />
+          <Input value="{prConvert>/plant}" editable="false" />
+
+          <Label text="Storage Location" required="true" />
+          <Input value="{prConvert>/storageLocation}" maxLength="4" />
+
+          <Label text="Purchasing Organization" required="true" />
+          <Input
+            value="{prConvert>/purchOrg}"
+            description="{prConvert>/purchOrgName}"
+            showValueHelp="true"
+            valueHelpRequest="onPRPurchOrgValueHelp" />
+
+          <Label text="Company Code" required="true" />
+          <Input value="{prConvert>/companyCode}" maxLength="4" />
+
+          <Label text="Vendor" required="true" />
+          <Input
+            value="{prConvert>/vendor}"
+            description="{prConvert>/vendorName}"
+            showValueHelp="true"
+            valueHelpRequest="onPRVendorValueHelp" />
+
+          <Label text="Purchasing Group" required="true" />
+          <Input
+            value="{prConvert>/purchGroup}"
+            description="{prConvert>/purchGroupName}"
+            showValueHelp="true"
+            valueHelpRequest="onPRPurchGroupValueHelp" />
+
+          <Label text="Net Price" required="true" />
+          <Input value="{prConvert>/price}" type="Number" description="{prConvert>/currency}" />
+        </f:SimpleForm>
+      </VBox>
+    </content>
+    <beginButton>
+      <Button
+        id="submitPRConversionButton"
+        text="Create Purchase Order"
+        type="Emphasized"
+        press="onSubmitPRConversion" />
+    </beginButton>
+    <endButton>
+      <Button text="Cancel" press="onClosePRConversion" />
+    </endButton>
+  </Dialog>
+</core:FragmentDefinition>

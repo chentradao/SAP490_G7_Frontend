@@ -51,10 +51,10 @@ sap.ui.define([
             if (sQuery) {
                 aFilters.push(new Filter({
                     filters: [
-                        new Filter("material_document", FilterOperator.Contains, sQuery),
-                        new Filter("production_order", FilterOperator.Contains, sQuery),
-                        new Filter("material", FilterOperator.Contains, sQuery),
-                        new Filter("request_id", FilterOperator.Contains, sQuery)
+                        new Filter("material_document", FilterOperator.EQ, sQuery),
+                        new Filter("production_order", FilterOperator.EQ, sQuery),
+                        new Filter("material", FilterOperator.EQ, sQuery.toUpperCase()),
+                        new Filter("request_id", FilterOperator.EQ, sQuery)
                     ],
                     and: false
                 }));

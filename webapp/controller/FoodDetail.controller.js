@@ -32,6 +32,20 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteFoodList");
         },
 
+        formatPrice: function (vPrice) {
+            if (vPrice === null || vPrice === undefined || vPrice === "") {
+                return "";
+            }
+            var fPrice = parseFloat(String(vPrice).replace(/,/g, ""));
+            if (!Number.isFinite(fPrice)) {
+                return "";
+            }
+            return fPrice.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        },
+
         onOpenCart: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             var oContext = this.getView().getBindingContext();
