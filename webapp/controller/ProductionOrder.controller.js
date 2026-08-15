@@ -105,7 +105,7 @@ sap.ui.define([
 
             oUi.setProperty("/selectedMaterial", oData.Material);
             oUi.setProperty("/selectedDescription", oData.MaterialDescription || "");
-            oUi.setProperty("/selectedStock", oData.StockQuantity || "0");
+            oUi.setProperty("/selectedStock", oData.AvailableQuantity || "0");
             oUi.setProperty("/selectedUnit", oData.MaterialBaseUnit || "");
             oUi.setProperty("/selectedPlant", oData.Plant || "P001");
             oUi.setProperty("/selectedStorage", oData.StorageLocation || "FG01");

@@ -74,7 +74,8 @@
           growing="true"
           growingScrollToLoad="true"
           growingThreshold="20"
-          items="{/RawStock}"
+          items="{stock>/items}"
+          busy="{stock>/busy}"
           noDataText="No raw materials match the selected filters">
           <columns>
             <Column width="8rem"><Text text="Material" /></Column>
@@ -91,22 +92,22 @@
           <items>
             <ColumnListItem
               vAlign="Middle"
-              highlight="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockHighlight'}">
+              highlight="{parts: ['stock>AvailableQuantity', 'stock>ReorderPoint'], formatter: '.formatStockHighlight'}">
               <cells>
-                <ObjectIdentifier title="{Material}" text="{MaterialBaseUnit}" />
-                <Text text="{MaterialDescription}" wrapping="false" />
-                <Text text="{Plant}" />
-                <Text text="{StorageLocation}" />
-                <ObjectNumber number="{path: 'StockQuantity', formatter: '.formatQuantity'}" unit="{MaterialBaseUnit}" />
-                <ObjectNumber number="{path: 'ReservedQuantity', formatter: '.formatQuantity'}" unit="{MaterialBaseUnit}" />
+                <ObjectIdentifier title="{stock>Material}" text="{stock>MaterialBaseUnit}" />
+                <Text text="{stock>MaterialDescription}" wrapping="false" />
+                <Text text="{stock>Plant}" />
+                <Text text="{stock>StorageLocation}" />
+                <ObjectNumber number="{path: 'stock>StockQuantity', formatter: '.formatQuantity'}" unit="{stock>MaterialBaseUnit}" />
+                <ObjectNumber number="{path: 'stock>ReservedQuantity', formatter: '.formatQuantity'}" unit="{stock>MaterialBaseUnit}" />
                 <ObjectNumber
-                  number="{path: 'AvailableQuantity', formatter: '.formatQuantity'}"
-                  unit="{MaterialBaseUnit}"
-                  state="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockState'}" />
-                <ObjectNumber number="{path: 'ReorderPoint', formatter: '.formatQuantity'}" unit="{MaterialBaseUnit}" />
+                  number="{path: 'stock>AvailableQuantity', formatter: '.formatQuantity'}"
+                  unit="{stock>MaterialBaseUnit}"
+                  state="{parts: ['stock>AvailableQuantity', 'stock>ReorderPoint'], formatter: '.formatStockState'}" />
+                <ObjectNumber number="{path: 'stock>ReorderPoint', formatter: '.formatQuantity'}" unit="{stock>MaterialBaseUnit}" />
                 <ObjectStatus
-                  text="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockStatus'}"
-                  state="{parts: ['AvailableQuantity', 'ReorderPoint'], formatter: '.formatStockState'}" />
+                  text="{parts: ['stock>AvailableQuantity', 'stock>ReorderPoint'], formatter: '.formatStockStatus'}"
+                  state="{parts: ['stock>AvailableQuantity', 'stock>ReorderPoint'], formatter: '.formatStockState'}" />
                 <Button text="Create PO" type="Emphasized" press="onCreatePOForRow" />
               </cells>
             </ColumnListItem>

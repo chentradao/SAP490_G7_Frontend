@@ -63,7 +63,7 @@
                       <ObjectIdentifier title="{Material}" />
                       <Text text="{MaterialDescription}" />
                       <ObjectStatus text="{= ${Plant} + ' / ' + ${StorageLocation} }" state="Information" />
-                      <ObjectNumber number="{StockQuantity}" unit="{MaterialBaseUnit}" />
+                      <ObjectNumber number="{AvailableQuantity}" unit="{MaterialBaseUnit}" />
                     </cells>
                   </ColumnListItem>
                 </items>

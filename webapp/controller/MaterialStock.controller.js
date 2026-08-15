@@ -57,6 +57,10 @@ sap.ui.define([
             });
 
             this.getView().setModel(oUiModel, "ui");
+            this.getView().setModel(new JSONModel({
+                busy: false,
+                items: []
+            }), "stock");
 
             this.getOwnerComponent()
                 .getRouter()
@@ -76,6 +80,7 @@ sap.ui.define([
             ).toUpperCase();
 
             if (bIsLoggedIn && (sRole === "STAFF" || sRole === "ADMIN")) {
+                this._refreshStockData();
                 return;
             }
 
@@ -217,9 +222,54 @@ sap.ui.define([
 
 
         onRefreshStock: function () {
-            const oBinding = this.byId("stockTable").getBinding("items");
-            if (oBinding) {
-                oBinding.refresh();
+            this._refreshStockData();
+        },
+
+
+        _refreshStockData: async function () {
+            const oStockModel = this.getView().getModel("stock");
+            const sRequestUrl =
+                "/sap/opu/odata4/sap/zsb_g7_canteen/" +
+                "srvd/sap/zsd_g7_canteen/0001/" +
+                "RawStock?$select=" +
+                "Material,Plant,StorageLocation,MaterialBaseUnit," +
+                "MaterialDescription,StockQuantity,ReservedQuantity," +
+                "AvailableQuantity,ReorderPoint&$orderby=Material";
+
+            oStockModel.setProperty("/busy", true);
+
+            try {
+                const oResponse = await fetch(sRequestUrl, {
+                    method: "GET",
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    headers: {
+                        Accept: "application/json"
+                    }
+                });
+
+                if (!oResponse.ok) {
+                    throw new Error(
+                        "RawStock request failed with HTTP " + oResponse.status
+                    );
+                }
+
+                const oPayload = await oResponse.json();
+
+                oStockModel.setProperty(
+                    "/items",
+                    Array.isArray(oPayload.value) ? oPayload.value : []
+                );
+
+                this._applyFilters();
+            } catch (oError) {
+                console.error("Could not load RawStock:", oError);
+                MessageBox.error(
+                    "Could not load raw material stock.\n\n" +
+                    (oError.message || String(oError))
+                );
+            } finally {
+                oStockModel.setProperty("/busy", false);
             }
         },
 
@@ -307,7 +357,7 @@ sap.ui.define([
                 oEvent.getSource();
 
             const oContext =
-                oButton.getBindingContext();
+                oButton.getBindingContext("stock");
 
             if (!oContext) {
 
