@@ -7,7 +7,8 @@ sap.ui.define([
     "sap/m/SelectDialog",
     "sap/m/StandardListItem",
     "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator"
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/Sorter"
 ], function (
     Controller,
     History,
@@ -17,7 +18,8 @@ sap.ui.define([
     SelectDialog,
     StandardListItem,
     Filter,
-    FilterOperator
+    FilterOperator,
+    Sorter
 ) {
     "use strict";
 
@@ -48,8 +50,9 @@ sap.ui.define([
             }
 
             this.byId("mrpMaterialFilter").setValue("");
-            this.byId("mrpPlantFilter").setValue("");
-            this.byId("mrpPRScope").setSelectedKey("ALL");
+            this.byId("mrpPlantFilter").setValue("P001");
+            this.byId("mrpPRScope").setSelectedKey("OPEN");
+            this.byId("mrpPRSort").setSelectedKey("PRIORITY");
             ["plannedOrdersTable", "purchaseRequisitionsTable"].forEach(function (sId) {
                 const oBinding = this.byId(sId).getBinding("items");
                 if (oBinding) {
@@ -67,6 +70,7 @@ sap.ui.define([
             const sMaterial = this._getFilterValue("mrpMaterialFilter");
             const sPlant = this._getFilterValue("mrpPlantFilter");
             const sPRScope = this.byId("mrpPRScope").getSelectedKey();
+            const sPRSort = this.byId("mrpPRSort").getSelectedKey();
             const aCommonFilters = [];
 
             if (sMaterial) {
@@ -78,7 +82,9 @@ sap.ui.define([
 
             const oPlannedBinding = this.byId("plannedOrdersTable").getBinding("items");
             if (oPlannedBinding) {
-                oPlannedBinding.filter(aCommonFilters);
+                oPlannedBinding.filter([
+                    new Filter("Material", FilterOperator.GE, "FG00009")
+                ].concat(aCommonFilters));
             }
 
             const aPRFilters = aCommonFilters.slice();
@@ -88,6 +94,13 @@ sap.ui.define([
             const oPRBinding = this.byId("purchaseRequisitionsTable").getBinding("items");
             if (oPRBinding) {
                 oPRBinding.filter(aPRFilters);
+                if (sPRSort === "NEWEST") {
+                    oPRBinding.sort([new Sorter("CreationDate", true), new Sorter("PurchaseRequisition", true)]);
+                } else if (sPRSort === "OLDEST") {
+                    oPRBinding.sort([new Sorter("CreationDate", false), new Sorter("PurchaseRequisition", false)]);
+                } else {
+                    oPRBinding.sort([new Sorter("DeliveryDate", false), new Sorter("CreationDate", false)]);
+                }
             }
         },
 
@@ -95,6 +108,7 @@ sap.ui.define([
             this.byId("mrpMaterialFilter").setValue("");
             this.byId("mrpPlantFilter").setValue("");
             this.byId("mrpPRScope").setSelectedKey("ALL");
+            this.byId("mrpPRSort").setSelectedKey("PRIORITY");
             this.onFilter();
         },
 
@@ -404,6 +418,59 @@ sap.ui.define([
             });
         },
 
+        _getBomShortages: async function (oPlannedOrder) {
+            const nOrderQuantity = this._parseQuantity(oPlannedOrder.PlannedOrderQuantity);
+            const sMaterial = String(oPlannedOrder.Material || "");
+            const sPlant = String(oPlannedOrder.Plant || "P001");
+            const oBinding = this.getOwnerComponent().getModel().bindList(
+                "/FinishedGoodsBOM",
+                undefined,
+                undefined,
+                [
+                    new Filter("FinishedMaterial", FilterOperator.EQ, sMaterial),
+                    new Filter("Plant", FilterOperator.EQ, sPlant)
+                ],
+                { $$groupId: "$direct" }
+            );
+            const aContexts = await oBinding.requestContexts(0, 1000);
+
+            if (!aContexts.length) {
+                throw new Error("No active BOM was found for " + sMaterial + " in plant " + sPlant + ".");
+            }
+
+            const mComponents = new Map();
+            aContexts.forEach(function (oContext) {
+                const oBOM = oContext.getObject();
+                const sComponent = String(oBOM.ComponentMaterial || "");
+                const sUnit = String(oBOM.ComponentUnit || "");
+                const sKey = sComponent + "|" + sUnit;
+                const oItem = mComponents.get(sKey) || {
+                    material: sComponent,
+                    description: oBOM.ComponentDescription || sComponent,
+                    unit: sUnit,
+                    required: 0,
+                    available: this._parseQuantity(oBOM.AvailableQuantity)
+                };
+                oItem.required += this._parseQuantity(oBOM.ComponentQuantity) * nOrderQuantity;
+                oItem.available = Math.min(oItem.available, this._parseQuantity(oBOM.AvailableQuantity));
+                mComponents.set(sKey, oItem);
+            }, this);
+
+            return Array.from(mComponents.values()).map(function (oItem) {
+                oItem.shortage = Math.max(0, oItem.required - oItem.available);
+                return oItem;
+            }).filter(function (oItem) {
+                return oItem.shortage > 0.0005;
+            });
+        },
+
+        _formatBomQuantity: function (vQuantity) {
+            return Number(vQuantity || 0).toLocaleString("vi-VN", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 3
+            });
+        },
+
         _readConversionResult: async function (sRequestId) {
             const oModel = this.getOwnerComponent().getModel();
             const oBinding = oModel.bindList(
@@ -453,11 +520,36 @@ sap.ui.define([
                 return;
             }
 
+            const oMRPModel = this.getView().getModel("mrp");
+            oMRPModel.setProperty("/busy", true);
+            try {
+                const aShortages = await this._getBomShortages(oPlannedOrder);
+                if (aShortages.length) {
+                    const sDetails = aShortages.map(function (oItem) {
+                        return oItem.material + " - " + oItem.description +
+                            ": required " + this._formatBomQuantity(oItem.required) + " " + oItem.unit +
+                            ", available " + this._formatBomQuantity(oItem.available) + " " + oItem.unit +
+                            ", shortage " + this._formatBomQuantity(oItem.shortage) + " " + oItem.unit;
+                    }.bind(this)).join("\n");
+                    MessageBox.error(
+                        "This Planned Order cannot be converted because BOM components are still short.\n\n" +
+                        sDetails +
+                        "\n\nConvert the MRP Purchase Requisitions to Purchase Orders and post Goods Receipt into RM01 first.",
+                        { title: "Raw Materials Not Yet Available" }
+                    );
+                    return;
+                }
+            } catch (oError) {
+                MessageBox.error(oError.message || "Could not validate BOM material availability.");
+                return;
+            } finally {
+                oMRPModel.setProperty("/busy", false);
+            }
+
             if (!await this._confirmConversion(oPlannedOrder)) {
                 return;
             }
 
-            const oMRPModel = this.getView().getModel("mrp");
             oMRPModel.setProperty("/busy", true);
 
             try {
@@ -524,6 +616,7 @@ sap.ui.define([
             }
             if (!sValue) { return "Open for Ordering"; }
             const mText = {
+                N: "Open for Ordering",
                 "05": "Completed",
                 COMPLETED: "Completed",
                 CLOSED: "Closed",
@@ -532,6 +625,34 @@ sap.ui.define([
                 ERROR: "SAP Error"
             };
             return mText[sValue] || sValue;
+        },
+
+        _daysUntil: function (vDate) {
+            if (!vDate) { return 9999; }
+            const sDate = String(vDate).slice(0, 10);
+            const oRequired = new Date(sDate + "T00:00:00");
+            const oToday = new Date();
+            oToday.setHours(0, 0, 0, 0);
+            return Number.isNaN(oRequired.getTime()) ? 9999 : Math.round((oRequired - oToday) / 86400000);
+        },
+
+        formatPriorityText: function (vDate) {
+            const iDays = this._daysUntil(vDate);
+            if (iDays < 0) { return "1 · Overdue"; }
+            if (iDays === 0) { return "1 · Due today"; }
+            if (iDays === 1) { return "2 · Due tomorrow"; }
+            if (iDays <= 3) { return "2 · Due soon"; }
+            return "3 · Planned";
+        },
+
+        formatPriorityState: function (vDate) {
+            const iDays = this._daysUntil(vDate);
+            return iDays <= 0 ? "Error" : (iDays <= 3 ? "Warning" : "Information");
+        },
+
+        formatPriorityIcon: function (vDate) {
+            const iDays = this._daysUntil(vDate);
+            return iDays <= 0 ? "sap-icon://alert" : (iDays <= 3 ? "sap-icon://lateness" : "sap-icon://calendar");
         },
 
         formatPRState: function (sStatus, vOpenQuantity, vIsClosed, sPurchaseOrder) {

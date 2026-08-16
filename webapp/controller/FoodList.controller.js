@@ -80,6 +80,7 @@ sap.ui.define([
             }
             this._updateCartBadge();
             this._updateOrdersBadge();
+            this._applyFilters();
         },
 
         onSearchFood: function (oEvent) {
@@ -98,7 +99,7 @@ sap.ui.define([
         _applyFilters: function (sQuery) {
             var oTable = this.byId("foodTable");
             var oBinding = oTable.getBinding("items");
-            var aFilters = [];
+            var aFilters = [new Filter("MaterialNumber", FilterOperator.GE, "FG00009")];
             var sSearchQuery = sQuery || this.byId("foodSearchField").getValue() || "";
             var sQuantitySort = this.byId("quantitySort").getSelectedKey();
             var sStatus = this.byId("statusFilter").getSelectedKey();

@@ -43,7 +43,7 @@
               <Table
                 id="fgTable"
                 class="wideDataTableMD compactSelectionTable"
-                items="{/FinishedGoodsStock}"
+                items="{path: '/Food2', filters: [{path: 'MaterialNumber', operator: 'GE', value1: 'FG00009'}]}"
                 mode="SingleSelectMaster"
                 selectionChange="onFGSelected"
                 sticky="ColumnHeaders"
@@ -60,10 +60,10 @@
                 <items>
                   <ColumnListItem type="Active" vAlign="Middle">
                     <cells>
-                      <ObjectIdentifier title="{Material}" />
+                      <ObjectIdentifier title="{MaterialNumber}" />
                       <Text text="{MaterialDescription}" />
                       <ObjectStatus text="{= ${Plant} + ' / ' + ${StorageLocation} }" state="Information" />
-                      <ObjectNumber number="{AvailableQuantity}" unit="{MaterialBaseUnit}" />
+                      <ObjectNumber number="{AvailableStock}" unit="{BaseUnit}" />
                     </cells>
                   </ColumnListItem>
                 </items>

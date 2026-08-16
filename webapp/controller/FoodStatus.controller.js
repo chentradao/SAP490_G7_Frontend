@@ -19,19 +19,29 @@ sap.ui.define([
             if (!oSession || !oSession.getProperty("/isLoggedIn") || ["STAFF", "ADMIN"].indexOf(sRole) === -1) {
                 MessageBox.warning("Only STAFF or ADMIN can manage food status.");
                 this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
             }
+            this._applyFilters("");
         },
 
         onSearch: function (oEvent) {
             var sQuery = oEvent.getParameter("newValue") || oEvent.getParameter("query") || "";
+            this._applyFilters(sQuery);
+        },
+
+        _applyFilters: function (sQuery) {
             var oBinding = this.byId("foodStatusTable").getBinding("items");
-            oBinding.filter(sQuery ? new Filter({
-                filters: [
-                    new Filter("MaterialNumber", FilterOperator.Contains, sQuery),
-                    new Filter("MaterialDescription", FilterOperator.Contains, sQuery)
-                ],
-                and: false
-            }) : []);
+            var aFilters = [new Filter("MaterialNumber", FilterOperator.GE, "FG00009")];
+            if (sQuery) {
+                aFilters.push(new Filter({
+                    filters: [
+                        new Filter("MaterialNumber", FilterOperator.Contains, sQuery),
+                        new Filter("MaterialDescription", FilterOperator.Contains, sQuery)
+                    ],
+                    and: false
+                }));
+            }
+            oBinding.filter(aFilters);
         },
 
         onStatusChange: function (oEvent) {

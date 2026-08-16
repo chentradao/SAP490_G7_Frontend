@@ -55,7 +55,9 @@ sap.ui.define([
                 return;
             }
 
-            const aFilters = [];
+            const aFilters = [
+                new Filter("material", FilterOperator.GE, "FG00009")
+            ];
             const sStatus = this.byId("productionStatusFilter").getSelectedKey();
 
             if (sStatus === "ACTIVE") {
@@ -65,7 +67,8 @@ sap.ui.define([
                         new Filter("status", FilterOperator.EQ, "CREATED"),
                         new Filter("status", FilterOperator.EQ, "RELEASED"),
                         new Filter("status", FilterOperator.EQ, "GOODS_ISSUED"),
-                        new Filter("status", FilterOperator.EQ, "GOODS_RECEIVED")
+                        new Filter("status", FilterOperator.EQ, "GOODS_RECEIVED"),
+                        new Filter("status", FilterOperator.Contains, "ERROR")
                     ],
                     and: false
                 }));

@@ -103,10 +103,10 @@ sap.ui.define([
             const oData = oItem.getBindingContext().getObject();
             const oUi = this.getView().getModel("ui");
 
-            oUi.setProperty("/selectedMaterial", oData.Material);
+            oUi.setProperty("/selectedMaterial", oData.MaterialNumber);
             oUi.setProperty("/selectedDescription", oData.MaterialDescription || "");
-            oUi.setProperty("/selectedStock", oData.AvailableQuantity || "0");
-            oUi.setProperty("/selectedUnit", oData.MaterialBaseUnit || "");
+            oUi.setProperty("/selectedStock", oData.AvailableStock || "0");
+            oUi.setProperty("/selectedUnit", oData.BaseUnit || "");
             oUi.setProperty("/selectedPlant", oData.Plant || "P001");
             oUi.setProperty("/selectedStorage", oData.StorageLocation || "FG01");
             oUi.setProperty("/bom", []);
@@ -115,7 +115,7 @@ sap.ui.define([
             try {
                 const oModel = this.getView().getModel();
                 const oBinding = oModel.bindList("/FinishedGoodsBOM", null, null, [
-                    new Filter("FinishedMaterial", FilterOperator.EQ, oData.Material),
+                    new Filter("FinishedMaterial", FilterOperator.EQ, oData.MaterialNumber),
                     new Filter("Plant", FilterOperator.EQ, oData.Plant || "P001")
                 ]);
                 const aContexts = await oBinding.requestContexts(0, 100);

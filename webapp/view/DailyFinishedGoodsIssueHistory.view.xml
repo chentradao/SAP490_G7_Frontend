@@ -1,0 +1,90 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.DailyFinishedGoodsIssueHistory"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  displayBlock="true">
+
+  <Page title="Daily FG Goods Issue History" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+    </headerContent>
+
+    <content>
+      <VBox class="poHistoryShell">
+        <VBox class="poHistoryIntro">
+          <Title text="Daily Finished Goods Issue History" level="H2" />
+          <Text text="Material documents posted with movement 201 from P001/FG01 to cost center ZCAN001." class="poHistorySubtitle" />
+        </VBox>
+
+        <OverflowToolbar class="poHistoryFilterBar">
+          <SearchField
+            id="dailyGIHistorySearch"
+            width="22rem"
+            placeholder="Search document, material or description"
+            search="onFilter"
+            liveChange="onFilter" />
+          <ToolbarSeparator />
+          <Label text="Posting Date" labelFor="dailyGIHistoryDate" />
+          <DatePicker
+            id="dailyGIHistoryDate"
+            width="11rem"
+            valueFormat="yyyy-MM-dd"
+            displayFormat="medium"
+            change="onFilter" />
+          <ToolbarSeparator />
+          <Label text="Source" labelFor="dailyGIHistorySource" />
+          <Select id="dailyGIHistorySource" selectedKey="ALL" width="11rem" change="onFilter">
+            <core:Item key="ALL" text="All" />
+            <core:Item key="DAILY" text="Daily Sales" />
+            <core:Item key="MANUAL" text="Manual / Legacy" />
+          </Select>
+          <ToolbarSpacer />
+          <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClear" />
+        </OverflowToolbar>
+
+        <ScrollContainer width="100%" height="62vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
+          <Table
+            id="dailyGIHistoryTable"
+            class="poHistoryTable wideDataTable"
+            sticky="ColumnHeaders"
+            alternateRowColors="true"
+            growing="true"
+            growingScrollToLoad="true"
+            growingThreshold="30"
+            noDataText="No daily finished-goods issues found"
+            items="{path: '/DailyFGGoodsIssueHistory', sorter: {path: 'PostingDate', descending: true}}">
+            <columns>
+              <Column width="13rem"><Text text="Material Document" /></Column>
+              <Column width="10rem"><Text text="Posting Date" /></Column>
+              <Column width="11rem"><Text text="Material" /></Column>
+              <Column width="18rem"><Text text="Description" /></Column>
+              <Column width="11rem" hAlign="End"><Text text="Issued Quantity" /></Column>
+              <Column width="10rem"><Text text="Location" /></Column>
+              <Column width="10rem"><Text text="Cost Center" /></Column>
+              <Column width="11rem"><Text text="Source" /></Column>
+              <Column width="11rem"><Text text="Posted By" /></Column>
+              <Column width="21rem"><Text text="Item Text" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem vAlign="Middle">
+                <cells>
+                  <ObjectIdentifier title="{MaterialDocument}" text="{= ${MaterialDocumentYear} + ' / Item ' + ${MaterialDocumentItem} }" />
+                  <Text text="{path: 'PostingDate', formatter: '.formatDate'}" />
+                  <ObjectIdentifier title="{Material}" />
+                  <Text text="{MaterialDescription}" />
+                  <ObjectNumber number="{path: 'IssuedQuantity', formatter: '.formatQuantity'}" unit="{BaseUnit}" />
+                  <ObjectStatus text="{= ${Plant} + ' / ' + ${StorageLocation} }" state="Information" />
+                  <Text text="{CostCenter}" />
+                  <ObjectStatus text="{path: 'ItemText', formatter: '.formatSource'}" state="{path: 'ItemText', formatter: '.formatSourceState'}" />
+                  <Text text="{PostedBy}" />
+                  <Text text="{ItemText}" wrapping="true" maxLines="2" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

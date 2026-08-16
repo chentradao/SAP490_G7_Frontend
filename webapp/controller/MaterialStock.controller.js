@@ -126,8 +126,6 @@ sap.ui.define([
             }
 
             const aFilters = [];
-
-
             // -----------------------------------------------------
             // Material search
             // -----------------------------------------------------
@@ -219,7 +217,6 @@ sap.ui.define([
             this.byId("storageLocFilter").setSelectedKey("All");
             this._applyFilters();
         },
-
 
         onRefreshStock: function () {
             this._refreshStockData();

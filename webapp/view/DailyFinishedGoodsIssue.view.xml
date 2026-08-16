@@ -1,0 +1,132 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.DailyFinishedGoodsIssue"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  displayBlock="true">
+
+  <Page
+    title="Daily Finished Goods Issue"
+    showNavButton="true"
+    navButtonPress="onNavBack"
+    busy="{dailyGI>/busy}">
+    <headerContent>
+      <Button text="Refresh Preview" icon="sap-icon://refresh" press="onPreview" />
+    </headerContent>
+
+    <content>
+      <VBox class="poHistoryShell">
+        <VBox class="poHistoryHeroText">
+          <Title text="End-of-Day Finished Goods Issue" level="H2" />
+          <Text
+            text="Aggregate paid and confirmed sales, then post movement 201 from P001/FG01. Each order item is issued only once."
+            class="poHistorySubtitle" />
+        </VBox>
+
+        <Panel headerText="Posting Parameters" class="staffWorkflowPanel">
+          <content>
+            <HBox wrap="Wrap" alignItems="End" class="sapUiSmallMargin">
+              <VBox class="sapUiSmallMarginEnd sapUiTinyMarginBottom">
+                <Label text="Sales Date" required="true" />
+                <DatePicker
+                  value="{dailyGI>/salesDate}"
+                  valueFormat="yyyy-MM-dd"
+                  displayFormat="medium"
+                  change="onPreview" />
+              </VBox>
+              <VBox class="sapUiSmallMarginEnd sapUiTinyMarginBottom">
+                <Label text="Posting Date" required="true" />
+                <DatePicker
+                  value="{dailyGI>/postingDate}"
+                  valueFormat="yyyy-MM-dd"
+                  displayFormat="medium" />
+              </VBox>
+              <VBox class="sapUiSmallMarginEnd sapUiTinyMarginBottom">
+                <Label text="Cost Center" />
+                <ObjectStatus text="ZCAN001 — CANTEEN KITCHEN" state="Information" icon="sap-icon://building" />
+              </VBox>
+              <Button
+                text="Prepare Preview"
+                icon="sap-icon://inspection"
+                type="Emphasized"
+                press="onPreview"
+                class="sapUiTinyMarginBottom" />
+            </HBox>
+          </content>
+        </Panel>
+
+        <Panel headerText="Sales Summary" class="staffWorkflowPanel">
+          <content>
+            <HBox wrap="Wrap" class="staffSalesKpiRow">
+              <VBox class="staffSalesKpi">
+                <Text text="Eligible orders" />
+                <Title text="{dailyGI>/orderCount}" level="H3" />
+              </VBox>
+              <VBox class="staffSalesKpi">
+                <Text text="Materials to issue" />
+                <Title text="{dailyGI>/materialCount}" level="H3" />
+              </VBox>
+              <VBox class="staffSalesKpi">
+                <Text text="Items already issued" />
+                <Title text="{dailyGI>/issuedItemCount}" level="H3" />
+              </VBox>
+            </HBox>
+
+            <ScrollContainer width="100%" horizontal="true" vertical="false" class="wideTableScroll">
+              <Table
+                id="dailyFinishedGoodsIssueTable"
+                class="poHistoryTable wideDataTable"
+                items="{path: 'dailyGI>/items'}"
+                mode="MultiSelect"
+                selectionChange="onMaterialSelectionChange"
+                sticky="ColumnHeaders"
+                alternateRowColors="true"
+                noDataText="No unissued paid and confirmed sales for this date">
+                <columns>
+                  <Column width="10rem"><Text text="Material" /></Column>
+                  <Column width="18rem"><Text text="Description" /></Column>
+                  <Column width="10rem" hAlign="End"><Text text="Sold Quantity" /></Column>
+                  <Column width="10rem" hAlign="End"><Text text="Current FG01" /></Column>
+                  <Column width="11rem" hAlign="End"><Text text="After Goods Issue" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem highlight="{= ${dailyGI>shortage} ? 'Error' : 'None' }">
+                    <cells>
+                      <ObjectIdentifier title="{dailyGI>material}" text="{dailyGI>unit}" />
+                      <Text text="{dailyGI>description}" />
+                      <ObjectNumber number="{path: 'dailyGI>soldQuantity', formatter: '.formatQuantity'}" unit="{dailyGI>unit}" />
+                      <ObjectNumber number="{path: 'dailyGI>currentStock', formatter: '.formatQuantity'}" unit="{dailyGI>unit}" />
+                      <ObjectNumber
+                        number="{path: 'dailyGI>remainingStock', formatter: '.formatQuantity'}"
+                        unit="{dailyGI>unit}"
+                        state="{path: 'dailyGI>remainingStock', formatter: '.formatRemainingState'}" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </ScrollContainer>
+
+            <ObjectStatus
+              visible="{dailyGI>/resultVisible}"
+              text="{dailyGI>/resultText}"
+              state="{dailyGI>/resultState}"
+              class="sapUiSmallMarginTop" />
+            <Text
+              visible="{= !!${dailyGI>/materialDocument} }"
+              text="{= 'Material Document: ' + ${dailyGI>/materialDocument} + ' / ' + ${dailyGI>/materialDocumentYear} }" />
+
+            <Toolbar class="sapUiSmallMarginTop">
+              <Text text="{= ${dailyGI>/selectedCount} + ' material(s) selected' }" />
+              <ToolbarSpacer />
+              <Button
+                text="Post Daily Goods Issue"
+                icon="sap-icon://outbox"
+                type="Reject"
+                press="onPostGoodsIssue"
+                enabled="{= ${dailyGI>/selectedCount} > 0 &amp;&amp; !${dailyGI>/busy} }" />
+            </Toolbar>
+          </content>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

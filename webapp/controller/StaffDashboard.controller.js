@@ -149,6 +149,8 @@ sap.ui.define([
         onOpenProductionHistory: function () { this._navTo("RouteProductionOrderHistory"); },
         onOpenGoodsIssueHistory: function () { this._navTo("RouteProductionGoodsIssueHistory"); },
         onOpenGoodsReceiptHistory: function () { this._navTo("RouteProductionGoodsReceiptHistory"); },
+        onOpenDailyFinishedGoodsIssue: function () { this._navTo("RouteDailyFinishedGoodsIssue"); },
+        onOpenDailyFinishedGoodsIssueHistory: function () { this._navTo("RouteDailyFinishedGoodsIssueHistory"); },
         onOpenFoodStatus: function () { this._navTo("RouteFoodStatus"); },
         onOpenRevenueAnalytics: function () { this._navTo("RouteRevenueAnalytics"); },
 
