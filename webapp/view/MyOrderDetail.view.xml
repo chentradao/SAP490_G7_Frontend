@@ -39,7 +39,6 @@
                             <Column hAlign="End" width="18%"><Text text="Unit Price" /></Column>
                             <Column hAlign="Center" width="12%"><Text text="Quantity" /></Column>
                             <Column hAlign="End" width="20%"><Text text="Line Amount" /></Column>
-                            <Column width="12%"><Text text="Status" /></Column>
                         </columns>
                         <items>
                             <ColumnListItem vAlign="Middle">
@@ -56,7 +55,6 @@
                                     <Text text="{= ${orders>unitPriceText} + ' ' + ${orders>currency} }" class="orderItemAmount" />
                                     <Text text="{orders>quantity}" textAlign="Center" />
                                     <Text text="{= ${orders>lineAmountText} + ' ' + ${orders>currency} }" class="orderItemAmount" />
-                                    <ObjectStatus text="{orders>itemStatus}" />
                                 </cells>
                             </ColumnListItem>
                         </items>

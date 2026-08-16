@@ -142,9 +142,6 @@
                             <Column width="10rem" hAlign="End">
                                 <Text text="Line Amount (VND)" />
                             </Column>
-                            <Column width="9rem" hAlign="Center">
-                                <Text text="Status" />
-                            </Column>
                         </columns>
                         <items>
                             <ColumnListItem>
@@ -164,12 +161,6 @@
                                         number="{ path: 'orders>lineAmount', formatter: '.formatAmount' }"
                                         unit="VND"
                                         emphasized="true" />
-                                    <ObjectStatus
-                                        text="{orders>itemStatus}"
-                                        state="{= ${orders>itemStatus} === 'PAID' ? 'Success'
-                                                : ${orders>itemStatus} === 'CANCELLED' ? 'Error'
-                                                : ${orders>itemStatus} === 'CREATED' ? 'Information'
-                                                : 'Warning' }" />
                                 </cells>
                             </ColumnListItem>
                         </items>

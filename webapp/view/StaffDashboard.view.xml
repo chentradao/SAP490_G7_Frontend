@@ -189,13 +189,6 @@
                 <Text text="Cancelled order value" />
                 <Title text="{= ${dashboard>/financeCancelledAmountText} + ' ' + ${dashboard>/financeCurrency} }" level="H2" />
               </VBox>
-              <VBox class="staffSalesKpi staffSalesKpiCost">
-                <Text text="Raw-material receipt cost" />
-                <Title
-                  text="{= ${dashboard>/financeDataAvailable} ? ${dashboard>/financePurchaseCostText} + ' ' + ${dashboard>/financeCurrency} : '—' }"
-                  level="H2" />
-                <Text text="Posted GR 101 less reversals 102" class="staffSalesKpiHint" />
-              </VBox>
             </FlexBox>
             <HBox justifyContent="End" class="sapUiSmallMarginTop">
               <Button
@@ -208,9 +201,7 @@
                 text="View Daily GI History"
                 icon="sap-icon://history"
                 type="Transparent"
-                press="onOpenDailyFinishedGoodsIssueHistory"
-                class="sapUiTinyMarginEnd" />
-              <Button text="View Revenue" icon="sap-icon://line-chart" type="Emphasized" press="onOpenRevenueAnalytics" />
+                press="onOpenDailyFinishedGoodsIssueHistory" />
             </HBox>
           </content>
         </Panel>
