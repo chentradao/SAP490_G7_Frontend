@@ -197,6 +197,21 @@
                 <Text text="Posted GR 101 less reversals 102" class="staffSalesKpiHint" />
               </VBox>
             </FlexBox>
+            <HBox justifyContent="End" class="sapUiSmallMarginTop">
+              <Button
+                text="Post Daily FG Goods Issue"
+                icon="sap-icon://outbox"
+                type="Reject"
+                press="onOpenDailyFinishedGoodsIssue"
+                class="sapUiTinyMarginEnd" />
+              <Button
+                text="View Daily GI History"
+                icon="sap-icon://history"
+                type="Transparent"
+                press="onOpenDailyFinishedGoodsIssueHistory"
+                class="sapUiTinyMarginEnd" />
+              <Button text="View Revenue" icon="sap-icon://line-chart" type="Emphasized" press="onOpenRevenueAnalytics" />
+            </HBox>
           </content>
         </Panel>
       </VBox>

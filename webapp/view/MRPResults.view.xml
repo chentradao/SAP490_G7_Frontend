@@ -20,6 +20,12 @@
           <ObjectStatus text="Plant P001" icon="sap-icon://factory" state="Information" inverted="true" />
         </HBox>
 
+        <MessageStrip
+          text="Process the earliest Required Date first. Note: the current SAP entity does not expose which PIR or finished good created each PR."
+          type="Warning"
+          showIcon="true"
+          class="sapUiSmallMarginBottom" />
+
         <Panel headerText="Filters" class="staffWorkflowPanel">
           <content>
             <Toolbar>
@@ -35,9 +41,16 @@
               <Input id="mrpPlantFilter" value="P001" width="8rem" submit="onFilter" />
               <ToolbarSeparator />
               <Label text="Show PRs" labelFor="mrpPRScope" />
-              <Select id="mrpPRScope" selectedKey="ALL" width="11rem" change="onFilter">
+              <Select id="mrpPRScope" selectedKey="OPEN" width="11rem" change="onFilter">
                 <core:Item key="OPEN" text="Open only" />
                 <core:Item key="ALL" text="All history" />
+              </Select>
+              <ToolbarSeparator />
+              <Label text="Sort" labelFor="mrpPRSort" />
+              <Select id="mrpPRSort" selectedKey="PRIORITY" width="12rem" change="onFilter">
+                <core:Item key="PRIORITY" text="Required first" />
+                <core:Item key="NEWEST" text="Newest created" />
+                <core:Item key="OLDEST" text="Oldest created" />
               </Select>
               <ToolbarSpacer />
               <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClearFilters" />
@@ -46,74 +59,22 @@
           </content>
         </Panel>
 
-        <Panel headerText="1. Planned Orders (Finished Goods)" class="staffWorkflowPanel">
+        <IconTabBar class="staffWorkflowPanel mrpActionTabs" expandable="false" selectedKey="PURCHASE">
+          <items>
+          <IconTabFilter key="PURCHASE" text="1. Buy Missing Materials" icon="sap-icon://cart">
+        <Panel headerText="Purchase Requisitions — Raw Materials to Buy" class="staffWorkflowPanel">
           <content>
             <Toolbar>
-              <Text text="Select one Planned Order to convert it into a Production Order." />
+              <Text text="Select an open request, create its Purchase Order, then receive it into RM01." />
               <ToolbarSpacer />
               <Button
-                id="convertPlannedOrderButton"
-                text="Convert to Production Order"
-                icon="sap-icon://factory"
-                type="Emphasized"
-                enabled="{= !${mrp>/busy} }"
-                press="onConvertPlannedOrder" />
-            </Toolbar>
-            <ScrollContainer width="100%" height="45vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
-              <Table
-                id="plannedOrdersTable"
-                class="poHistoryTable wideDataTable"
-                mode="SingleSelectMaster"
-                sticky="ColumnHeaders"
-                alternateRowColors="true"
-                growing="true"
-                growingThreshold="20"
-                noDataText="No MRP planned orders found"
-                items="{path: '/MRPPlannedOrders', sorter: {path: 'PlannedOrder', descending: true}}">
-                <columns>
-                  <Column width="13rem"><Text text="Planned Order" /></Column>
-                  <Column width="11rem"><Text text="Material" /></Column>
-                  <Column width="18rem"><Text text="Description" /></Column>
-                  <Column width="8rem"><Text text="Plant" /></Column>
-                  <Column width="9rem"><Text text="Type" /></Column>
-                  <Column width="12rem" hAlign="End"><Text text="Planned Quantity" /></Column>
-                  <Column width="12rem"><Text text="Start Date" /></Column>
-                  <Column width="12rem"><Text text="End Date" /></Column>
-                  <Column width="11rem"><Text text="Production Version" /></Column>
-                </columns>
-                <items>
-                  <ColumnListItem>
-                    <cells>
-                      <ObjectIdentifier title="{PlannedOrder}" />
-                      <ObjectIdentifier title="{Material}" />
-                      <Text text="{MaterialDescription}" />
-                      <Text text="{Plant}" />
-                      <Text text="{PlannedOrderType}" />
-                      <ObjectNumber number="{PlannedOrderQuantity}" unit="{Unit}" />
-                      <Text text="{path: 'PlannedStartDate', formatter: '.formatDate'}" />
-                      <Text text="{path: 'PlannedEndDate', formatter: '.formatDate'}" />
-                      <Text text="{ProductionVersion}" />
-                    </cells>
-                  </ColumnListItem>
-                </items>
-              </Table>
-            </ScrollContainer>
-          </content>
-        </Panel>
-
-        <Panel headerText="2. Purchase Requisitions (Raw Materials)" class="staffWorkflowPanel">
-          <content>
-            <Toolbar>
-              <Text text="Select one open PR item to create a referenced Purchase Order." />
-              <ToolbarSpacer />
-              <Button
-                text="Convert to Purchase Order"
+                text="Create Purchase Order"
                 icon="sap-icon://cart"
                 type="Emphasized"
                 enabled="{= !${mrp>/busy} }"
                 press="onConvertPurchaseRequisition" />
             </Toolbar>
-            <ScrollContainer width="100%" height="45vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
+            <ScrollContainer width="100%" height="55vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
               <Table
                 id="purchaseRequisitionsTable"
                 class="poHistoryTable wideDataTable"
@@ -122,47 +83,31 @@
                 alternateRowColors="true"
                 growing="true"
                 growingThreshold="20"
-                noDataText="No MRP purchase requisitions found"
-                items="{path: '/MRPPurchaseRequisitions', sorter: {path: 'PurchaseRequisition', descending: true}}">
+                noDataText="No raw materials need purchasing"
+                items="{path: '/MRPPurchaseRequisitions', sorter: [{path: 'DeliveryDate', descending: false}, {path: 'CreationDate', descending: false}, {path: 'PurchaseRequisition', descending: false}]}">
                 <columns>
-                  <Column width="13rem"><Text text="Purchase Requisition" /></Column>
-                  <Column width="8rem"><Text text="Item" /></Column>
-                  <Column width="11rem"><Text text="Material" /></Column>
-                  <Column width="12rem" hAlign="End"><Text text="Requested Quantity" /></Column>
-                  <Column width="12rem" hAlign="End"><Text text="Ordered Quantity" /></Column>
-                  <Column width="11rem" hAlign="End"><Text text="Open Quantity" /></Column>
-                  <Column width="9rem"><Text text="Closed" /></Column>
-                  <Column width="18rem"><Text text="Description" /></Column>
-                  <Column width="8rem"><Text text="Plant" /></Column>
-                  <Column width="10rem"><Text text="Storage" /></Column>
-                  <Column width="12rem"><Text text="Delivery Date" /></Column>
-                  <Column width="11rem"><Text text="MRP Controller" /></Column>
-                  <Column width="12rem"><Text text="Processing Status" /></Column>
-                  <Column width="13rem"><Text text="Purchase Order" /></Column>
+                  <Column width="9rem"><Text text="Priority" /></Column>
+                  <Column width="11rem"><Text text="Purchase Requisition" /></Column>
+                  <Column width="9rem"><Text text="Material" /></Column>
+                  <Column width="14rem"><Text text="Description" /></Column>
+                  <Column width="10rem" hAlign="End"><Text text="Need to Buy" /></Column>
+                  <Column width="10rem"><Text text="Required Date" /></Column>
+                  <Column width="12rem"><Text text="Status" /></Column>
+                  <Column width="11rem"><Text text="Purchase Order" /></Column>
                 </columns>
                 <items>
                   <ColumnListItem highlight="{path: 'ProcessingStatus', formatter: '.formatPRHighlight'}">
                     <cells>
-                      <ObjectIdentifier title="{PurchaseRequisition}" />
-                      <Text text="{PurchaseRequisitionItem}" />
+                      <ObjectStatus
+                        text="{path: 'DeliveryDate', formatter: '.formatPriorityText'}"
+                        state="{path: 'DeliveryDate', formatter: '.formatPriorityState'}"
+                        icon="{path: 'DeliveryDate', formatter: '.formatPriorityIcon'}" />
+                      <ObjectIdentifier title="{PurchaseRequisition}" text="Item {PurchaseRequisitionItem}" />
                       <ObjectIdentifier title="{Material}" />
-                      <ObjectNumber number="{RequestedQuantity}" unit="{Unit}" />
-                      <ObjectNumber number="{OrderedQuantity}" unit="{Unit}" />
-                      <ObjectNumber
-                        number="{OpenQuantity}"
-                        unit="{Unit}"
-                        state="{path: 'OpenQuantity', formatter: '.formatOpenQuantityState'}" />
-                      <ObjectStatus
-                        text="{path: 'IsClosed', formatter: '.formatClosedText'}"
-                        state="{path: 'IsClosed', formatter: '.formatClosedState'}" />
                       <Text text="{MaterialDescription}" />
-                      <Text text="{Plant}" />
-                      <Text text="{StorageLocation}" />
+                      <ObjectNumber number="{OpenQuantity}" unit="{Unit}" state="{path: 'OpenQuantity', formatter: '.formatOpenQuantityState'}" />
                       <Text text="{path: 'DeliveryDate', formatter: '.formatDate'}" />
-                      <Text text="{MRPController}" />
-                      <ObjectStatus
-                        text="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRStatus'}"
-                        state="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRState'}" />
+                      <ObjectStatus text="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRStatus'}" state="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRState'}" />
                       <ObjectIdentifier title="{PurchaseOrder}" text="{PurchaseOrderItem}" />
                     </cells>
                   </ColumnListItem>
@@ -171,6 +116,60 @@
             </ScrollContainer>
           </content>
         </Panel>
+          </IconTabFilter>
+
+          <IconTabFilter key="PRODUCTION" text="2. Create Production Order" icon="sap-icon://factory">
+        <Panel headerText="Planned Orders — Ready for Production" class="staffWorkflowPanel">
+          <content>
+            <Toolbar>
+              <Text text="Select a proposal. The system checks BOM stock before conversion." />
+              <ToolbarSpacer />
+              <Button
+                id="convertPlannedOrderButton"
+                text="Create Production Order"
+                icon="sap-icon://factory"
+                type="Emphasized"
+                enabled="{= !${mrp>/busy} }"
+                press="onConvertPlannedOrder" />
+            </Toolbar>
+            <ScrollContainer width="100%" height="55vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
+              <Table
+                id="plannedOrdersTable"
+                class="poHistoryTable wideDataTable"
+                mode="SingleSelectMaster"
+                sticky="ColumnHeaders"
+                alternateRowColors="true"
+                growing="true"
+                growingThreshold="20"
+                noDataText="No planned production orders found"
+                items="{path: '/MRPPlannedOrders', sorter: {path: 'PlannedOrder', descending: true}}">
+                <columns>
+                  <Column width="13rem"><Text text="Planned Order" /></Column>
+                  <Column width="11rem"><Text text="Material" /></Column>
+                  <Column width="18rem"><Text text="Description" /></Column>
+                  <Column width="12rem" hAlign="End"><Text text="Quantity" /></Column>
+                  <Column width="12rem"><Text text="Production Date" /></Column>
+                  <Column width="8rem"><Text text="Plant" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <ObjectIdentifier title="{PlannedOrder}" />
+                      <ObjectIdentifier title="{Material}" />
+                      <Text text="{MaterialDescription}" />
+                      <ObjectNumber number="{PlannedOrderQuantity}" unit="{Unit}" />
+                      <Text text="{path: 'PlannedStartDate', formatter: '.formatDate'}" />
+                      <Text text="{Plant}" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </ScrollContainer>
+          </content>
+        </Panel>
+          </IconTabFilter>
+          </items>
+        </IconTabBar>
       </VBox>
     </content>
   </Page>

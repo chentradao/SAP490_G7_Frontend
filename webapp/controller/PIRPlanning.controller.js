@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/ui/core/routing/History",
     "sap/m/MessageBox",
     "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator"
-], function (Controller, JSONModel, History, MessageBox, Filter, FilterOperator) {
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/Sorter"
+], function (Controller, JSONModel, History, MessageBox, Filter, FilterOperator, Sorter) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.PIRPlanning", {
@@ -63,6 +64,21 @@ sap.ui.define([
             oPIR.setProperty("/plant", oContext.getProperty("Plant") || "P001");
             oPIR.setProperty("/currentStock", oContext.getProperty("StockQuantity") || "0");
             oPIR.setProperty("/unit", oContext.getProperty("MaterialBaseUnit") || "EA");
+        },
+
+        onFinishedGoodsSearch: function (oEvent) {
+            const sQuery = String(oEvent.getParameter("newValue") || "").trim();
+            const aFilters = [new Filter("Material", FilterOperator.GE, "FG00009")];
+            if (sQuery) {
+                aFilters.push(new Filter({
+                    filters: [
+                        new Filter("Material", FilterOperator.Contains, sQuery),
+                        new Filter("MaterialDescription", FilterOperator.Contains, sQuery)
+                    ],
+                    and: false
+                }));
+            }
+            this.byId("pirFinishedGoodsTable").getBinding("items").filter(aFilters);
         },
 
         onCreatePIR: async function () {
@@ -196,7 +212,7 @@ sap.ui.define([
             const bConfirmed = await new Promise(function (resolve) {
                 MessageBox.confirm(
                     "Run single-item, multi-level MRP for " + sMaterial + " in plant " + sPlant + "?\n\n" +
-                    "SAP will create a Planned Order for the finished good and Purchase Requisitions for missing raw materials when required.",
+                    "SAP will create a Planned Order for the finished good and Purchase Requisitions for missing BOM components.",
                     {
                         title: "Run MRP",
                         emphasizedAction: MessageBox.Action.OK,
@@ -256,9 +272,12 @@ sap.ui.define([
                 this.onRefresh();
 
                 if (sUpdatedStatus === "MRP_COMPLETED") {
+                    const sCreatedDocuments = await this._getMRPCreatedDocuments(sRequestId);
                     MessageBox.success(
                         "MRP completed successfully for " + sMaterial + "." +
-                        (sMessage ? "\n\n" + sMessage : ""),
+                        (sMessage ? "\n\n" + sMessage : "") +
+                        (sCreatedDocuments ? "\n\nDocuments created:\n" + sCreatedDocuments :
+                            "\n\nNo new Planned Order or Purchase Requisition was recorded."),
                         {
                             title: "MRP Completed",
                             onClose: function () {
@@ -273,6 +292,44 @@ sap.ui.define([
                 MessageBox.error(oError.message || "Could not run MRP.");
             } finally {
                 oPIR.setProperty("/busy", false);
+            }
+        },
+
+        _getMRPCreatedDocuments: async function (sPIRRequestId) {
+            try {
+                const oModel = this.getOwnerComponent().getModel();
+                const oRuns = oModel.bindList(
+                    "/MRPRuns", undefined,
+                    [new Sorter("StartedAt", true)],
+                    [new Filter("PIRRequestID", FilterOperator.EQ, sPIRRequestId)],
+                    { $$groupId: "$direct", $select: "MRPRunID,FinishedMaterial,StartedAt" }
+                );
+                const aRunContexts = await oRuns.requestContexts(0, 1);
+                if (!aRunContexts.length) { return ""; }
+
+                const sRunId = aRunContexts[0].getProperty("MRPRunID");
+                const oItems = oModel.bindList(
+                    "/MRPRunItems", undefined,
+                    [new Sorter("ItemNo", false)],
+                    [new Filter("MRPRunID", FilterOperator.EQ, sRunId)],
+                    {
+                        $$groupId: "$direct",
+                        $select: "ItemNo,DocumentCategory,DocumentNumber,DocumentItem,Material,RequiredQuantity,Unit"
+                    }
+                );
+                const aItemContexts = await oItems.requestContexts(0, 100);
+                return aItemContexts.map(function (oItemContext) {
+                    const oItem = oItemContext.getObject();
+                    const sCategory = oItem.DocumentCategory === "PLANNED_ORDER"
+                        ? "Planned Order" : "Purchase Requisition";
+                    const sItem = oItem.DocumentItem ? "/" + oItem.DocumentItem : "";
+                    return "• " + sCategory + ": " + oItem.DocumentNumber + sItem +
+                        " — " + oItem.Material + " — " +
+                        Number(oItem.RequiredQuantity || 0).toLocaleString("vi-VN", { maximumFractionDigits: 3 }) +
+                        " " + (oItem.Unit || "");
+                }).join("\n");
+            } catch (oError) {
+                return "";
             }
         },
 

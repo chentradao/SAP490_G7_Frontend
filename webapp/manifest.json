@@ -243,6 +243,20 @@
           ]
         },
         {
+          "name": "RouteDailyFinishedGoodsIssue",
+          "pattern": "DailyFinishedGoodsIssue",
+          "target": [
+            "TargetDailyFinishedGoodsIssue"
+          ]
+        },
+        {
+          "name": "RouteDailyFinishedGoodsIssueHistory",
+          "pattern": "DailyFinishedGoodsIssueHistory",
+          "target": [
+            "TargetDailyFinishedGoodsIssueHistory"
+          ]
+        },
+        {
           "name": "RouteCashierOrders",
           "pattern": "CashierOrders",
           "target": [
@@ -404,6 +418,20 @@
           "clearControlAggregation": false,
           "viewId": "ProductionGoodsReceiptHistory",
           "viewName": "ProductionGoodsReceiptHistory"
+        },
+        "TargetDailyFinishedGoodsIssue": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "DailyFinishedGoodsIssue",
+          "viewName": "DailyFinishedGoodsIssue"
+        },
+        "TargetDailyFinishedGoodsIssueHistory": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "DailyFinishedGoodsIssueHistory",
+          "viewName": "DailyFinishedGoodsIssueHistory"
         },
         "TargetCashierOrders": {
           "viewType": "XML",

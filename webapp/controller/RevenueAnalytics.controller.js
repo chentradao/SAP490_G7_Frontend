@@ -1,120 +1,143 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/ui/model/json/JSONModel"
-], function (Controller, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/m/MessageBox"
+], function (Controller, JSONModel, MessageBox) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.RevenueAnalytics", {
         onInit: function () {
             this.getView().setModel(new JSONModel({
-                chartHtml: "",
-                backendAvailable: false,
-                message: "Loading analytics..."
+                busy: false, rangeDays: "7", allRows: [], rows: [], chartHtml: "", currency: "VND",
+                revenueText: "0", purchaseCostText: "0", balanceText: "0",
+                successfulOrders: 0, cancelledOrders: 0, cancelledAmountText: "0",
+                message: "Revenue and purchase costs supplied by AdminFinanceDaily."
             }), "analytics");
             this.getOwnerComponent().getRouter().getRoute("RouteRevenueAnalytics")
-                .attachPatternMatched(this._loadAnalytics, this);
+                .attachPatternMatched(this._onRouteMatched, this);
         },
 
-        _loadAnalytics: function () {
-            this._loadRapAnalytics().then(function (aRows) {
-                this._showChart(aRows, true);
-            }.bind(this)).catch(function () {
-                return this._loadRevenueFallback().then(function (aRows) {
-                    this._showChart(aRows, false);
-                }.bind(this));
-            }.bind(this));
+        _onRouteMatched: function () {
+            const oSession = this.getOwnerComponent().getModel("session");
+            const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
+            if (!oSession || !oSession.getProperty("/isLoggedIn") || !["STAFF", "ADMIN"].includes(sRole)) {
+                MessageBox.warning("Only STAFF or ADMIN can access Revenue Analytics.");
+                this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
+                return;
+            }
+            this._loadAnalytics();
         },
 
-        _loadRapAnalytics: function () {
-            return this.getOwnerComponent().getModel().bindList(
-                "/SalesAnalyticsDaily", undefined, undefined, undefined,
-                { $$groupId: "$direct", $select: "BusinessDate,Revenue,MaterialCost,Profit,Currency" }
-            ).requestContexts(0, 31).then(function (aContexts) {
-                if (!aContexts.length) { throw new Error("No analytics data"); }
-                return aContexts.map(function (oContext) {
-                    var oRow = oContext.getObject();
+        _loadAnalytics: async function () {
+            const oAnalytics = this.getView().getModel("analytics");
+            oAnalytics.setProperty("/busy", true);
+            try {
+                const oBinding = this.getOwnerComponent().getModel().bindList(
+                    "/AdminFinanceDaily", undefined, undefined, undefined, {
+                        $$groupId: "$direct",
+                        $select: "BusinessDate,Currency,SuccessfulOrderCount,Revenue,CancelledOrderCount,CancelledOrderAmount,PurchaseCost"
+                    }
+                );
+                const aContexts = await oBinding.requestContexts(0, 1000);
+                const aRows = aContexts.map(function (oContext) {
+                    const oRow = oContext.getObject();
+                    const fRevenue = Number(oRow.Revenue || 0);
+                    const fPurchaseCost = Number(oRow.PurchaseCost || 0);
                     return {
-                        date: oRow.BusinessDate,
-                        revenue: Number(oRow.Revenue) || 0,
-                        cost: Number(oRow.MaterialCost) || 0,
-                        profit: Number(oRow.Profit) || 0
+                        date: this._normalizeDate(oRow.BusinessDate), currency: oRow.Currency || "VND",
+                        successfulOrders: Number(oRow.SuccessfulOrderCount || 0), revenue: fRevenue,
+                        purchaseCost: fPurchaseCost, balance: fRevenue - fPurchaseCost,
+                        cancelledOrders: Number(oRow.CancelledOrderCount || 0),
+                        cancelledAmount: Number(oRow.CancelledOrderAmount || 0)
                     };
-                }).sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
-            });
+                }.bind(this)).sort(function (a, b) { return a.date.localeCompare(b.date); });
+                oAnalytics.setProperty("/allRows", aRows);
+                this._applyRange();
+            } catch (oError) {
+                MessageBox.error(oError.message || "Could not load AdminFinanceDaily analytics.");
+                oAnalytics.setProperty("/allRows", []);
+                this._applyRange();
+            } finally {
+                oAnalytics.setProperty("/busy", false);
+            }
         },
 
-        _loadRevenueFallback: function () {
-            return this.getOwnerComponent().getModel().bindList(
-                "/Orders", undefined, undefined, undefined,
-                { $$groupId: "$direct", $select: "OrderDate,PaymentStatus,TotalAmount" }
-            ).requestContexts(0, 5000).then(function (aContexts) {
-                var oByDate = {};
-                aContexts.forEach(function (oContext) {
-                    var oOrder = oContext.getObject();
-                    if (String(oOrder.PaymentStatus || "").toUpperCase() !== "PAID") { return; }
-                    var sDate = this._normalizeDate(oOrder.OrderDate);
-                    if (sDate) { oByDate[sDate] = (oByDate[sDate] || 0) + (Number(oOrder.TotalAmount) || 0); }
-                }.bind(this));
-                return this._lastDays(7).map(function (sDate) {
-                    return { date: sDate, revenue: oByDate[sDate] || 0, cost: 0, profit: 0 };
+        onRangeChange: function () { this._applyRange(); },
+
+        _applyRange: function () {
+            const oAnalytics = this.getView().getModel("analytics");
+            const aAllRows = oAnalytics.getProperty("/allRows") || [];
+            const sRange = oAnalytics.getProperty("/rangeDays") || "7";
+            let aRows = aAllRows.slice();
+            if (sRange !== "ALL" && aAllRows.length) {
+                const oStartDate = new Date(aAllRows[aAllRows.length - 1].date + "T00:00:00");
+                oStartDate.setDate(oStartDate.getDate() - Number(sRange) + 1);
+                aRows = aAllRows.filter(function (oRow) {
+                    return new Date(oRow.date + "T00:00:00") >= oStartDate;
                 });
-            }.bind(this));
+            }
+            const oTotals = aRows.reduce(function (oTotal, oRow) {
+                oTotal.revenue += oRow.revenue; oTotal.purchaseCost += oRow.purchaseCost;
+                oTotal.balance += oRow.balance; oTotal.successfulOrders += oRow.successfulOrders;
+                oTotal.cancelledOrders += oRow.cancelledOrders; oTotal.cancelledAmount += oRow.cancelledAmount;
+                return oTotal;
+            }, { revenue: 0, purchaseCost: 0, balance: 0, successfulOrders: 0, cancelledOrders: 0, cancelledAmount: 0 });
+            oAnalytics.setProperty("/rows", aRows.slice().reverse());
+            oAnalytics.setProperty("/currency", aRows.length ? aRows[aRows.length - 1].currency : "VND");
+            oAnalytics.setProperty("/revenueText", this.formatAmount(oTotals.revenue));
+            oAnalytics.setProperty("/purchaseCostText", this.formatAmount(oTotals.purchaseCost));
+            oAnalytics.setProperty("/balanceText", this.formatAmount(oTotals.balance));
+            oAnalytics.setProperty("/successfulOrders", oTotals.successfulOrders);
+            oAnalytics.setProperty("/cancelledOrders", oTotals.cancelledOrders);
+            oAnalytics.setProperty("/cancelledAmountText", this.formatAmount(oTotals.cancelledAmount));
+            oAnalytics.setProperty("/chartHtml", this._buildSvg(aRows));
         },
 
         _normalizeDate: function (vDate) {
-            var sDate = String(vDate || "").slice(0, 10);
+            const sDate = String(vDate || "").slice(0, 10);
             return /^\d{8}$/.test(sDate) ? sDate.slice(0, 4) + "-" + sDate.slice(4, 6) + "-" + sDate.slice(6, 8) : sDate;
         },
 
-        _lastDays: function (iDays) {
-            var aDates = [];
-            for (var i = iDays - 1; i >= 0; i -= 1) {
-                var oDate = new Date();
-                oDate.setDate(oDate.getDate() - i);
-                aDates.push([oDate.getFullYear(), String(oDate.getMonth() + 1).padStart(2, "0"), String(oDate.getDate()).padStart(2, "0")].join("-"));
+        _buildSvg: function (aRows) {
+            if (!aRows.length) { return '<div style="padding:4rem;text-align:center;color:#5b738b">No finance data for this period.</div>'; }
+            const iWidth = 1100, iHeight = 430, iLeft = 105, iTop = 35, iPlotWidth = 930, iPlotHeight = 310;
+            const aValues = [];
+            aRows.forEach(function (oRow) { aValues.push(oRow.revenue, oRow.purchaseCost, Math.max(0, oRow.balance)); });
+            const fScaleMax = Math.max.apply(Math, aValues.concat([1])) * 1.1;
+            const getX = function (i) { return iLeft + (aRows.length === 1 ? iPlotWidth / 2 : i * iPlotWidth / (aRows.length - 1)); };
+            const getY = function (v) { return iTop + iPlotHeight - Math.max(0, Number(v || 0)) / fScaleMax * iPlotHeight; };
+            const compact = function (v) { return Number(v || 0).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 1 }); };
+            const series = function (sKey, sColor, sLabel) {
+                const sPoints = aRows.map(function (oRow, i) { return getX(i).toFixed(1) + "," + getY(oRow[sKey]).toFixed(1); }).join(" ");
+                const sDots = aRows.map(function (oRow, i) {
+                    const sTitle = sLabel + " " + oRow.date + ": " + Number(oRow[sKey]).toLocaleString("en-US") + " " + oRow.currency;
+                    return '<circle cx="' + getX(i).toFixed(1) + '" cy="' + getY(oRow[sKey]).toFixed(1) + '" r="5" fill="' + sColor + '"><title>' + sTitle + '</title></circle>';
+                }).join("");
+                return '<polyline fill="none" stroke="' + sColor + '" stroke-width="4" stroke-linejoin="round" points="' + sPoints + '"/>' + sDots;
+            };
+            let sGrid = "";
+            for (let i = 0; i <= 4; i += 1) {
+                const y = iTop + iPlotHeight * i / 4;
+                sGrid += '<line x1="' + iLeft + '" y1="' + y + '" x2="' + (iLeft + iPlotWidth) + '" y2="' + y + '" stroke="#d9e2ec"/>' +
+                    '<text x="' + (iLeft - 12) + '" y="' + (y + 5) + '" text-anchor="end" font-size="12" fill="#475e75">' + compact(fScaleMax * (4 - i) / 4) + '</text>';
             }
-            return aDates;
-        },
-
-        _showChart: function (aRows, bBackendAvailable) {
-            var oAnalytics = this.getView().getModel("analytics");
-            oAnalytics.setProperty("/backendAvailable", bBackendAvailable);
-            oAnalytics.setProperty("/message", bBackendAvailable ?
-                "Revenue, BOM material cost and profit supplied by RAP analytics." :
-                "Revenue is available. Material cost and profit require the SalesAnalyticsDaily RAP entity described below.");
-            oAnalytics.setProperty("/chartHtml", this._buildSvg(aRows, bBackendAvailable));
-        },
-
-        _buildSvg: function (aRows, bShowCost) {
-            var iWidth = 1000, iHeight = 430, iLeft = 80, iTop = 30, iPlotWidth = 880, iPlotHeight = 320;
-            var aValues = [];
-            aRows.forEach(function (oRow) {
-                aValues.push(oRow.revenue);
-                if (bShowCost) { aValues.push(oRow.cost, oRow.profit); }
-            });
-            var fMax = Math.max.apply(Math, aValues.concat([1]));
-            var point = function (vValue, iIndex) {
-                var x = iLeft + (aRows.length === 1 ? iPlotWidth / 2 : iIndex * iPlotWidth / (aRows.length - 1));
-                var y = iTop + iPlotHeight - (Number(vValue || 0) / fMax * iPlotHeight);
-                return x.toFixed(1) + "," + y.toFixed(1);
-            };
-            var polyline = function (sKey, sColor) {
-                return '<polyline fill="none" stroke="' + sColor + '" stroke-width="4" points="' +
-                    aRows.map(function (oRow, i) { return point(oRow[sKey], i); }).join(" ") + '"/>';
-            };
-            var sLabels = aRows.map(function (oRow, i) {
-                var x = iLeft + (aRows.length === 1 ? iPlotWidth / 2 : i * iPlotWidth / (aRows.length - 1));
-                return '<text x="' + x + '" y="385" text-anchor="middle" font-size="13" fill="#475e75">' + String(oRow.date).slice(5) + '</text>';
+            const iStep = Math.max(1, Math.ceil(aRows.length / 10));
+            const sLabels = aRows.map(function (oRow, i) {
+                return (i % iStep === 0 || i === aRows.length - 1) ? '<text x="' + getX(i) + '" y="375" text-anchor="middle" font-size="12" fill="#475e75">' + oRow.date.slice(5) + '</text>' : "";
             }).join("");
-            var sLines = polyline("revenue", "#0a6ed1");
-            if (bShowCost) { sLines += polyline("cost", "#e9730c") + polyline("profit", "#107e3e"); }
-            return '<div class="revenueChart"><svg viewBox="0 0 ' + iWidth + ' ' + iHeight + '" role="img" aria-label="Revenue, cost and profit line chart">' +
-                '<line x1="80" y1="350" x2="960" y2="350" stroke="#8996a5"/><line x1="80" y1="30" x2="80" y2="350" stroke="#8996a5"/>' +
-                sLines + sLabels + '</svg></div>';
+            return '<div class="revenueChart"><svg viewBox="0 0 ' + iWidth + ' ' + iHeight + '">' + sGrid +
+                series("revenue", "#0a6ed1", "Revenue") + series("purchaseCost", "#e9730c", "Purchase Cost") +
+                series("balance", "#107e3e", "Balance") + sLabels + '<text x="25" y="28" font-size="12" fill="#475e75">VND</text></svg></div>';
         },
 
-        onBack: function () {
-            this.getOwnerComponent().getRouter().navTo("RouteStaffDashboard", {}, true);
-        }
+        formatAmount: function (v) { return Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 }); },
+        formatDate: function (sDate) {
+            if (!sDate) { return "-"; }
+            const oDate = new Date(String(sDate) + "T00:00:00");
+            return Number.isNaN(oDate.getTime()) ? String(sDate) : oDate.toLocaleDateString("vi-VN");
+        },
+        formatBalanceState: function (v) { return Number(v || 0) >= 0 ? "Success" : "Error"; },
+        onRefresh: function () { this._loadAnalytics(); },
+        onBack: function () { this.getOwnerComponent().getRouter().navTo("RouteStaffDashboard", {}, true); }
     });
 });

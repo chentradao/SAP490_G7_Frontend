@@ -44,7 +44,7 @@
           growingScrollToLoad="true"
           growingThreshold="20"
           noDataText="No posted production goods issues found"
-          items="{path: '/ProductionOrderRequests', sorter: {path: 'goods_issued_at', descending: true}}">
+          items="{path: '/ProductionOrderRequests', filters: [{path: 'material', operator: 'GE', value1: 'FG00009'}], sorter: {path: 'goods_issued_at', descending: true}}">
           <columns>
             <Column width="13rem"><Text text="Material Document" /></Column>
             <Column width="11rem"><Text text="Production Order" /></Column>

@@ -438,6 +438,12 @@ body, html {
 .revenueChart { width: 100%; overflow-x: auto; }
 .revenueChart svg { width: 100%; min-width: 42rem; height: auto; }
 
+.pirPlanningWorkspace { gap: 1rem; }
+.pirPlanningColumn { flex: 1 1 30rem; min-width: 0; }
+.pirPlanningColumn .sapMListTbl { min-width: 34rem; }
+.mrpActionTabs .sapMITBContent { padding: 1rem 0 0; }
+.mrpActionTabs .sapMITBContainerContent { border-bottom: 0; }
+
 @media (max-width: 48rem) {
     .materialStockShell,
     .poHistoryShell,
