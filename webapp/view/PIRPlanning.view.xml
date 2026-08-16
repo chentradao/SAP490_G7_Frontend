@@ -1,3 +1,4 @@
+<!-- View PIRPlanning.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.PIRPlanning"
   xmlns:mvc="sap.ui.core.mvc"
@@ -6,6 +7,7 @@
   xmlns:f="sap.ui.layout.form"
   displayBlock="true">
 
+  <!-- Trang chính: Demand Forecast and PIR -->
   <Page title="Demand Forecast and PIR" showNavButton="true" navButtonPress="onNavBack">
     <headerContent>
       <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
@@ -27,6 +29,7 @@
           class="sapUiSmallMarginBottom" />
 
         <HBox wrap="Wrap" alignItems="Stretch" class="pirPlanningWorkspace">
+        <!-- Khu vực nghiệp vụ: 1. Choose a Meal -->
         <Panel headerText="1. Choose a Meal" class="staffWorkflowPanel pirPlanningColumn">
           <content>
             <SearchField
@@ -63,6 +66,7 @@
           </content>
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: 2. Plan Tomorrow's Demand -->
         <Panel headerText="2. Plan Tomorrow's Demand" class="staffWorkflowPanel pirPlanningColumn">
           <content>
             <VBox class="sapUiSmallMargin">

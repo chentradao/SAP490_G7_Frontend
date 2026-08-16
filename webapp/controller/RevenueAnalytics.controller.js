@@ -1,3 +1,7 @@
+/*
+ * Controller RevenueAnalytics.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -6,6 +10,7 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.RevenueAnalytics", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getView().setModel(new JSONModel({
                 busy: false, rangeDays: "7", allRows: [], rows: [], chartHtml: "", currency: "VND",
@@ -17,6 +22,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -28,6 +34,7 @@ sap.ui.define([
             this._loadAnalytics();
         },
 
+        /** Tải Analytics từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadAnalytics: async function () {
             const oAnalytics = this.getView().getModel("analytics");
             oAnalytics.setProperty("/busy", true);
@@ -62,8 +69,10 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Range Change từ giao diện người dùng. */
         onRangeChange: function () { this._applyRange(); },
 
+        /** Hàm nội bộ thực hiện apply Range. */
         _applyRange: function () {
             const oAnalytics = this.getView().getModel("analytics");
             const aAllRows = oAnalytics.getProperty("/allRows") || [];
@@ -93,11 +102,13 @@ sap.ui.define([
             oAnalytics.setProperty("/chartHtml", this._buildSvg(aRows));
         },
 
+        /** Hàm nội bộ thực hiện normalize Date. */
         _normalizeDate: function (vDate) {
             const sDate = String(vDate || "").slice(0, 10);
             return /^\d{8}$/.test(sDate) ? sDate.slice(0, 4) + "-" + sDate.slice(4, 6) + "-" + sDate.slice(6, 8) : sDate;
         },
 
+        /** Hàm nội bộ thực hiện build Svg. */
         _buildSvg: function (aRows) {
             if (!aRows.length) { return '<div style="padding:4rem;text-align:center;color:#5b738b">No finance data for this period.</div>'; }
             const iWidth = 1100, iHeight = 430, iLeft = 105, iTop = 35, iPlotWidth = 930, iPlotHeight = 310;
@@ -130,14 +141,19 @@ sap.ui.define([
                 series("balance", "#107e3e", "Balance") + sLabels + '<text x="25" y="28" font-size="12" fill="#475e75">VND</text></svg></div>';
         },
 
+        /** Định dạng Amount trước khi hiển thị trên giao diện. */
         formatAmount: function (v) { return Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 }); },
+        /** Định dạng Date trước khi hiển thị trên giao diện. */
         formatDate: function (sDate) {
             if (!sDate) { return "-"; }
             const oDate = new Date(String(sDate) + "T00:00:00");
             return Number.isNaN(oDate.getTime()) ? String(sDate) : oDate.toLocaleDateString("vi-VN");
         },
+        /** Định dạng Balance State trước khi hiển thị trên giao diện. */
         formatBalanceState: function (v) { return Number(v || 0) >= 0 ? "Success" : "Error"; },
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () { this._loadAnalytics(); },
+        /** Xử lý sự kiện Back từ giao diện người dùng. */
         onBack: function () { this.getOwnerComponent().getRouter().navTo("RouteStaffDashboard", {}, true); }
     });
 });

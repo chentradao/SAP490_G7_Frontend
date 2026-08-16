@@ -1,3 +1,7 @@
+/*
+ * Controller MyOrderDetail.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -8,17 +12,20 @@ sap.ui.define([
 ], function (Controller, JSONModel, Filter, FilterOperator, MessageBox, sessionUtils) {
     "use strict";
 
+    /** Chuyển ngày từ backend sang chuỗi ngày phù hợp với locale Việt Nam. */
     function formatDate(sValue) {
         var sDate = String(sValue || "").replace(/[^0-9]/g, "").slice(0, 8);
         return sDate.length === 8 ? sDate.slice(6, 8) + "/" + sDate.slice(4, 6) + "/" + sDate.slice(0, 4) : sValue || "";
     }
 
     return Controller.extend("sap490g7fioriapp.controller.MyOrderDetail", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getOwnerComponent().getRouter().getRoute("RouteMyOrderDetail")
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function (oEvent) {
             var oSession = this.getOwnerComponent().getModel("session");
             if (!sessionUtils.isLoggedIn(oSession) || !sessionUtils.isCustomer(oSession)) {
@@ -29,6 +36,7 @@ sap.ui.define([
             this._loadOrderDetail(oEvent.getParameter("arguments").orderId);
         },
 
+        /** Tải Order Detail từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadOrderDetail: function (sOrderId) {
             var oComponent = this.getOwnerComponent();
             var oOrdersModel = oComponent.getModel("orders") || new JSONModel({
@@ -55,6 +63,7 @@ sap.ui.define([
             });
         },
 
+        /** Tải Order From Backend từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadOrderFromBackend: function (sOrderId) {
             var sEscapedOrderId = String(sOrderId || "").replace(/'/g, "''");
             var oContext = this.getOwnerComponent().getModel().bindContext("/Orders('" + sEscapedOrderId + "')", null, {
@@ -63,6 +72,7 @@ sap.ui.define([
             return oContext.requestObject().then(this._normalizeOrder.bind(this));
         },
 
+        /** Hàm nội bộ thực hiện normalize Order. */
         _normalizeOrder: function (oRow) {
             if (!oRow) { return null; }
 
@@ -96,6 +106,7 @@ sap.ui.define([
             };
         },
 
+        /** Tải Order Item Images từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadOrderItemImages: function (aItems) {
             var oODataModel = this.getOwnerComponent().getModel();
             var oOrdersModel = this.getOwnerComponent().getModel("orders");
@@ -121,6 +132,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Checkout từ giao diện người dùng. */
         onCheckout: function () {
             var oOrder = this.getOwnerComponent().getModel("orders").getProperty("/selectedOrder");
             if (!oOrder || !oOrder.canCheckout) {
@@ -139,6 +151,7 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteCheckout");
         },
 
+        /** Xử lý sự kiện Back từ giao diện người dùng. */
         onBack: function () {
             this.getOwnerComponent().getRouter().navTo("RouteMyOrders", {}, true);
         }

@@ -1,3 +1,7 @@
+/*
+ * Controller POCreate.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/ui/model/json/JSONModel",

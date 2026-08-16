@@ -1,3 +1,7 @@
+/*
+ * Controller FoodList.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/Filter",
@@ -11,6 +15,7 @@ sap.ui.define([
 
     return Controller.extend("sap490g7fioriapp.controller.FoodList", {
 
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteFoodList").attachPatternMatched(this._onRouteMatched, this);
@@ -21,12 +26,14 @@ sap.ui.define([
             }
         },
 
+        /** Hàm nội bộ thực hiện Cart Model Changed. */
         _onCartModelChanged: function (oEvent) {
             if (oEvent.getParameter("path") === "/items") {
                 this._updateCartBadge();
             }
         },
 
+        /** Hàm nội bộ thực hiện update Cart Badge. */
         _updateCartBadge: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             var sCartId = oSession && oSession.getProperty("/cartId");
@@ -55,6 +62,7 @@ sap.ui.define([
             }.bind(this));
         },
 
+        /** Hàm nội bộ thực hiện update Orders Badge. */
         _updateOrdersBadge: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             var sUserId = oSession && oSession.getProperty("/userId");
@@ -72,6 +80,7 @@ sap.ui.define([
             });
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             if (!oSession || !oSession.getProperty("/isLoggedIn")) {
@@ -83,19 +92,25 @@ sap.ui.define([
             this._applyFilters();
         },
 
+        /** Xử lý sự kiện Search Food từ giao diện người dùng. */
         onSearchFood: function (oEvent) {
             var sQuery = oEvent.getParameter("newValue") || oEvent.getParameter("query") || this.byId("foodSearchField").getValue() || "";
             this._applyFilters(sQuery);
         },
 
+        /** Xử lý sự kiện Quantity Sort Change từ giao diện người dùng. */
         onQuantitySortChange: function () {
             this._applyFilters();
         },
 
+        /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function (sQuery) {
             var oTable = this.byId("foodTable");
             var oBinding = oTable.getBinding("items");
-            var aFilters = [new Filter("MaterialNumber", FilterOperator.GE, "FG00009")];
+            var aFilters = [
+                new Filter("MaterialNumber", FilterOperator.GE, "FG00009"),
+                new Filter("Status", FilterOperator.EQ, "A")
+            ];
             var sSearchQuery = sQuery || this.byId("foodSearchField").getValue() || "";
             var sQuantitySort = this.byId("quantitySort").getSelectedKey();
 
@@ -117,6 +132,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Food Press từ giao diện người dùng. */
         onFoodPress: function (oEvent) {
             var oItem = oEvent.getSource();
             var oContext = oItem.getBindingContext();
@@ -127,6 +143,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Add To Cart từ giao diện người dùng. */
         onAddToCart: function (oEvent) {
             if (oEvent && typeof oEvent.stopPropagation === "function") {
                 oEvent.stopPropagation();
@@ -160,6 +177,7 @@ sap.ui.define([
 });
         },
 
+        /** Xử lý sự kiện View Cart từ giao diện người dùng. */
         onViewCart: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             if (oSession) {
@@ -169,10 +187,12 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteCart");
         },
 
+        /** Xử lý sự kiện View My Orders từ giao diện người dùng. */
         onViewMyOrders: function () {
             this.getOwnerComponent().getRouter().navTo("RouteMyOrders");
         },
 
+        /** Xử lý sự kiện Logout từ giao diện người dùng. */
         onLogout: function () {
             var oSessionModel = this.getOwnerComponent().getModel("session");
             sessionUtils.resetSession(oSessionModel);

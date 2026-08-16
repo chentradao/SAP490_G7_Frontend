@@ -1,3 +1,7 @@
+/*
+ * Controller PIRPlanning.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -10,12 +14,14 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.PIRPlanning", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getView().setModel(new JSONModel(this._createInitialData()), "pir");
             this.getOwnerComponent().getRouter().getRoute("RoutePIRPlanning")
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Định dạng Local Date trước khi hiển thị trên giao diện. */
         _formatLocalDate: function (oDate) {
             const iMonth = oDate.getMonth() + 1;
             const iDay = oDate.getDate();
@@ -24,6 +30,7 @@ sap.ui.define([
                 String(iDay).padStart(2, "0");
         },
 
+        /** Tạo Initial Data dùng cho luồng xử lý hiện tại. */
         _createInitialData: function () {
             const oTomorrow = new Date();
             oTomorrow.setDate(oTomorrow.getDate() + 1);
@@ -43,6 +50,7 @@ sap.ui.define([
             };
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -56,6 +64,7 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        /** Xử lý sự kiện Finished Good Selected từ giao diện người dùng. */
         onFinishedGoodSelected: function (oEvent) {
             const oContext = oEvent.getParameter("listItem").getBindingContext();
             const oPIR = this.getView().getModel("pir");
@@ -66,6 +75,7 @@ sap.ui.define([
             oPIR.setProperty("/unit", oContext.getProperty("MaterialBaseUnit") || "EA");
         },
 
+        /** Xử lý sự kiện Finished Goods Search từ giao diện người dùng. */
         onFinishedGoodsSearch: function (oEvent) {
             const sQuery = String(oEvent.getParameter("newValue") || "").trim();
             const aFilters = [new Filter("Material", FilterOperator.GE, "FG00009")];
@@ -81,6 +91,7 @@ sap.ui.define([
             this.byId("pirFinishedGoodsTable").getBinding("items").filter(aFilters);
         },
 
+        /** Xử lý sự kiện Create PIR từ giao diện người dùng. */
         onCreatePIR: async function () {
             const oPIR = this.getView().getModel("pir");
             const oData = oPIR.getData();
@@ -192,6 +203,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Run MRP từ giao diện người dùng. */
         onRunMRP: async function (oEvent) {
             const oContext = oEvent.getSource().getBindingContext();
             if (!oContext) {
@@ -295,6 +307,7 @@ sap.ui.define([
             }
         },
 
+        /** Đọc và trả về MRP Created Documents phục vụ xử lý nội bộ. */
         _getMRPCreatedDocuments: async function (sPIRRequestId) {
             try {
                 const oModel = this.getOwnerComponent().getModel();
@@ -333,6 +346,7 @@ sap.ui.define([
             }
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
             ["pirFinishedGoodsTable", "pirHistoryTable"].forEach(function (sId) {
                 const oBinding = this.byId(sId).getBinding("items");
@@ -342,6 +356,7 @@ sap.ui.define([
             }, this);
         },
 
+        /** Định dạng State trước khi hiển thị trên giao diện. */
         formatState: function (sStatus) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sValue === "CREATED" || sValue === "MRP_COMPLETED") { return "Success"; }
@@ -349,22 +364,26 @@ sap.ui.define([
             return "Warning";
         },
 
+        /** Định dạng Highlight trước khi hiển thị trên giao diện. */
         formatHighlight: function (sStatus) {
             return this.formatState(sStatus);
         },
 
+        /** Định dạng Date trước khi hiển thị trên giao diện. */
         formatDate: function (vDate) {
             if (!vDate) { return "-"; }
             const oDate = new Date(String(vDate) + "T00:00:00");
             return Number.isNaN(oDate.getTime()) ? String(vDate) : oDate.toLocaleDateString("vi-VN");
         },
 
+        /** Định dạng Date Time trước khi hiển thị trên giao diện. */
         formatDateTime: function (vDate) {
             if (!vDate) { return "-"; }
             const oDate = vDate instanceof Date ? vDate : new Date(vDate);
             return Number.isNaN(oDate.getTime()) ? String(vDate) : oDate.toLocaleString("vi-VN");
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             if (History.getInstance().getPreviousHash() !== undefined) {
                 window.history.go(-1);

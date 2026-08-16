@@ -1,8 +1,10 @@
+<!-- View MyOrderDetail.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
     controllerName="sap490g7fioriapp.controller.MyOrderDetail"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     displayBlock="true">
+    <!-- Trang chính: Order Detail -->
     <Page title="Order Detail" showNavButton="true" navButtonPress=".onBack" showFooter="true">
         <content>
             <VBox class="sapUiMediumMargin">
@@ -18,6 +20,7 @@
                     </attributes>
                 </ObjectHeader>
 
+                <!-- Khu vực nghiệp vụ: Order Information -->
                 <Panel headerText="Order Information" class="sapUiSmallMarginTop">
                     <VBox class="sapUiSmallMargin">
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
@@ -31,6 +34,7 @@
                     </VBox>
                 </Panel>
 
+                <!-- Khu vực nghiệp vụ: Order Items -->
                 <Panel headerText="Order Items" class="sapUiSmallMarginTop">
                     <Table items="{orders>/selectedOrder/items}" class="orderItemsTable">
                         <columns>

@@ -1,3 +1,4 @@
+/* Thiết lập khung ứng dụng và vùng cuộn chung cho toàn bộ UI5 shell. */
 html, body, body > div, #container, #container-uiarea, #content {
     height: 100%;
     width: 100%;
@@ -22,6 +23,7 @@ body, html {
     -webkit-overflow-scrolling: touch;
 }
 
+/* Giỏ hàng, checkout và chi tiết đơn: chiều cao dòng, tổng tiền và ảnh món ăn. */
 .cartTable .sapMListTblCell {
     height: 4.5rem;
     vertical-align: middle;
@@ -68,6 +70,7 @@ body, html {
     background-color: #f7f9fb;
 }
 
+/* Màn tồn kho nguyên vật liệu: bố cục, filter bar và bảng stock. */
 .materialStockShell {
     max-width: none;
     width: 100%;
@@ -106,6 +109,7 @@ body, html {
     background: #f5f7f9;
 }
 
+/* Dialog và vùng thông tin chi tiết của quy trình Purchase Order. */
 .poDialogContent,
 .poDetailsContent {
     padding: 1.25rem 1.5rem;
@@ -141,6 +145,7 @@ body, html {
     color: #556b82;
 }
 
+/* Các màn lịch sử nghiệp vụ: hero, filter bar và bảng dữ liệu dùng chung. */
 .poHistoryShell {
     max-width: none;
     width: 100%;
@@ -194,6 +199,7 @@ body, html {
     background: #f5f7f9;
 }
 
+/* Hỗ trợ bảng nghiệp vụ nhiều cột cuộn ngang nhưng vẫn giữ header dễ theo dõi. */
 .wideTableScroll {
     display: block;
     width: 100%;
@@ -270,6 +276,7 @@ body, html {
     cursor: not-allowed !important;
 }
 
+/* Màn lập lệnh sản xuất và từng bước chọn thành phẩm, kiểm tra BOM, nhập số lượng. */
 .productionOrderShell {
     width: 100%;
     box-sizing: border-box;
@@ -318,6 +325,7 @@ body, html {
     margin: 0 1rem 1rem 0;
 }
 
+/* Dashboard nhân viên: hero, nhóm chức năng, KPI bán hàng và các action tile. */
 .staffDashboardShell {
     max-width: 92rem;
     margin: 0 auto;
@@ -387,6 +395,7 @@ body, html {
     gap: 1rem;
 }
 
+/* Danh sách và chi tiết món ăn: kích thước ảnh và bố cục thông tin. */
 .foodListImage {
     border: 1px solid #d9e2ec;
     border-radius: 0.5rem;
@@ -433,6 +442,7 @@ body, html {
     font-size: 0.75rem;
 }
 
+/* Màn phân tích doanh thu và vùng biểu đồ. */
 .revenueAnalyticsShell {
     max-width: 92rem;
     margin: 0 auto;
@@ -444,6 +454,7 @@ body, html {
 .revenueChart { width: 100%; overflow-x: auto; }
 .revenueChart svg { width: 100%; min-width: 42rem; height: auto; }
 
+/* Bố cục dự báo PIR và các tab kết quả MRP. */
 .pirPlanningWorkspace { gap: 1rem; }
 .pirPlanningColumn { flex: 1 1 30rem; min-width: 0; }
 .pirPlanningColumn .sapMListTbl { min-width: 34rem; }

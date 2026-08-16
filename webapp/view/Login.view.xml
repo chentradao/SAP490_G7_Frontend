@@ -1,9 +1,11 @@
+<!-- View Login.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
     controllerName="sap490g7fioriapp.controller.Login"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
     displayBlock="true">
+    <!-- Trang chính: {i18n>loginTitle} -->
     <Page title="{i18n>loginTitle}" showHeader="false" fitContainer="true">
         <content>
             <VBox alignItems="Center" justifyContent="Center" class="sapUiLargeMarginTop">

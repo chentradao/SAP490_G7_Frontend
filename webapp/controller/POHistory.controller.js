@@ -1,3 +1,7 @@
+/*
+ * Controller POHistory.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/routing/History",
@@ -9,6 +13,7 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.POHistory", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             const oToday = new Date();
             const sToday = this._formatDateForOData(oToday);
@@ -32,6 +37,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -59,6 +65,7 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        /** Xử lý sự kiện Search từ giao diện người dùng. */
         onSearch: function (oEvent) {
             const sQuery = (
                 oEvent.getParameter("query") ||
@@ -68,12 +75,14 @@ sap.ui.define([
             this._applyFilters(sQuery);
         },
 
+        /** Xử lý sự kiện Status Change từ giao diện người dùng. */
         onStatusChange: function () {
             const oSearchField = this.byId("poHistorySearch");
             const sQuery = oSearchField ? oSearchField.getValue().trim() : "";
             this._applyFilters(sQuery);
         },
 
+        /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function (sQuery) {
             const oTable = this.byId("poHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -115,12 +124,14 @@ sap.ui.define([
                 : []);
         },
 
+        /** Xử lý sự kiện Clear Filters từ giao diện người dùng. */
         onClearFilters: function () {
             this.byId("poHistorySearch").setValue("");
             this.byId("poStatusFilter").setSelectedKey("ALL");
             this._applyFilters("");
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
             const oTable = this.byId("poHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -129,10 +140,12 @@ sap.ui.define([
             }
         },
 
+        /** Định dạng Status trước khi hiển thị trên giao diện. */
         formatStatus: function (sPurchaseOrder, sStatus) {
             return sPurchaseOrder ? "CREATED" : (sStatus || "PENDING");
         },
 
+        /** Định dạng Status State trước khi hiển thị trên giao diện. */
         formatStatusState: function (sPurchaseOrder, sStatus) {
             if (sPurchaseOrder) {
                 return "Success";
@@ -140,10 +153,12 @@ sap.ui.define([
             return sStatus === "ERROR" ? "Error" : "Warning";
         },
 
+        /** Định dạng Purchase Source trước khi hiển thị trên giao diện. */
         formatPurchaseSource: function (sPurchaseRequisition) {
             return sPurchaseRequisition ? "From MRP PR" : "Manual";
         },
 
+        /** Định dạng Date trước khi hiển thị trên giao diện. */
         formatDate: function (vDate) {
             if (!vDate) {
                 return "-";
@@ -162,6 +177,7 @@ sap.ui.define([
             return oDate.toLocaleDateString("vi-VN");
         },
 
+        /** Định dạng Date Time trước khi hiển thị trên giao diện. */
         formatDateTime: function (vDateTime) {
             if (!vDateTime) {
                 return "-";
@@ -181,11 +197,13 @@ sap.ui.define([
             });
         },
 
+        /** Định dạng Remaining State trước khi hiển thị trên giao diện. */
         formatRemainingState: function (vRemaining) {
             const fRemaining = Number(vRemaining || 0);
             return fRemaining <= 0 ? "Error" : "Success";
         },
 
+        /** Định dạng Date For O Data trước khi hiển thị trên giao diện. */
         _formatDateForOData: function (oDate) {
             return [
                 oDate.getFullYear(),
@@ -194,11 +212,13 @@ sap.ui.define([
             ].join("-");
         },
 
+        /** Định dạng Quantity trước khi hiển thị trên giao diện. */
         _formatQuantity: function (vValue) {
             const fValue = Number(String(vValue || "").trim().replace(",", "."));
             return Number.isFinite(fValue) ? fValue.toFixed(3) : "0.000";
         },
 
+        /** Định dạng Total Amount trước khi hiển thị trên giao diện. */
         formatTotalAmount: function (vQuantity, vPrice) {
             const fQuantity = Number(vQuantity || 0);
             const fPrice = Number(vPrice || 0);
@@ -214,6 +234,7 @@ sap.ui.define([
             });
         },
 
+        /** Định dạng Price trước khi hiển thị trên giao diện. */
         formatPrice: function (vPrice) {
             var fPrice = Number(vPrice);
             return Number.isFinite(fPrice) ? fPrice.toLocaleString("en-US", {
@@ -222,6 +243,7 @@ sap.ui.define([
             }) : "0";
         },
 
+        /** Xử lý sự kiện Open PO Details từ giao diện người dùng. */
         onOpenPODetails: function (oEvent) {
             const oContext = oEvent.getSource().getBindingContext();
             const oDialog = this.byId("poDetailsDialog");
@@ -232,10 +254,12 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Close PO Details từ giao diện người dùng. */
         onClosePODetails: function () {
             this.byId("poDetailsDialog").close();
         },
 
+        /** Xử lý sự kiện Open GR Dialog từ giao diện người dùng. */
         onOpenGRDialog: async function () {
             const oPOContext = this.byId("poDetailsDialog").getBindingContext();
             const oPO = oPOContext && oPOContext.getObject();
@@ -301,10 +325,12 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Close GR Dialog từ giao diện người dùng. */
         onCloseGRDialog: function () {
             this.byId("postGRDialog").close();
         },
 
+        /** Xử lý sự kiện Post GR Confirm từ giao diện người dùng. */
         onPostGRConfirm: async function () {
             const oGRModel = this.getView().getModel("gr");
             const oGR = oGRModel.getData();
@@ -424,6 +450,7 @@ sap.ui.define([
             }
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             const sPreviousHash = History.getInstance().getPreviousHash();
             if (sPreviousHash !== undefined) {
@@ -433,6 +460,7 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteMaterialStock", {}, true);
         },
 
+        /** Xử lý sự kiện Open GR History từ giao diện người dùng. */
         onOpenGRHistory: function () {
             this.getOwnerComponent().getRouter().navTo("RouteGRHistory");
         }

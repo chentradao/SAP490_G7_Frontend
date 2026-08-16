@@ -1,3 +1,4 @@
+<!-- View RevenueAnalytics.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.RevenueAnalytics"
   xmlns:mvc="sap.ui.core.mvc"
@@ -5,6 +6,7 @@
   xmlns:core="sap.ui.core"
   displayBlock="true">
 
+  <!-- Trang chính: Revenue Analytics -->
   <Page title="Revenue Analytics" showNavButton="true" navButtonPress="onBack" busy="{analytics>/busy}">
     <headerContent>
       <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
@@ -57,10 +59,12 @@
           <ObjectStatus text="Operating Balance" state="Success" icon="sap-icon://circle-task-2" class="sapUiSmallMarginBegin" />
         </HBox>
 
+        <!-- Khu vực nghiệp vụ: Daily Trend -->
         <Panel headerText="Daily Trend" class="staffWorkflowPanel">
           <core:HTML content="{analytics>/chartHtml}" sanitizeContent="false" />
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: Daily Finance Details -->
         <Panel headerText="Daily Finance Details" class="staffWorkflowPanel sapUiSmallMarginTop">
           <ScrollContainer width="100%" height="38vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
             <Table

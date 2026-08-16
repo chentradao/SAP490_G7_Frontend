@@ -1,3 +1,7 @@
+/*
+ * Controller ProductionOrderHistory.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/routing/History",
@@ -10,6 +14,7 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.ProductionOrderHistory", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getView().setModel(new JSONModel({
                 version: 0,
@@ -20,6 +25,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -39,16 +45,19 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        /** Xử lý sự kiện Search từ giao diện người dùng. */
         onSearch: function (oEvent) {
             const sQuery = (oEvent.getParameter("query") || oEvent.getParameter("newValue") || "").trim();
             this._applyFilters(sQuery);
         },
 
+        /** Xử lý sự kiện Status Change từ giao diện người dùng. */
         onStatusChange: function () {
             const oSearch = this.byId("productionHistorySearch");
             this._applyFilters(oSearch ? oSearch.getValue().trim() : "");
         },
 
+        /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function (sQuery) {
             const oBinding = this.byId("productionHistoryTable").getBinding("items");
             if (!oBinding) {
@@ -91,6 +100,7 @@ sap.ui.define([
             oBinding.filter(aFilters.length ? new Filter({ filters: aFilters, and: true }) : []);
         },
 
+        /** Xử lý sự kiện Clear Filters từ giao diện người dùng. */
         onClearFilters: function () {
             const oSearch = this.byId("productionHistorySearch");
             const oStatus = this.byId("productionStatusFilter");
@@ -103,6 +113,7 @@ sap.ui.define([
             this._applyFilters("");
         },
 
+        /** Xử lý sự kiện Open Production Details từ giao diện người dùng. */
         onOpenProductionDetails: function (oEvent) {
             const oContext = oEvent.getSource().getBindingContext();
             const oDialog = this.byId("productionDetailsDialog");
@@ -112,6 +123,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Close Production Details từ giao diện người dùng. */
         onCloseProductionDetails: function () {
             const oDialog = this.byId("productionDetailsDialog");
             if (oDialog) {
@@ -119,6 +131,7 @@ sap.ui.define([
             }
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
             const oTable = this.byId("productionHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -128,6 +141,7 @@ sap.ui.define([
             this.onRefreshConfirmations();
         },
 
+        /** Xử lý sự kiện Refresh Confirmations từ giao diện người dùng. */
         onRefreshConfirmations: function () {
             const oTable = this.byId("productionConfirmationHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -137,6 +151,7 @@ sap.ui.define([
             this._loadConfirmedOrders();
         },
 
+        /** Tải Confirmed Orders từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadConfirmedOrders: async function () {
             try {
                 const oBinding = this.getOwnerComponent().getModel().bindList(
@@ -171,12 +186,14 @@ sap.ui.define([
             }
         },
 
+        /** Kiểm tra điều kiện Operation0010 Confirmed. */
         _isOperation0010Confirmed: function (sProductionOrder) {
             const oState = this.getView().getModel("confirmationState");
             const mOrders = oState ? oState.getProperty("/confirmedOrders") || {} : {};
             return Boolean(mOrders[String(sProductionOrder || "")]);
         },
 
+        /** Xử lý sự kiện Confirm Operation từ giao diện người dùng. */
         onConfirmOperation: async function (oEvent) {
             this._confirmationContext = oEvent.getSource().getBindingContext();
 
@@ -213,12 +230,14 @@ sap.ui.define([
             this._confirmationDialog.open();
         },
 
+        /** Xử lý sự kiện Close Operation Confirmation từ giao diện người dùng. */
         onCloseOperationConfirmation: function () {
             if (this._confirmationDialog) {
                 this._confirmationDialog.close();
             }
         },
 
+        /** Xử lý sự kiện Submit Operation Confirmation từ giao diện người dùng. */
         onSubmitOperationConfirmation: async function () {
             const oContext = this._confirmationContext;
             if (!oContext) {
@@ -306,24 +325,108 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Release từ giao diện người dùng. */
         onRelease: async function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext();
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext();
+
+            if (!oContext) {
+                MessageBox.error("Production Order context is missing.");
+                return;
+            }
+
             const sProductionOrder = oContext.getProperty("production_order") || "";
+            const sRequestId = oContext.getProperty("request_id") || "";
+
+            if (!sProductionOrder || !sRequestId) {
+                MessageBox.error("Production Order or Request ID is missing.");
+                return;
+            }
+
+            const bConfirmed = await new Promise(function (resolve) {
+                MessageBox.confirm(
+                    "Release Production Order " + sProductionOrder + "?",
+                    {
+                        title: "Release Production Order",
+                        emphasizedAction: MessageBox.Action.OK,
+                        onClose: function (sAction) {
+                            resolve(sAction === MessageBox.Action.OK);
+                        }
+                    }
+                );
+            });
+
+            if (!bConfirmed) {
+                return;
+            }
+
+            oButton.setBusy(true);
 
             try {
-                const oAction = this.getOwnerComponent().getModel().bindContext(
+                const oModel = this.getOwnerComponent().getModel();
+                const oAction = oModel.bindContext(
                     "com.sap.gateway.srvd.zsd_g7_canteen.v0001.ReleaseProductionOrder(...)",
                     oContext
                 );
                 await oAction.execute("$direct");
-                oContext.refresh();
-                MessageBox.success("Production Order " + sProductionOrder + " was released successfully.");
+
+                // Đọc lại bản ghi theo Request ID để không phụ thuộc vào row context
+                // đang được table cache sau khi action vừa hoàn tất.
+                const oPollBinding = oModel.bindList(
+                    "/ProductionOrderRequests",
+                    undefined,
+                    undefined,
+                    [new Filter("request_id", FilterOperator.EQ, sRequestId)],
+                    {
+                        $$groupId: "$direct",
+                        $select: "request_id,production_order,status,bapi_message"
+                    }
+                );
+
+                let sStatus = "";
+                let sMessage = "";
+
+                for (let iAttempt = 0; iAttempt < 8; iAttempt += 1) {
+                    await new Promise(function (resolve) {
+                        setTimeout(resolve, 750);
+                    });
+
+                    oPollBinding.refresh();
+                    const aContexts = await oPollBinding.requestContexts(0, 1);
+
+                    if (aContexts.length > 0) {
+                        sStatus = String(aContexts[0].getProperty("status") || "")
+                            .trim()
+                            .toUpperCase();
+                        sMessage = aContexts[0].getProperty("bapi_message") || "";
+                    }
+
+                    if (sStatus === "RELEASED" || sStatus.includes("ERROR")) {
+                        break;
+                    }
+                }
+
                 this.onRefresh();
+
+                if (sStatus === "RELEASED") {
+                    MessageBox.success(
+                        "Production Order " + sProductionOrder + " was released successfully." +
+                        (sMessage ? "\n\n" + sMessage : "")
+                    );
+                } else {
+                    MessageBox.error(
+                        sMessage ||
+                        "SAP did not return the RELEASED status. Check whether the Production Order is locked."
+                    );
+                }
             } catch (oError) {
                 MessageBox.error(oError.message || "Could not release the Production Order.");
+            } finally {
+                oButton.setBusy(false);
             }
         },
 
+        /** Xử lý sự kiện Post Goods Issue từ giao diện người dùng. */
         onPostGoodsIssue: async function (oEvent) {
             const oButton = oEvent.getSource();
             const oContext = oButton.getBindingContext();
@@ -415,6 +518,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Post Production Goods Receipt từ giao diện người dùng. */
         onPostProductionGoodsReceipt: async function (oEvent) {
             const oButton = oEvent.getSource();
             const oContext = oButton.getBindingContext();
@@ -511,6 +615,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Complete Production Order từ giao diện người dùng. */
         onCompleteProductionOrder: async function (oEvent) {
             const oButton = oEvent.getSource();
             const oContext = oButton.getBindingContext();
@@ -591,6 +696,7 @@ sap.ui.define([
             }
         },
 
+        /** Thực hiện xử lý can Release. */
         canRelease: function (sProductionOrder, sStatus, sMessage) {
             const sNormalizedStatus = String(sStatus || "").trim().toUpperCase();
             const sNormalizedMessage = String(sMessage || "").trim().toUpperCase();
@@ -599,6 +705,7 @@ sap.ui.define([
                 !sNormalizedMessage.includes("ALREADY RELEASED");
         },
 
+        /** Thực hiện xử lý can Post Goods Issue. */
         canPostGoodsIssue: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument) {
             return Boolean(sProductionOrder) &&
                 String(sStatus || "").trim().toUpperCase() === "RELEASED" &&
@@ -606,6 +713,7 @@ sap.ui.define([
                 !sMaterialDocument;
         },
 
+        /** Thực hiện xử lý can Confirm Operation. */
         canConfirmOperation: function (sProductionOrder, sStatus, sGoodsIssueStatus) {
             const sValue = String(sStatus || "").trim().toUpperCase();
             return Boolean(sProductionOrder) &&
@@ -614,6 +722,7 @@ sap.ui.define([
                 !this._isOperation0010Confirmed(sProductionOrder);
         },
 
+        /** Thực hiện xử lý can Post Production Goods Receipt. */
         canPostProductionGoodsReceipt: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument, sReceiptStatus) {
             const sOrderStatus = String(sStatus || "").trim().toUpperCase();
             return Boolean(sProductionOrder) &&
@@ -624,6 +733,7 @@ sap.ui.define([
                 !sMaterialDocument;
         },
 
+        /** Thực hiện xử lý can Complete Production Order. */
         canCompleteProductionOrder: function (sProductionOrder, sStatus, sMaterialDocument, sReceiptStatus, sMessage) {
             const sNormalizedMessage = String(sMessage || "").toUpperCase();
             return Boolean(sProductionOrder) &&
@@ -633,6 +743,7 @@ sap.ui.define([
                 !sNormalizedMessage.includes("TECHNICALLY COMPLETE");
         },
 
+        /** Đọc và trả về Next Action phục vụ xử lý nội bộ. */
         _getNextAction: function (
             sProductionOrder,
             sStatus,
@@ -672,10 +783,12 @@ sap.ui.define([
             return "";
         },
 
+        /** Thực hiện xử lý has Next Action. */
         hasNextAction: function () {
             return Boolean(this._getNextAction.apply(this, arguments));
         },
 
+        /** Định dạng Next Action Text trước khi hiển thị trên giao diện. */
         formatNextActionText: function () {
             const mText = {
                 RELEASE: "Release Order",
@@ -687,6 +800,7 @@ sap.ui.define([
             return mText[this._getNextAction.apply(this, arguments)] || "";
         },
 
+        /** Định dạng Next Action Icon trước khi hiển thị trên giao diện. */
         formatNextActionIcon: function () {
             const mIcon = {
                 RELEASE: "sap-icon://play",
@@ -698,6 +812,7 @@ sap.ui.define([
             return mIcon[this._getNextAction.apply(this, arguments)] || "";
         },
 
+        /** Xử lý sự kiện Execute Next Step từ giao diện người dùng. */
         onExecuteNextStep: function (oEvent) {
             const oContext = oEvent.getSource().getBindingContext();
             if (!oContext) {
@@ -727,6 +842,7 @@ sap.ui.define([
             }
         },
 
+        /** Định dạng Workflow Progress trước khi hiển thị trên giao diện. */
         formatWorkflowProgress: function (sProductionOrder, sStatus, sGoodsIssueStatus, sGoodsReceiptStatus) {
             const sOrderStatus = String(sStatus || "").trim().toUpperCase();
             const bReleased = Boolean(sProductionOrder) &&
@@ -758,6 +874,7 @@ sap.ui.define([
             }).join("   ");
         },
 
+        /** Định dạng Friendly Order Status trước khi hiển thị trên giao diện. */
         formatFriendlyOrderStatus: function (sStatus) {
             const sValue = String(sStatus || "").trim().toUpperCase();
             const mStatus = {
@@ -772,20 +889,24 @@ sap.ui.define([
             return mStatus[sValue] || sStatus || "Unknown";
         },
 
+        /** Định dạng Release Button Type trước khi hiển thị trên giao diện. */
         formatReleaseButtonType: function (sProductionOrder, sStatus, sMessage) {
             return this.canRelease(sProductionOrder, sStatus, sMessage) ? "Emphasized" : "Default";
         },
 
+        /** Định dạng Goods Issue Button Type trước khi hiển thị trên giao diện. */
         formatGoodsIssueButtonType: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument) {
             return this.canPostGoodsIssue(sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument)
                 ? "Accept" : "Default";
         },
 
+        /** Định dạng Confirmation Button Type trước khi hiển thị trên giao diện. */
         formatConfirmationButtonType: function (sProductionOrder, sStatus, sGoodsIssueStatus) {
             return this.canConfirmOperation(sProductionOrder, sStatus, sGoodsIssueStatus)
                 ? "Emphasized" : "Default";
         },
 
+        /** Định dạng Goods Receipt Button Type trước khi hiển thị trên giao diện. */
         formatGoodsReceiptButtonType: function (sProductionOrder, sStatus, sGoodsIssueStatus, sMaterialDocument, sReceiptStatus) {
             return this.canPostProductionGoodsReceipt(
                 sProductionOrder,
@@ -796,6 +917,7 @@ sap.ui.define([
             ) ? "Accept" : "Default";
         },
 
+        /** Định dạng Complete Button Type trước khi hiển thị trên giao diện. */
         formatCompleteButtonType: function (sProductionOrder, sStatus, sMaterialDocument, sReceiptStatus, sMessage) {
             return this.canCompleteProductionOrder(
                 sProductionOrder,
@@ -806,6 +928,7 @@ sap.ui.define([
             ) ? "Accept" : "Default";
         },
 
+        /** Định dạng Next Step trước khi hiển thị trên giao diện. */
         formatNextStep: function (sProductionOrder, sStatus, sGoodsIssueStatus, sGoodsReceiptStatus) {
             const sValue = String(sStatus || "").toUpperCase();
             if (!sProductionOrder) { return "Create Production Order"; }
@@ -827,6 +950,7 @@ sap.ui.define([
             return "Review Order";
         },
 
+        /** Định dạng Next Step State trước khi hiển thị trên giao diện. */
         formatNextStepState: function (sProductionOrder, sStatus) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sValue === "COMPLETED") { return "Success"; }
@@ -834,14 +958,17 @@ sap.ui.define([
             return sProductionOrder ? "Information" : "Warning";
         },
 
+        /** Định dạng Confirmation Type trước khi hiển thị trên giao diện. */
         formatConfirmationType: function (sFinalConfirmation) {
             return String(sFinalConfirmation || "").toUpperCase() === "X" ? "Final" : "Partial";
         },
 
+        /** Định dạng Production Source trước khi hiển thị trên giao diện. */
         formatProductionSource: function (sPlannedOrder) {
             return sPlannedOrder ? "From MRP" : "Manual";
         },
 
+        /** Định dạng Confirmation State trước khi hiển thị trên giao diện. */
         formatConfirmationState: function (sStatus) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sValue === "CONFIRMED" || sValue === "SUCCESS") {
@@ -853,6 +980,7 @@ sap.ui.define([
             return "Warning";
         },
 
+        /** Định dạng State trước khi hiển thị trên giao diện. */
         formatState: function (sStatus) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sValue === "CREATED" || sValue === "RELEASED" || sValue === "GOODS_ISSUED" ||
@@ -865,6 +993,7 @@ sap.ui.define([
             return "Warning";
         },
 
+        /** Định dạng Goods Issue State trước khi hiển thị trên giao diện. */
         formatGoodsIssueState: function (sStatus) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sValue === "POSTED") {
@@ -876,6 +1005,7 @@ sap.ui.define([
             return "None";
         },
 
+        /** Định dạng Goods Receipt State trước khi hiển thị trên giao diện. */
         formatGoodsReceiptState: function (sStatus) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sValue === "POSTED") {
@@ -887,10 +1017,12 @@ sap.ui.define([
             return "None";
         },
 
+        /** Định dạng Highlight trước khi hiển thị trên giao diện. */
         formatHighlight: function (sStatus) {
             return this.formatState(sStatus);
         },
 
+        /** Định dạng Date Time trước khi hiển thị trên giao diện. */
         formatDateTime: function (vDate) {
             if (!vDate) {
                 return "-";
@@ -899,6 +1031,7 @@ sap.ui.define([
             return Number.isNaN(oDate.getTime()) ? String(vDate) : oDate.toLocaleString("vi-VN");
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             const sPreviousHash = History.getInstance().getPreviousHash();
             if (sPreviousHash !== undefined) {

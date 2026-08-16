@@ -1,3 +1,7 @@
+/*
+ * Controller DailyFinishedGoodsIssue.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -8,6 +12,7 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.DailyFinishedGoodsIssue", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             const oToday = new Date();
             const sToday = this._formatDate(oToday);
@@ -34,6 +39,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Định dạng Date trước khi hiển thị trên giao diện. */
         _formatDate: function (oDate) {
             return [
                 oDate.getFullYear(),
@@ -42,10 +48,12 @@ sap.ui.define([
             ].join("-");
         },
 
+        /** Hàm nội bộ thực hiện compact Date. */
         _compactDate: function (sDate) {
             return String(sDate || "").replaceAll("-", "");
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -63,6 +71,7 @@ sap.ui.define([
             this.onPreview();
         },
 
+        /** Đọc Objects từ backend. */
         _requestObjects: async function (sPath, mParameters, aFilters) {
             const oModel = this.getOwnerComponent().getModel();
             const oBinding = oModel.bindList(
@@ -78,6 +87,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Preview từ giao diện người dùng. */
         onPreview: async function () {
             const oState = this.getView().getModel("dailyGI");
             const sSalesDate = oState.getProperty("/salesDate");
@@ -174,6 +184,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Post Goods Issue từ giao diện người dùng. */
         onPostGoodsIssue: async function () {
             const oState = this.getView().getModel("dailyGI");
             const aItems = oState.getProperty("/items") || [];
@@ -270,12 +281,14 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Material Selection Change từ giao diện người dùng. */
         onMaterialSelectionChange: function () {
             const iSelectedCount = this.byId("dailyFinishedGoodsIssueTable")
                 .getSelectedItems().length;
             this.getView().getModel("dailyGI").setProperty("/selectedCount", iSelectedCount);
         },
 
+        /** Định dạng Quantity trước khi hiển thị trên giao diện. */
         formatQuantity: function (vQuantity) {
             const fQuantity = Number(vQuantity || 0);
             return fQuantity.toLocaleString("vi-VN", {
@@ -284,10 +297,12 @@ sap.ui.define([
             });
         },
 
+        /** Định dạng Remaining State trước khi hiển thị trên giao diện. */
         formatRemainingState: function (vRemaining) {
             return Number(vRemaining || 0) < 0 ? "Error" : "Success";
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             this.getOwnerComponent().getRouter().navTo("RouteStaffDashboard", {}, true);
         }

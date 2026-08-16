@@ -1,3 +1,7 @@
+/*
+ * Controller Login.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -8,12 +12,14 @@ sap.ui.define([
 
     var LOGIN_ACTION = "/Users/com.sap.gateway.srvd.zsd_g7_canteen.v0001.login(...)";
 
+    /** Chuẩn hóa payload đăng nhập để hỗ trợ các dạng response khác nhau từ OData action. */
     function getLoginResult(oResult) {
         if (Array.isArray(oResult)) { return oResult[0] || {}; }
         if (oResult && Array.isArray(oResult.value)) { return oResult.value[0] || {}; }
         return oResult || {};
     }
 
+    /** Đọc giá trị đầu tiên tồn tại trong danh sách tên field tương thích. */
     function getValue(oResult, aNames) {
         var sName = aNames.find(function (sCandidate) {
             return Object.prototype.hasOwnProperty.call(oResult, sCandidate);
@@ -23,6 +29,7 @@ sap.ui.define([
 
     return Controller.extend("sap490g7fioriapp.controller.Login", {
 
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             var oLoginModel = new JSONModel({
                 username: "",
@@ -40,6 +47,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onLoginRouteMatched, this);
         },
 
+        /** Xử lý sự kiện Login từ giao diện người dùng. */
         onLogin: function () {
             var oView = this.getView();
             var oLoginModel = oView.getModel("loginModel");

@@ -1,3 +1,4 @@
+<!-- View ProductionGoodsIssueHistory.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.ProductionGoodsIssueHistory"
   xmlns:mvc="sap.ui.core.mvc"

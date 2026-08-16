@@ -1,3 +1,4 @@
+<!-- View DailyFinishedGoodsIssue.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.DailyFinishedGoodsIssue"
   xmlns:mvc="sap.ui.core.mvc"
@@ -22,6 +23,7 @@
             class="poHistorySubtitle" />
         </VBox>
 
+        <!-- Khu vực nghiệp vụ: Posting Parameters -->
         <Panel headerText="Posting Parameters" class="staffWorkflowPanel">
           <content>
             <HBox wrap="Wrap" alignItems="End" class="sapUiSmallMargin">
@@ -54,6 +56,7 @@
           </content>
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: Sales Summary -->
         <Panel headerText="Sales Summary" class="staffWorkflowPanel">
           <content>
             <HBox wrap="Wrap" class="staffSalesKpiRow">

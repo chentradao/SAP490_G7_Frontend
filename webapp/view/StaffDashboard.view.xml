@@ -1,9 +1,11 @@
+<!-- View StaffDashboard.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.StaffDashboard"
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   displayBlock="true">
 
+  <!-- Trang chính: Staff Operations -->
   <Page title="Staff Operations" backgroundDesign="Standard">
     <headerContent>
       <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
@@ -20,6 +22,7 @@
           <ObjectStatus text="Plant P001" icon="sap-icon://factory" state="Information" inverted="true" />
         </HBox>
 
+        <!-- Khu vực nghiệp vụ: 1. Demand Planning -->
         <Panel class="staffWorkflowPanel" headerText="1. Demand Planning" expandable="false">
           <content>
             <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="staffMenuAction">
@@ -35,6 +38,7 @@
           </content>
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: 2. Raw Material Replenishment -->
         <Panel class="staffWorkflowPanel" headerText="2. Raw Material Replenishment" expandable="false">
           <content>
             <Text
@@ -78,6 +82,7 @@
           </content>
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: 3. Finished Goods Production -->
         <Panel class="staffWorkflowPanel" headerText="3. Finished Goods Production" expandable="false">
           <content>
             <Text
@@ -147,6 +152,7 @@
           </content>
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: 5. Revenue and Purchasing Performance -->
         <Panel class="staffWorkflowPanel" headerText="5. Revenue and Purchasing Performance" expandable="false">
           <content>
             <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="staffFinanceToolbar sapUiSmallMarginBottom">

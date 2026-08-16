@@ -1,3 +1,4 @@
+<!-- View ProductionOrderHistory.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.ProductionOrderHistory"
   xmlns:mvc="sap.ui.core.mvc"
@@ -107,6 +108,7 @@
     </content>
 
     <dependents>
+      <!-- Hộp thoại: Production Order Details -->
       <Dialog id="productionDetailsDialog" title="Production Order Details" contentWidth="48rem" stretchOnPhone="true">
         <content>
           <VBox class="poDetailsContent">

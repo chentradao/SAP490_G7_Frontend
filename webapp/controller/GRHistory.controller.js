@@ -1,3 +1,7 @@
+/*
+ * Controller GRHistory.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/routing/History",
@@ -8,11 +12,13 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.GRHistory", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getOwnerComponent().getRouter().getRoute("RouteGRHistory")
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -32,6 +38,7 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        /** Xử lý sự kiện Search từ giao diện người dùng. */
         onSearch: function (oEvent) {
             const sQuery = (
                 oEvent.getParameter("query") ||
@@ -41,11 +48,13 @@ sap.ui.define([
             this._applyFilters(sQuery);
         },
 
+        /** Xử lý sự kiện Status Change từ giao diện người dùng. */
         onStatusChange: function () {
             const oSearch = this.byId("grHistorySearch");
             this._applyFilters(oSearch ? oSearch.getValue().trim() : "");
         },
 
+        /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function (sQuery) {
             const oTable = this.byId("grHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -79,6 +88,7 @@ sap.ui.define([
                 : []);
         },
 
+        /** Xử lý sự kiện Clear Filters từ giao diện người dùng. */
         onClearFilters: function () {
             const oSearch = this.byId("grHistorySearch");
             const oStatus = this.byId("grStatusFilter");
@@ -93,6 +103,7 @@ sap.ui.define([
             this._applyFilters("");
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
             const oTable = this.byId("grHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -101,6 +112,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Retry Goods Receipt từ giao diện người dùng. */
         onRetryGoodsReceipt: async function (oEvent) {
             const oButton = oEvent.getSource();
             const oContext = oButton.getBindingContext();
@@ -155,6 +167,7 @@ sap.ui.define([
             }
         },
 
+        /** Định dạng Date trước khi hiển thị trên giao diện. */
         formatDate: function (vDate) {
             if (!vDate) {
                 return "-";
@@ -173,6 +186,7 @@ sap.ui.define([
             return oDate.toLocaleDateString("vi-VN");
         },
 
+        /** Định dạng State trước khi hiển thị trên giao diện. */
         formatState: function (sStatus) {
             if (sStatus === "POSTED") {
                 return "Success";
@@ -183,6 +197,7 @@ sap.ui.define([
             return "Warning";
         },
 
+        /** Định dạng Status Text trước khi hiển thị trên giao diện. */
         formatStatusText: function (sStatus) {
             const sValue = String(sStatus || "").trim().toUpperCase();
             const mText = {
@@ -193,10 +208,12 @@ sap.ui.define([
             return mText[sValue] || sStatus || "Waiting for SAP";
         },
 
+        /** Định dạng Highlight trước khi hiển thị trên giao diện. */
         formatHighlight: function (sStatus) {
             return this.formatState(sStatus);
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             const sPreviousHash = History.getInstance().getPreviousHash();
             if (sPreviousHash !== undefined) {

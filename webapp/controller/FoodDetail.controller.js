@@ -1,3 +1,7 @@
+/*
+ * Controller FoodDetail.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/Filter",
@@ -10,11 +14,13 @@ sap.ui.define([
 
     return Controller.extend("sap490g7fioriapp.controller.FoodDetail", {
 
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteFoodDetail").attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function (oEvent) {
             var oSession = this.getOwnerComponent().getModel("session");
             if (!sessionUtils.isLoggedIn(oSession) || !sessionUtils.isCustomer(oSession)) {
@@ -31,10 +37,12 @@ sap.ui.define([
             });
         },
 
+        /** Kiểm tra điều kiện Active Food. */
         _isActiveFood: function (sStatus) {
             return ["A", "ACTIVE", "1"].indexOf(String(sStatus || "").toUpperCase()) !== -1;
         },
 
+        /** Đọc và trả về Current Cart Quantity phục vụ xử lý nội bộ. */
         _getCurrentCartQuantity: function (sCartId, sFoodId) {
             if (!sCartId || !sFoodId) {
                 return Promise.resolve(0);
@@ -53,10 +61,12 @@ sap.ui.define([
             });
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             this.getOwnerComponent().getRouter().navTo("RouteFoodList");
         },
 
+        /** Định dạng Price trước khi hiển thị trên giao diện. */
         formatPrice: function (vPrice) {
             if (vPrice === null || vPrice === undefined || vPrice === "") {
                 return "";
@@ -71,6 +81,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Open Cart từ giao diện người dùng. */
         onOpenCart: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             var oContext = this.getView().getBindingContext();
@@ -82,6 +93,7 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteCart", {}, true);
         },
 
+        /** Xử lý sự kiện Add To Cart từ giao diện người dùng. */
         onAddToCart: function () {
             var oContext = this.getView().getBindingContext();
             if (!oContext) {

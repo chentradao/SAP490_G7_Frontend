@@ -1,4 +1,6 @@
+<!-- View Checkout.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View controllerName="sap490g7fioriapp.controller.Checkout" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" displayBlock="true">
+    <!-- Trang chính: Checkout -->
     <Page title="Checkout" showNavButton="true" navButtonPress=".onBack">
         <content>
             <HBox width="100%" class="sapUiMediumMargin" renderType="Div">
@@ -56,6 +58,7 @@
                     </VBox>
                 </VBox>
                 <VBox width="35%" alignItems="Center" class="sapUiSmallPaddingTop">
+                    <!-- Khu vực nghiệp vụ: PayOS QR Code -->
                     <Panel headerText="PayOS QR Code" width="100%">
                         <VBox alignItems="Center" class="sapUiMediumMargin">
                             <BusyIndicator visible="{qrModel>/loading}" class="sapUiMediumMarginBottom" />

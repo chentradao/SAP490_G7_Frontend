@@ -1,3 +1,4 @@
+<!-- Fragment ProductionOperationConfirmation.fragment: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <core:FragmentDefinition
   xmlns="sap.m"
   xmlns:core="sap.ui.core"

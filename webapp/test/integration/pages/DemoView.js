@@ -1,3 +1,6 @@
+/*
+ * Test DemoView: định nghĩa dữ liệu chuẩn bị, thao tác mô phỏng và assertion cho luồng UI5 tương ứng.
+ */
 sap.ui.define([
 	"sap/ui/test/Opa5"
 ], function (Opa5) {

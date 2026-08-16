@@ -1,3 +1,4 @@
+<!-- View GRHistory.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.GRHistory"
   xmlns:mvc="sap.ui.core.mvc"

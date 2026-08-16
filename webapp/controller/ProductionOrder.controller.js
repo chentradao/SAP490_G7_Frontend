@@ -1,3 +1,7 @@
+/*
+ * Controller ProductionOrder.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -8,6 +12,7 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.ProductionOrder", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getView().setModel(new JSONModel({
                 bom: [],
@@ -30,6 +35,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -45,32 +51,31 @@ sap.ui.define([
             }
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             this.getOwnerComponent().getRouter().navTo("RouteStaffDashboard", {}, true);
         },
 
+        /** Xử lý sự kiện Open History từ giao diện người dùng. */
         onOpenHistory: function () {
             this.getOwnerComponent().getRouter().navTo("RouteProductionOrderHistory");
         },
 
-        onSyncFoodStock: async function () {
+        /** Xử lý sự kiện Refresh FG Stock từ giao diện người dùng. */
+        onRefreshFGStock: async function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(
                 oSession && oSession.getProperty("/role") || ""
             ).toUpperCase();
 
             if (sRole !== "ADMIN") {
-                MessageBox.warning("Only ADMIN can synchronize Food2 stock.");
+                MessageBox.warning("Only ADMIN can refresh finished-goods stock.");
                 return;
             }
 
-            const oButton = this.byId("syncFoodStockButton");
-            const oModel = this.getOwnerComponent().getModel();
-            const oAction = oModel.bindContext(
-                "/Food2/com.sap.gateway.srvd.zsd_g7_canteen.v0001.syncFromFG01(...)",
-                undefined,
-                { $$groupId: "$direct" }
-            );
+            const oButton = this.byId("refreshFGStockButton");
+            const oTable = this.byId("fgTable");
+            const oBinding = oTable && oTable.getBinding("items");
 
             if (oButton) {
                 oButton.setBusy(true);
@@ -78,18 +83,20 @@ sap.ui.define([
             }
 
             try {
-                await oAction.execute();
-                oModel.refresh();
+                if (!oBinding) {
+                    throw new Error("Finished-goods stock binding is not available.");
+                }
+
+                oBinding.refresh();
+                await oBinding.requestContexts(0, 15);
                 this.getView().getModel("ui").setProperty(
                     "/lastStockSyncText",
-                    "Last synchronized: " + new Date().toLocaleString("vi-VN")
+                    "Last refreshed: " + new Date().toLocaleString("vi-VN")
                 );
-                MessageBox.success(
-                    "Food2 stock was synchronized from P001/FG01 successfully."
-                );
+                MessageBox.success("Finished-goods stock from P001/FG01 was refreshed.");
             } catch (oError) {
-                console.error("Food2 stock synchronization failed:", oError);
-                MessageBox.error("Unable to synchronize Food2 stock from P001/FG01.");
+                console.error("Finished-goods stock refresh failed:", oError);
+                MessageBox.error(oError.message || "Unable to refresh stock from P001/FG01.");
             } finally {
                 if (oButton) {
                     oButton.setBusy(false);
@@ -98,24 +105,25 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện FG Selected từ giao diện người dùng. */
         onFGSelected: async function (oEvent) {
             const oItem = oEvent.getParameter("listItem");
             const oData = oItem.getBindingContext().getObject();
             const oUi = this.getView().getModel("ui");
 
-            oUi.setProperty("/selectedMaterial", oData.MaterialNumber);
+            oUi.setProperty("/selectedMaterial", oData.Material);
             oUi.setProperty("/selectedDescription", oData.MaterialDescription || "");
-            oUi.setProperty("/selectedStock", oData.AvailableStock || "0");
-            oUi.setProperty("/selectedUnit", oData.BaseUnit || "");
+            oUi.setProperty("/selectedStock", oData.StockQuantity || "0");
+            oUi.setProperty("/selectedUnit", oData.MaterialBaseUnit || "EA");
             oUi.setProperty("/selectedPlant", oData.Plant || "P001");
-            oUi.setProperty("/selectedStorage", oData.StorageLocation || "FG01");
+            oUi.setProperty("/selectedStorage", "FG01");
             oUi.setProperty("/bom", []);
             oUi.setProperty("/canCreate", false);
 
             try {
                 const oModel = this.getView().getModel();
                 const oBinding = oModel.bindList("/FinishedGoodsBOM", null, null, [
-                    new Filter("FinishedMaterial", FilterOperator.EQ, oData.MaterialNumber),
+                    new Filter("FinishedMaterial", FilterOperator.EQ, oData.Material),
                     new Filter("Plant", FilterOperator.EQ, oData.Plant || "P001")
                 ]);
                 const aContexts = await oBinding.requestContexts(0, 100);
@@ -139,12 +147,14 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Order Quantity Change từ giao diện người dùng. */
         onOrderQuantityChange: function (oEvent) {
             const sValue = oEvent.getParameter("value");
             this.getView().getModel("ui").setProperty("/orderQuantity", sValue);
             this._recalculateMaterialAvailability();
         },
 
+        /** Hàm nội bộ thực hiện recalculate Material Availability. */
         _recalculateMaterialAvailability: function () {
             const oUi = this.getView().getModel("ui");
             const nOrderQuantity = Number(oUi.getProperty("/orderQuantity"));
@@ -182,6 +192,7 @@ sap.ui.define([
             oUi.setProperty("/canCreate", Boolean(aCalculatedBom.length && bValidQuantity && !aShortages.length));
         },
 
+        /** Định dạng Quantity trước khi hiển thị trên giao diện. */
         _formatQuantity: function (vQuantity) {
             return Number(vQuantity || 0).toLocaleString("en-US", {
                 minimumFractionDigits: 0,
@@ -189,6 +200,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Create Production Order từ giao diện người dùng. */
         onCreateProductionOrder: async function () {
             const oUi = this.getView().getModel("ui");
             const sMaterial = oUi.getProperty("/selectedMaterial");

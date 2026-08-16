@@ -1,9 +1,11 @@
+<!-- View MyOrders.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
     controllerName="sap490g7fioriapp.controller.MyOrders"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
     displayBlock="true">
+    <!-- Trang chính: My Orders -->
     <Page title="My Orders" showNavButton="true" navButtonPress=".onBack">
         <subHeader>
             <Toolbar>
@@ -24,6 +26,7 @@
             </Toolbar>
         </subHeader>
         <content>
+            <!-- Bảng dữ liệu: orderList -->
             <Table id="orderList" items="{orders>/filteredOrders}" noDataText="You do not have any orders yet" class="ordersTable">
                 <columns>
                     <Column width="22%"><Text text="Order ID" /></Column>

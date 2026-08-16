@@ -1,3 +1,7 @@
+/*
+ * Controller StaffDashboard.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -7,6 +11,7 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.StaffDashboard", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getView().setModel(new JSONModel({
                 lowStockCount: 0,
@@ -32,6 +37,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -50,6 +56,7 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: async function () {
             const oModel = this.getOwnerComponent().getModel();
             const oDashboard = this.getView().getModel("dashboard");
@@ -137,6 +144,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Finance Period Change từ giao diện người dùng. */
         onFinancePeriodChange: function (oEvent) {
             this.getView().getModel("dashboard").setProperty(
                 "/financePeriod",
@@ -145,6 +153,7 @@ sap.ui.define([
             this._applyFinancePeriod();
         },
 
+        /** Hàm nội bộ thực hiện apply Finance Period. */
         _applyFinancePeriod: function () {
             const oDashboard = this.getView().getModel("dashboard");
             const sPeriod = oDashboard.getProperty("/financePeriod") || "TODAY";
@@ -208,6 +217,7 @@ sap.ui.define([
             );
         },
 
+        /** Đọc và trả về Finance Range phục vụ xử lý nội bộ. */
         _getFinanceRange: function (sPeriod) {
             const oToday = new Date();
             const oStart = new Date(oToday.getFullYear(), oToday.getMonth(), oToday.getDate());
@@ -241,6 +251,7 @@ sap.ui.define([
             };
         },
 
+        /** Hàm nội bộ thực hiện normalize Business Date. */
         _normalizeBusinessDate: function (vDate) {
             if (vDate instanceof Date && !Number.isNaN(vDate.getTime())) {
                 return [
@@ -255,24 +266,39 @@ sap.ui.define([
                 sDate;
         },
 
+        /** Hàm nội bộ thực hiện nav To. */
         _navTo: function (sRoute) {
             this.getOwnerComponent().getRouter().navTo(sRoute);
         },
 
+        /** Xử lý sự kiện Open PIR Planning từ giao diện người dùng. */
         onOpenPIRPlanning: function () { this._navTo("RoutePIRPlanning"); },
+        /** Xử lý sự kiện Open MRP Results từ giao diện người dùng. */
         onOpenMRPResults: function () { this._navTo("RouteMRPResults"); },
+        /** Xử lý sự kiện Open Material Stock từ giao diện người dùng. */
         onOpenMaterialStock: function () { this._navTo("RouteMaterialStock"); },
+        /** Xử lý sự kiện Open PO History từ giao diện người dùng. */
         onOpenPOHistory: function () { this._navTo("RoutePOHistory"); },
+        /** Xử lý sự kiện Open GR History từ giao diện người dùng. */
         onOpenGRHistory: function () { this._navTo("RouteGRHistory"); },
+        /** Xử lý sự kiện Open Production Order từ giao diện người dùng. */
         onOpenProductionOrder: function () { this._navTo("RouteProductionOrder"); },
+        /** Xử lý sự kiện Open Production History từ giao diện người dùng. */
         onOpenProductionHistory: function () { this._navTo("RouteProductionOrderHistory"); },
+        /** Xử lý sự kiện Open Goods Issue History từ giao diện người dùng. */
         onOpenGoodsIssueHistory: function () { this._navTo("RouteProductionGoodsIssueHistory"); },
+        /** Xử lý sự kiện Open Goods Receipt History từ giao diện người dùng. */
         onOpenGoodsReceiptHistory: function () { this._navTo("RouteProductionGoodsReceiptHistory"); },
+        /** Xử lý sự kiện Open Daily Finished Goods Issue từ giao diện người dùng. */
         onOpenDailyFinishedGoodsIssue: function () { this._navTo("RouteDailyFinishedGoodsIssue"); },
+        /** Xử lý sự kiện Open Daily Finished Goods Issue History từ giao diện người dùng. */
         onOpenDailyFinishedGoodsIssueHistory: function () { this._navTo("RouteDailyFinishedGoodsIssueHistory"); },
+        /** Xử lý sự kiện Open Food Status từ giao diện người dùng. */
         onOpenFoodStatus: function () { this._navTo("RouteFoodStatus"); },
+        /** Xử lý sự kiện Open Revenue Analytics từ giao diện người dùng. */
         onOpenRevenueAnalytics: function () { this._navTo("RouteRevenueAnalytics"); },
 
+        /** Xử lý sự kiện Logout từ giao diện người dùng. */
         onLogout: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             sessionUtils.resetSession(oSession);

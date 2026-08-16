@@ -1,3 +1,6 @@
+/*
+ * Module cartUtils: tập trung logic model/tiện ích dùng lại để controller không lặp nghiệp vụ.
+ */
 sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator"
@@ -7,6 +10,7 @@ sap.ui.define([
     var CART_ENTITY_SET = "/Carts";
     var CART_ITEM_ENTITY_SET = "/CartItems";
 
+    /** Chuẩn hóa giá vật liệu về đơn giá hợp lệ dùng trong giỏ hàng. */
     function getCartUnitPrice(vMaterialPrice) {
         if (typeof vMaterialPrice === "number") {
             return Number.isFinite(vMaterialPrice) ? vMaterialPrice : 0;
@@ -33,6 +37,7 @@ sap.ui.define([
     // Tim ItemNo ke tiep cho 1 cart: doc toan bo item hien co,
     // lay so lon nhat + 1, dinh dang du 6 chu so (numc(6)).
     // ------------------------------------------------------------
+    /** Đọc các dòng hiện có để xác định số thứ tự tiếp theo trong giỏ hàng. */
     function getNextItemNo(oODataModel, sCartId) {
         var oListBinding = oODataModel.bindList(CART_ITEM_ENTITY_SET, undefined, undefined, [
             new Filter("CartID", FilterOperator.EQ, sCartId)
@@ -54,6 +59,7 @@ sap.ui.define([
     }
 
     return {
+        /** Thực hiện xử lý sync Active Cart. */
         syncActiveCart: function (oCartModel, sUserId, sCartId) {
             var oCartState = oCartModel.getProperty("/carts") || {};
             var sActiveCartId = sCartId || (sUserId ? "CART-" + sUserId : null);
@@ -82,6 +88,7 @@ sap.ui.define([
             return oUserCart;
         },
 
+        /** Thực hiện xử lý add Item To User Cart. */
         addItemToUserCart: function (oCartModel, sUserId, sCartId, oMaterial) {
             var oUserCart = this.syncActiveCart(oCartModel, sUserId, sCartId);
             var aItems = (oUserCart.items || []).slice();
@@ -110,6 +117,7 @@ sap.ui.define([
             return aItems;
         },
 
+        /** Thực hiện xử lý ensure Cart For User. */
         ensureCartForUser: function (oODataModel, oSessionModel, sUserId) {
             if (!oODataModel || !oSessionModel || !sUserId) {
                 return Promise.resolve(null);
@@ -152,6 +160,7 @@ sap.ui.define([
             });
         },
 
+        /** Thực hiện xử lý add Material To Cart. */
         addMaterialToCart: function (oODataModel, oSessionModel, sUserId, oMaterial, iQuantity) {
             var iQtyToAdd = Number(iQuantity) > 0 ? Number(iQuantity) : 1;
 
@@ -211,6 +220,7 @@ sap.ui.define([
             });
         },
 
+        /** Thực hiện xử lý clear Cart Items. */
         clearCartItems: function (oODataModel, oSessionModel, sCartId) {
             if (!oODataModel || !sCartId) {
                 return Promise.resolve(0);
@@ -235,6 +245,7 @@ sap.ui.define([
             });
         },
 
+        /** Thực hiện xử lý refresh Cart Count. */
         refreshCartCount: function (oODataModel, oSessionModel, sCartId) {
     if (!oODataModel || !oSessionModel || !sCartId) {
         if (oSessionModel) {

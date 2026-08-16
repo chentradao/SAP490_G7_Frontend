@@ -1,3 +1,7 @@
+/*
+ * Controller CashierOrders.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -10,6 +14,7 @@ sap.ui.define([
 
     return Controller.extend("sap490g7fioriapp.controller.CashierOrders", {
 
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             var oRouter = this.getOwnerComponent().getRouter();
             if (oRouter && oRouter.getRoute) {
@@ -34,6 +39,7 @@ sap.ui.define([
             this._startAutoRefresh();
         },
 
+        /** Xử lý sự kiện Exit từ giao diện người dùng. */
         onExit: function () {
             if (this._iAutoRefreshTimer) {
                 clearInterval(this._iAutoRefreshTimer);
@@ -41,6 +47,7 @@ sap.ui.define([
             }
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             if (!this._canAccessOrderManagement()) {
                 this._clearOrders();
@@ -54,11 +61,13 @@ sap.ui.define([
             this._loadOrderEntitySet();
         },
 
+        /** Hàm nội bộ thực hiện can Access Order Management. */
         _canAccessOrderManagement: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             return sessionUtils.isLoggedIn(oSession) && sessionUtils.isStaffOrManager(oSession);
         },
 
+        /** Hàm nội bộ thực hiện clear Orders. */
         _clearOrders: function () {
             var oOrdersModel = this.getOwnerComponent().getModel("orders");
             if (oOrdersModel) {
@@ -69,6 +78,7 @@ sap.ui.define([
             }
         },
 
+        /** Tải Order Entity Set từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadOrderEntitySet: function () {
             var oModel = this.getOwnerComponent().getModel();
             oModel.getMetaModel().requestObject("/$EntityContainer").then(function (oContainer) {
@@ -89,6 +99,7 @@ sap.ui.define([
             }.bind(this));
         },
 
+        /** Hàm nội bộ thực hiện start Auto Refresh. */
         _startAutoRefresh: function () {
             if (this._iAutoRefreshTimer) {
                 clearInterval(this._iAutoRefreshTimer);
@@ -99,6 +110,7 @@ sap.ui.define([
             }.bind(this), AUTO_REFRESH_INTERVAL_MS);
         },
 
+        /** Hàm nội bộ thực hiện refresh Orders. */
         _refreshOrders: function (bSilent) {
             if (!this._canAccessOrderManagement()) {
                 this._clearOrders();
@@ -134,6 +146,7 @@ sap.ui.define([
                 }.bind(this));
         },
 
+        /** Tải All Orders From Backend từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadAllOrdersFromBackend: function () {
             var oModel = this.getOwnerComponent().getModel();
             var sEntitySet = this._sOrderEntitySet || "Orders";
@@ -148,6 +161,7 @@ sap.ui.define([
             }.bind(this));
         },
 
+        /** Hàm nội bộ thực hiện normalize Order. */
         _normalizeOrder: function (oRow) {
             if (!oRow) { return {}; }
 
@@ -168,17 +182,20 @@ sap.ui.define([
             };
         },
 
+        /** Xử lý sự kiện Search từ giao diện người dùng. */
         onSearch: function (oEvent) {
             this._sSearchQuery = (oEvent.getParameter("newValue") || "").trim().toLowerCase();
             this._applyFilters();
         },
 
+        /** Xử lý sự kiện Quick Status Change từ giao diện người dùng. */
         onQuickStatusChange: function (oEvent) {
             var oItem = oEvent.getParameter("item");
             this._sStatusFilter = oItem ? oItem.getKey() : "ALL";
             this._applyFilters();
         },
 
+        /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function () {
             var oOrdersModel = this.getOwnerComponent().getModel("orders");
             var aOrders = oOrdersModel.getProperty("/orders") || [];
@@ -213,6 +230,7 @@ sap.ui.define([
             oOrdersModel.setProperty("/filteredOrders", aFiltered);
         },
 
+        /** Đọc và trả về Order Timestamp phục vụ xử lý nội bộ. */
         _getOrderTimestamp: function (oOrder) {
             if (!oOrder) { return 0; }
 
@@ -230,6 +248,7 @@ sap.ui.define([
             return Number.isNaN(iTimestamp) ? 0 : iTimestamp;
         },
 
+        /** Đọc và trả về Timestamp Value phục vụ xử lý nội bộ. */
         _getTimestampValue: function (sValue) {
             var oParts = this._parseTimestampParts(sValue);
             if (!oParts) { return 0; }
@@ -238,6 +257,7 @@ sap.ui.define([
             return Number.isNaN(iTimestamp) ? 0 : iTimestamp;
         },
 
+        /** Chuyển đổi Timestamp Parts về kiểu dữ liệu an toàn. */
         _parseTimestampParts: function (sValue) {
             sValue = String(sValue || "").trim();
             if (!sValue) { return null; }
@@ -280,6 +300,7 @@ sap.ui.define([
             };
         },
 
+        /** Hàm nội bộ thực hiện normalize Time For Sort. */
         _normalizeTimeForSort: function (sTime) {
             sTime = String(sTime || "").trim();
             if (!sTime) { return "00:00:00"; }
@@ -315,6 +336,7 @@ sap.ui.define([
             return "00:00:00";
         },
 
+        /** Định dạng Date trước khi hiển thị trên giao diện. */
         formatDate: function (sDate) {
             sDate = String(sDate || "").trim();
             if (!sDate) { return ""; }
@@ -333,6 +355,7 @@ sap.ui.define([
             });
         },
 
+        /** Định dạng Time trước khi hiển thị trên giao diện. */
         formatTime: function (sTime) {
             sTime = String(sTime || "").trim();
             if (!sTime) { return ""; }
@@ -363,6 +386,7 @@ sap.ui.define([
             return sTime;
         },
 
+        /** Định dạng Updated At trước khi hiển thị trên giao diện. */
         formatUpdatedAt: function (sValue) {
             var oParts = this._parseTimestampParts(sValue);
             if (!oParts) { return ""; }
@@ -370,6 +394,7 @@ sap.ui.define([
             return this.formatDate(oParts.date) + " " + this.formatTime(oParts.time);
         },
 
+        /** Định dạng Amount trước khi hiển thị trên giao diện. */
         formatAmount: function (vAmount) {
             return Number(vAmount || 0).toLocaleString("en-US", {
                 minimumFractionDigits: 0,
@@ -377,6 +402,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Order Press từ giao diện người dùng. */
         onOrderPress: function (oEvent) {
             var oContext = oEvent.getSource().getBindingContext("orders");
             var sOrderId = oContext && oContext.getProperty("orderId");
@@ -387,10 +413,12 @@ sap.ui.define([
             }
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
             this._refreshOrders();
         },
 
+        /** Xử lý sự kiện Logout từ giao diện người dùng. */
         onLogout: function () {
             var oSessionModel = this.getOwnerComponent().getModel("session");
             sessionUtils.resetSession(oSessionModel);
@@ -398,6 +426,7 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteLogin", {}, true);
         },
 
+        /** Xử lý sự kiện Back từ giao diện người dùng. */
         onBack: function () {
             this.onLogout();
         }

@@ -1,3 +1,7 @@
+/*
+ * Controller Checkout.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -15,6 +19,7 @@ sap.ui.define([
     var CREATE_CHECKOUT_ACTION = "/Payments/com.sap.gateway.srvd.zsd_g7_canteen.v0001.createCheckout(...)";
     var PAYMENT_STATUS_POLL_INTERVAL_MS = 3000;
 
+    /** Định dạng giá trị tiền trên màn hình checkout. */
     function formatAmount(vAmount) {
         var sValue = String(vAmount === null || vAmount === undefined ? "" : vAmount)
             .trim()
@@ -39,6 +44,7 @@ sap.ui.define([
     }
 
     return Controller.extend("sap490g7fioriapp.controller.Checkout", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getView().setModel(new JSONModel({
                 loading: false, hasQr: false, qrCodeUrl: "", qrPayload: "", qrFallbackUsed: false,
@@ -48,10 +54,12 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Xử lý sự kiện Exit từ giao diện người dùng. */
         onExit: function () {
             this._stopPaymentStatusPolling();
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             this._stopPaymentStatusPolling();
             this._bPaymentSuccessHandled = false;
@@ -85,6 +93,7 @@ sap.ui.define([
             this.onGenerateQr();
         },
 
+        /** Hàm nội bộ thực hiện reset Qr State. */
         _resetQrState: function () {
             var oQrModel = this.getView().getModel("qrModel");
             if (oQrModel) {
@@ -95,6 +104,7 @@ sap.ui.define([
             }
         },
 
+        /** Kiểm tra điều kiện Valid Cart Checkout Data. */
         _isValidCartCheckoutData: function (oOrder) {
             var aItems = oOrder && Array.isArray(oOrder.items) ? oOrder.items : [];
             var fTotal = Number(oOrder && oOrder.totalAmount);
@@ -105,6 +115,7 @@ sap.ui.define([
                 fTotal > 0;
         },
 
+        /** Xử lý sự kiện Back từ giao diện người dùng. */
         onBack: function () {
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
             var sPaymentStatus = String(oCheckoutData && oCheckoutData.getProperty("/paymentStatus") || "").toUpperCase();
@@ -126,6 +137,7 @@ sap.ui.define([
             this._navigateBack();
         },
 
+        /** Hàm nội bộ thực hiện navigate Back. */
         _navigateBack: function () {
             this._stopPaymentStatusPolling();
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
@@ -142,6 +154,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Generate Qr từ giao diện người dùng. */
         onGenerateQr: function () {
             var oQrModel = this.getView().getModel("qrModel");
             var oSession = this.getOwnerComponent().getModel("session");
@@ -212,6 +225,7 @@ sap.ui.define([
             });
         },
 
+        /** Hàm nội bộ thực hiện start Payment Status Polling. */
         _startPaymentStatusPolling: function (sOrderId) {
             if (!sOrderId) {
                 return;
@@ -224,6 +238,7 @@ sap.ui.define([
             }.bind(this), PAYMENT_STATUS_POLL_INTERVAL_MS);
         },
 
+        /** Hàm nội bộ thực hiện stop Payment Status Polling. */
         _stopPaymentStatusPolling: function () {
             if (this._iPaymentStatusTimer) {
                 clearInterval(this._iPaymentStatusTimer);
@@ -231,6 +246,7 @@ sap.ui.define([
             }
         },
 
+        /** Hàm nội bộ thực hiện check Order Payment Status. */
         _checkOrderPaymentStatus: function (sOrderId) {
             var sEscapedOrderId = String(sOrderId || "").replace(/'/g, "''");
             return this.getOwnerComponent().getModel()
@@ -249,6 +265,7 @@ sap.ui.define([
                 });
         },
 
+        /** Hàm nội bộ thực hiện handle Payment Paid. */
         _handlePaymentPaid: function (sOrderId) {
             if (this._bPaymentSuccessHandled) {
                 return;
@@ -267,6 +284,7 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
         },
 
+        /** Hàm nội bộ thực hiện display Pay Os Qr. */
         _displayPayOsQr: function (oPayment) {
             var oQrModel = this.getView().getModel("qrModel");
             var sQrCode = oPayment.QRCode || oPayment.qr_code || "";
@@ -287,6 +305,7 @@ sap.ui.define([
             oQrModel.setProperty("/hasQr", true);
         },
 
+        /** Tải Payment For Order từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadPaymentForOrder: function (sOrderId) {
             var oQrModel = this.getView().getModel("qrModel");
             oQrModel.setData({ loading: true, hasQr: false, qrCodeUrl: "", qrPayload: "", qrFallbackUsed: false,
@@ -318,6 +337,7 @@ sap.ui.define([
             });
         },
 
+        /** Tải Payment Gateway từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadPaymentGateway: function (sPaymentId) {
             var oQrModel = this.getView().getModel("qrModel");
             return this.getOwnerComponent().getModel().bindList("/PaymentGateway", undefined, [
@@ -338,12 +358,14 @@ sap.ui.define([
             });
         },
 
+        /** Đọc và trả về Qr Url phục vụ xử lý nội bộ. */
         _getQrUrl: function (sPayload, bFallback) {
             return bFallback ?
                 "https://quickchart.io/qr?size=220&text=" + encodeURIComponent(sPayload) + "&_=" + Date.now() :
                 "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(sPayload) + "&_=" + Date.now();
         },
 
+        /** Xử lý sự kiện Regenerate Qr từ giao diện người dùng. */
         onRegenerateQr: function () {
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
             var sOrderId = oCheckoutData && oCheckoutData.getProperty("/orderId");
@@ -352,6 +374,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Qr Image Error từ giao diện người dùng. */
         onQrImageError: function () {
             var oQrModel = this.getView().getModel("qrModel");
             var sPayload = oQrModel.getProperty("/qrPayload");
@@ -364,6 +387,7 @@ sap.ui.define([
             oQrModel.setProperty("/statusText", "Could not load the QR image. Please open the PayOS payment page.");
         },
 
+        /** Tải Checkout Order từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadCheckoutOrder: function (sUserId, sOrderId) {
             var oModel = this.getOwnerComponent().getModel();
             var pOrder;
@@ -379,6 +403,7 @@ sap.ui.define([
             }.bind(this));
         },
 
+        /** Đọc và trả về Latest Order For User phục vụ xử lý nội bộ. */
         _getLatestOrderForUser: function (sUserId) {
             return this.getOwnerComponent().getModel().bindList("/Orders", undefined, [
                 new Sorter("CreatedAt", true),
@@ -393,6 +418,7 @@ sap.ui.define([
             });
         },
 
+        /** Hàm nội bộ thực hiện set Checkout Order. */
         _setCheckoutOrder: function (oOrder) {
             var aItems = Array.isArray(oOrder._Items) ? oOrder._Items : [];
             var oCurrentModel = this.getOwnerComponent().getModel("checkoutData");
@@ -431,6 +457,7 @@ sap.ui.define([
             this._loadCheckoutFoodDetails(aCheckoutItems);
         },
 
+        /** Tải Checkout Food Details từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
         _loadCheckoutFoodDetails: function (aItems) {
             var oModel = this.getOwnerComponent().getModel();
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
@@ -458,6 +485,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Save Note từ giao diện người dùng. */
         onSaveNote: function () {
             var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
             var sOrderId = oCheckoutData && oCheckoutData.getProperty("/orderId");
@@ -486,6 +514,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Open Checkout Url từ giao diện người dùng. */
         onOpenCheckoutUrl: function () {
             var sCheckoutUrl = this.getView().getModel("qrModel").getProperty("/checkoutUrl");
             if (sCheckoutUrl) { window.open(sCheckoutUrl, "_blank", "noopener,noreferrer"); }

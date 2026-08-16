@@ -1,3 +1,4 @@
+<!-- View POCreate.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.POCreate"
   xmlns:mvc="sap.ui.core.mvc"
@@ -5,6 +6,7 @@
   xmlns:core="sap.ui.core"
   xmlns:f="sap.ui.layout.form">
 
+  <!-- Trang chính: Raw Material Stock -->
   <Page title="Raw Material Stock" showNavButton="true" navButtonPress="onNavBack">
     <content>
       <VBox class="sapUiMediumMargin">

@@ -1,3 +1,7 @@
+/*
+ * Controller ProductionGoodsIssueHistory.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/routing/History",
@@ -8,11 +12,13 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.ProductionGoodsIssueHistory", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getOwnerComponent().getRouter().getRoute("RouteProductionGoodsIssueHistory")
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -32,11 +38,13 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        /** Xử lý sự kiện Search từ giao diện người dùng. */
         onSearch: function (oEvent) {
             const sQuery = (oEvent.getParameter("query") || oEvent.getParameter("newValue") || "").trim();
             this._applyFilters(sQuery);
         },
 
+        /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function (sQuery) {
             const oTable = this.byId("goodsIssueHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -63,6 +71,7 @@ sap.ui.define([
             oBinding.filter(new Filter({ filters: aFilters, and: true }));
         },
 
+        /** Xử lý sự kiện Clear từ giao diện người dùng. */
         onClear: function () {
             const oSearch = this.byId("goodsIssueHistorySearch");
             if (oSearch) {
@@ -71,6 +80,7 @@ sap.ui.define([
             this._applyFilters("");
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
             const oTable = this.byId("goodsIssueHistoryTable");
             const oBinding = oTable && oTable.getBinding("items");
@@ -79,6 +89,7 @@ sap.ui.define([
             }
         },
 
+        /** Định dạng Date Time trước khi hiển thị trên giao diện. */
         formatDateTime: function (vDate) {
             if (!vDate) {
                 return "-";
@@ -87,6 +98,7 @@ sap.ui.define([
             return Number.isNaN(oDate.getTime()) ? String(vDate) : oDate.toLocaleString("vi-VN");
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             const sPreviousHash = History.getInstance().getPreviousHash();
             if (sPreviousHash !== undefined) {

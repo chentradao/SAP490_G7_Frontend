@@ -1,3 +1,7 @@
+/*
+ * Controller MRPResults.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/routing/History",
@@ -24,16 +28,21 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.MRPResults", {
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             this.getView().setModel(new JSONModel({
                 busy: false
             }), "mrp");
+            this.getView().setModel(new JSONModel({
+                items: []
+            }), "prResults");
             this.getView().setModel(new JSONModel({}), "prConvert");
 
             this.getOwnerComponent().getRouter().getRoute("RouteMRPResults")
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             const oSession = this.getOwnerComponent().getModel("session");
             const sRole = String(oSession && oSession.getProperty("/role") || "").toUpperCase();
@@ -50,6 +59,7 @@ sap.ui.define([
             }
 
             this.byId("mrpMaterialFilter").setValue("");
+            this.byId("mrpPRFilter").setValue("");
             this.byId("mrpPlantFilter").setValue("P001");
             this.byId("mrpPRScope").setSelectedKey("OPEN");
             this.byId("mrpPRSort").setSelectedKey("PRIORITY");
@@ -62,12 +72,15 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        /** Đọc và trả về Filter Value phục vụ xử lý nội bộ. */
         _getFilterValue: function (sId) {
             return String(this.byId(sId).getValue() || "").trim().toUpperCase();
         },
 
+        /** Xử lý sự kiện Filter từ giao diện người dùng. */
         onFilter: function () {
             const sMaterial = this._getFilterValue("mrpMaterialFilter");
+            const sPurchaseRequisition = this._getFilterValue("mrpPRFilter");
             const sPlant = this._getFilterValue("mrpPlantFilter");
             const sPRScope = this.byId("mrpPRScope").getSelectedKey();
             const sPRSort = this.byId("mrpPRSort").getSelectedKey();
@@ -88,6 +101,13 @@ sap.ui.define([
             }
 
             const aPRFilters = aCommonFilters.slice();
+            if (sPurchaseRequisition) {
+                aPRFilters.push(new Filter(
+                    "PurchaseRequisition",
+                    FilterOperator.Contains,
+                    sPurchaseRequisition
+                ));
+            }
             if (sPRScope === "OPEN") {
                 aPRFilters.push(new Filter("OpenQuantity", FilterOperator.GT, 0));
             }
@@ -104,29 +124,59 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Clear Filters từ giao diện người dùng. */
         onClearFilters: function () {
             this.byId("mrpMaterialFilter").setValue("");
+            this.byId("mrpPRFilter").setValue("");
             this.byId("mrpPlantFilter").setValue("");
             this.byId("mrpPRScope").setSelectedKey("ALL");
             this.byId("mrpPRSort").setSelectedKey("PRIORITY");
             this.onFilter();
         },
 
+        /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
-            ["plannedOrdersTable", "purchaseRequisitionsTable"].forEach(function (sId) {
-                const oBinding = this.byId(sId).getBinding("items");
-                if (oBinding) {
-                    oBinding.refresh();
-                }
-            }, this);
+            const oPlannedBinding = this.byId("plannedOrdersTable").getBinding("items");
+            if (oPlannedBinding) {
+                oPlannedBinding.refresh();
+            }
+
+            this._loadPurchaseRequisitions();
         },
 
+        /** Tải Purchase Requisitions từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
+        _loadPurchaseRequisitions: async function () {
+            const oResultsModel = this.getView().getModel("prResults");
+
+            try {
+                const oSourceBinding = this.getOwnerComponent().getModel().bindList(
+                    "/MRPPurchaseRequisitions",
+                    undefined,
+                    undefined,
+                    undefined,
+                    { $$groupId: "$direct" }
+                );
+                const aContexts = await oSourceBinding.requestContexts(0, 5000);
+                const aItems = aContexts.map(function (oContext) {
+                    return Object.assign({}, oContext.getObject());
+                });
+
+                oResultsModel.setProperty("/items", aItems);
+                this.onFilter();
+            } catch (oError) {
+                console.error("Could not load Purchase Requisitions:", oError);
+                MessageBox.error(oError.message || "Could not load Purchase Requisitions.");
+            }
+        },
+
+        /** Định dạng Local Date trước khi hiển thị trên giao diện. */
         _formatLocalDate: function (oDate) {
             return oDate.getFullYear() + "-" +
                 String(oDate.getMonth() + 1).padStart(2, "0") + "-" +
                 String(oDate.getDate()).padStart(2, "0");
         },
 
+        /** Đọc và trả về Safe Delivery Date phục vụ xử lý nội bộ. */
         _getSafeDeliveryDate: function (vDeliveryDate) {
             const oTomorrow = new Date();
             oTomorrow.setHours(0, 0, 0, 0);
@@ -143,6 +193,44 @@ sap.ui.define([
                 : sDate;
         },
 
+        /**
+         * Lấy Net Price đã được SAP lưu trên Purchase Requisition.
+         *
+         * Field chuẩn của API/CDS Purchase Requisition là
+         * PurchaseRequisitionPrice. Các tên còn lại được giữ làm fallback
+         * để màn hình vẫn chạy nếu CDS Z của dự án đang dùng alias riêng.
+         */
+        _getPurchaseRequisitionPrice: function (oPR) {
+            const aPriceCandidates = [
+                oPR && oPR.PurchaseRequisitionPrice,
+                oPR && oPR.NetPrice,
+                oPR && oPR.ValuationPrice,
+                oPR && oPR.Price
+            ];
+
+            for (let i = 0; i < aPriceCandidates.length; i += 1) {
+                const nPrice = this._parseQuantity(aPriceCandidates[i]);
+                if (nPrice > 0) {
+                    return String(nPrice);
+                }
+            }
+
+            return "";
+        },
+
+        /**
+         * Lấy currency đi cùng Net Price của PR. Theo chuẩn SAP,
+         * PurchaseRequisitionPrice luôn đi cùng PurReqnItemCurrency.
+         */
+        _getPurchaseRequisitionCurrency: function (oPR) {
+            return (oPR && (
+                oPR.PurReqnItemCurrency ||
+                oPR.DocumentCurrency ||
+                oPR.Currency
+            )) || "VND";
+        },
+
+        /** Xử lý sự kiện Convert Purchase Requisition từ giao diện người dùng. */
         onConvertPurchaseRequisition: async function () {
             const oTable = this.byId("purchaseRequisitionsTable");
             const oItem = oTable.getSelectedItem();
@@ -152,7 +240,13 @@ sap.ui.define([
                 return;
             }
 
-            const oPR = oItem.getBindingContext().getObject();
+            const oPRContext = oItem.getBindingContext("prResults");
+            const oPR = oPRContext && oPRContext.getObject();
+
+            if (!oPR) {
+                MessageBox.error("The selected Purchase Requisition could not be read.");
+                return;
+            }
             const nOpenQuantity = this._parseQuantity(oPR.OpenQuantity);
 
             if (nOpenQuantity <= 0) {
@@ -185,8 +279,9 @@ sap.ui.define([
                 purchOrgName: "",
                 purchGroup: oPR.PurchasingGroup || "324",
                 purchGroupName: "",
-                price: "",
-                currency: "VND"
+                // Tự động điền đúng giá của PR thay vì bắt người dùng nhập lại.
+                price: this._getPurchaseRequisitionPrice(oPR),
+                currency: this._getPurchaseRequisitionCurrency(oPR)
             });
 
             if (!this._prConversionDialog) {
@@ -201,12 +296,14 @@ sap.ui.define([
             this._prConversionDialog.open();
         },
 
+        /** Xử lý sự kiện Close PR Conversion từ giao diện người dùng. */
         onClosePRConversion: function () {
             if (this._prConversionDialog) {
                 this._prConversionDialog.close();
             }
         },
 
+        /** Hàm nội bộ thực hiện open PR Value Help. */
         _openPRValueHelp: function (mConfig) {
             const oDialog = new SelectDialog({
                 title: mConfig.title,
@@ -244,6 +341,7 @@ sap.ui.define([
             oDialog.open();
         },
 
+        /** Xử lý sự kiện PR Purch Org Value Help từ giao diện người dùng. */
         onPRPurchOrgValueHelp: function () {
             const oData = this.getView().getModel("prConvert");
             this._openPRValueHelp({
@@ -261,6 +359,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện PR Vendor Value Help từ giao diện người dùng. */
         onPRVendorValueHelp: function () {
             const oData = this.getView().getModel("prConvert");
             const sPurchOrg = oData.getProperty("/purchOrg") || "";
@@ -279,6 +378,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện PR Purch Group Value Help từ giao diện người dùng. */
         onPRPurchGroupValueHelp: function () {
             const oData = this.getView().getModel("prConvert");
             this._openPRValueHelp({
@@ -293,6 +393,7 @@ sap.ui.define([
             });
         },
 
+        /** Đọc PO Conversion Result từ backend. */
         _readPOConversionResult: async function (sRequestId) {
             const oBinding = this.getOwnerComponent().getModel().bindList(
                 "/ZP_G7_PO_REQUEST",
@@ -320,6 +421,7 @@ sap.ui.define([
             return oResult;
         },
 
+        /** Xử lý sự kiện Submit PR Conversion từ giao diện người dùng. */
         onSubmitPRConversion: async function () {
             const oDataModel = this.getView().getModel("prConvert");
             const oData = oDataModel.getData();
@@ -393,12 +495,14 @@ sap.ui.define([
             }
         },
 
+        /** Hàm nội bộ thực hiện wait. */
         _wait: function (iMilliseconds) {
             return new Promise(function (resolve) {
                 setTimeout(resolve, iMilliseconds);
             });
         },
 
+        /** Hàm nội bộ thực hiện confirm Conversion. */
         _confirmConversion: function (oPlannedOrder) {
             return new Promise(function (resolve) {
                 MessageBox.confirm(
@@ -418,6 +522,7 @@ sap.ui.define([
             });
         },
 
+        /** Đọc và trả về Bom Shortages phục vụ xử lý nội bộ. */
         _getBomShortages: async function (oPlannedOrder) {
             const nOrderQuantity = this._parseQuantity(oPlannedOrder.PlannedOrderQuantity);
             const sMaterial = String(oPlannedOrder.Material || "");
@@ -464,6 +569,7 @@ sap.ui.define([
             });
         },
 
+        /** Định dạng Bom Quantity trước khi hiển thị trên giao diện. */
         _formatBomQuantity: function (vQuantity) {
             return Number(vQuantity || 0).toLocaleString("vi-VN", {
                 minimumFractionDigits: 0,
@@ -471,6 +577,7 @@ sap.ui.define([
             });
         },
 
+        /** Đọc Conversion Result từ backend. */
         _readConversionResult: async function (sRequestId) {
             const oModel = this.getOwnerComponent().getModel();
             const oBinding = oModel.bindList(
@@ -503,6 +610,7 @@ sap.ui.define([
             return oResult;
         },
 
+        /** Xử lý sự kiện Convert Planned Order từ giao diện người dùng. */
         onConvertPlannedOrder: async function () {
             const oTable = this.byId("plannedOrdersTable");
             const oSelectedItem = oTable.getSelectedItem();
@@ -603,12 +711,14 @@ sap.ui.define([
             }
         },
 
+        /** Định dạng Date trước khi hiển thị trên giao diện. */
         formatDate: function (vDate) {
             if (!vDate) { return "-"; }
             const oDate = vDate instanceof Date ? vDate : new Date(String(vDate) + "T00:00:00");
             return Number.isNaN(oDate.getTime()) ? String(vDate) : oDate.toLocaleDateString("vi-VN");
         },
 
+        /** Định dạng PR Status trước khi hiển thị trên giao diện. */
         formatPRStatus: function (sStatus, vOpenQuantity, vIsClosed, sPurchaseOrder) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sPurchaseOrder || this._parseQuantity(vOpenQuantity) <= 0 || this._isClosed(vIsClosed)) {
@@ -627,6 +737,7 @@ sap.ui.define([
             return mText[sValue] || sValue;
         },
 
+        /** Hàm nội bộ thực hiện days Until. */
         _daysUntil: function (vDate) {
             if (!vDate) { return 9999; }
             const sDate = String(vDate).slice(0, 10);
@@ -636,6 +747,7 @@ sap.ui.define([
             return Number.isNaN(oRequired.getTime()) ? 9999 : Math.round((oRequired - oToday) / 86400000);
         },
 
+        /** Định dạng Priority Text trước khi hiển thị trên giao diện. */
         formatPriorityText: function (vDate) {
             const iDays = this._daysUntil(vDate);
             if (iDays < 0) { return "1 · Overdue"; }
@@ -645,16 +757,19 @@ sap.ui.define([
             return "3 · Planned";
         },
 
+        /** Định dạng Priority State trước khi hiển thị trên giao diện. */
         formatPriorityState: function (vDate) {
             const iDays = this._daysUntil(vDate);
             return iDays <= 0 ? "Error" : (iDays <= 3 ? "Warning" : "Information");
         },
 
+        /** Định dạng Priority Icon trước khi hiển thị trên giao diện. */
         formatPriorityIcon: function (vDate) {
             const iDays = this._daysUntil(vDate);
             return iDays <= 0 ? "sap-icon://alert" : (iDays <= 3 ? "sap-icon://lateness" : "sap-icon://calendar");
         },
 
+        /** Định dạng PR State trước khi hiển thị trên giao diện. */
         formatPRState: function (sStatus, vOpenQuantity, vIsClosed, sPurchaseOrder) {
             const sValue = String(sStatus || "").toUpperCase();
             if (sPurchaseOrder || this._parseQuantity(vOpenQuantity) <= 0 || this._isClosed(vIsClosed)) {
@@ -665,10 +780,12 @@ sap.ui.define([
             return "Warning";
         },
 
+        /** Định dạng PR Highlight trước khi hiển thị trên giao diện. */
         formatPRHighlight: function (sStatus) {
             return this.formatPRState(sStatus);
         },
 
+        /** Chuyển đổi Quantity về kiểu dữ liệu an toàn. */
         _parseQuantity: function (vQuantity) {
             if (typeof vQuantity === "number") {
                 return vQuantity;
@@ -685,23 +802,28 @@ sap.ui.define([
             return Number.isFinite(nValue) ? nValue : 0;
         },
 
+        /** Định dạng Open Quantity State trước khi hiển thị trên giao diện. */
         formatOpenQuantityState: function (vQuantity) {
             return this._parseQuantity(vQuantity) > 0 ? "Success" : "Error";
         },
 
+        /** Kiểm tra điều kiện Closed. */
         _isClosed: function (vClosed) {
             const sValue = String(vClosed || "").trim().toUpperCase();
             return vClosed === true || sValue === "X" || sValue === "TRUE";
         },
 
+        /** Định dạng Closed Text trước khi hiển thị trên giao diện. */
         formatClosedText: function (vClosed) {
             return this._isClosed(vClosed) ? "Closed" : "Open";
         },
 
+        /** Định dạng Closed State trước khi hiển thị trên giao diện. */
         formatClosedState: function (vClosed) {
             return this._isClosed(vClosed) ? "Error" : "Success";
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             if (History.getInstance().getPreviousHash() !== undefined) {
                 window.history.go(-1);

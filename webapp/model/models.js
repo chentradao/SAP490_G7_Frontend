@@ -1,3 +1,6 @@
+/*
+ * Module models: tập trung logic model/tiện ích dùng lại để controller không lặp nghiệp vụ.
+ */
 sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/Device"

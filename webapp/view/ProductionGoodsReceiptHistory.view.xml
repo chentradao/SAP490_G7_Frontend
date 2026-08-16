@@ -1,9 +1,11 @@
+<!-- View ProductionGoodsReceiptHistory.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.ProductionGoodsReceiptHistory"
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   displayBlock="true">
 
+  <!-- Trang chính: Production Goods Receipt History -->
   <Page title="Production Goods Receipt History" showNavButton="true" navButtonPress="onNavBack">
     <headerContent>
       <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />

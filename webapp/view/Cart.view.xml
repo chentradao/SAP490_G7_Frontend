@@ -1,8 +1,10 @@
+<!-- View Cart.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
     controllerName="sap490g7fioriapp.controller.Cart"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     displayBlock="true">
+    <!-- Trang chính: Cart -->
     <Page title="Cart" showFooter="true" showNavButton="true" navButtonPress=".onBack">
         <content>
             <Table

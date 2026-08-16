@@ -1,3 +1,7 @@
+/*
+ * Controller Cart.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -9,6 +13,7 @@ sap.ui.define([
 ], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, cartUtils, sessionUtils) {
     "use strict";
 
+    /** Chuyển giá trị tiền sang number an toàn trước khi tính tổng. */
     function toAmount(vPrice) {
         if (typeof vPrice === "number") {
             return Number.isFinite(vPrice) ? vPrice : 0;
@@ -31,6 +36,7 @@ sap.ui.define([
         return Number(sValue) || 0;
     }
 
+    /** Định dạng số tiền kèm mã tiền tệ để hiển thị trong giỏ hàng. */
     function getAmountText(vAmount, sCurrency) {
         var fAmount = toAmount(vAmount);
         var sAmount = fAmount.toLocaleString("en-US", {
@@ -42,6 +48,7 @@ sap.ui.define([
 
     return Controller.extend("sap490g7fioriapp.controller.Cart", {
 
+        /** Khởi tạo model trạng thái và đăng ký các sự kiện điều hướng của màn hình. */
         onInit: function () {
             var oViewModel = new JSONModel({
                 totalPrice: 0,
@@ -55,6 +62,7 @@ sap.ui.define([
                 .attachPatternMatched(this._onRouteMatched, this);
         },
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             var oBinding = this.byId("cartList").getBinding("items");
@@ -89,6 +97,7 @@ sap.ui.define([
             }
         },
 
+        /** Xử lý sự kiện Back từ giao diện người dùng. */
         onBack: function () {
             var oSession = this.getOwnerComponent().getModel("session");
             var sReturnRoute = oSession && oSession.getProperty("/cartReturnRoute");
@@ -103,6 +112,7 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteFoodList", {}, true);
         },
 
+        /** Xử lý sự kiện Quantity Change từ giao diện người dùng. */
         onQuantityChange: function (oEvent) {
             var oStepInput = oEvent.getSource();
             var oContext = oStepInput.getBindingContext();
@@ -161,14 +171,17 @@ sap.ui.define([
             });
         },
 
+        /** Định dạng Food Name trước khi hiển thị trên giao diện. */
         formatFoodName: function (sFoodName, sFoodId) {
             return sFoodName || sFoodId || "";
         },
 
+        /** Định dạng Cart Amount trước khi hiển thị trên giao diện. */
         formatCartAmount: function (vAmount, sCurrency) {
             return getAmountText(vAmount, sCurrency);
         },
 
+        /** Xử lý sự kiện Cart List Update Finished từ giao diện người dùng. */
         onCartListUpdateFinished: function (oEvent) {
             var oList = this.byId("cartList");
             var oBinding = oList.getBinding("items");
@@ -198,6 +211,7 @@ sap.ui.define([
             oViewModel.setProperty("/checkoutEnabled", aContexts.length > 0);
         },
 
+        /** Hàm nội bộ thực hiện validate Cart Stock. */
         _validateCartStock: function (aItems) {
             var oModel = this.getOwnerComponent().getModel();
             return Promise.all(aItems.map(function (oItem) {
@@ -222,6 +236,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Checkout từ giao diện người dùng. */
         onCheckout: function () {
             var oList = this.byId("cartList");
             var oBinding = oList.getBinding("items");

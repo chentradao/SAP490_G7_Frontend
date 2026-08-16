@@ -1,3 +1,4 @@
+<!-- View ProductionOrder.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.ProductionOrder"
   xmlns:mvc="sap.ui.core.mvc"
@@ -5,16 +6,17 @@
   xmlns:f="sap.ui.layout.form"
   displayBlock="true">
 
+  <!-- Trang chính: Production Planning -->
   <Page title="Production Planning" showNavButton="true" navButtonPress="onNavBack">
     <headerContent>
       <Button
-        id="syncFoodStockButton"
-        text="Sync FG Stock"
-        tooltip="Overwrite Food2 stock with the current stock from P001/FG01"
+        id="refreshFGStockButton"
+        text="Refresh FG Stock"
+        tooltip="Reload the current finished-goods stock from P001/FG01"
         icon="sap-icon://synchronize"
         type="Transparent"
         visible="{= ${session>/role} === 'ADMIN' }"
-        press="onSyncFoodStock" />
+        press="onRefreshFGStock" />
       <Button text="Work Queue" icon="sap-icon://workflow-tasks" type="Emphasized" press="onOpenHistory" />
     </headerContent>
 
@@ -36,6 +38,7 @@
           </VBox>
         </HBox>
 
+        <!-- Khu vực nghiệp vụ: 1. Select Finished Product -->
         <Panel headerText="1. Select Finished Product" class="productionStepCard">
           <content>
             <Text text="Choose one product currently maintained in plant P001 and storage FG01." class="productionStepHint" />
@@ -43,7 +46,7 @@
               <Table
                 id="fgTable"
                 class="wideDataTableMD compactSelectionTable"
-                items="{path: '/Food2', filters: [{path: 'MaterialNumber', operator: 'GE', value1: 'FG00009'}]}"
+                items="{path: '/FinishedGoodsStock', filters: [{path: 'Material', operator: 'GE', value1: 'FG00009'}]}"
                 mode="SingleSelectMaster"
                 selectionChange="onFGSelected"
                 sticky="ColumnHeaders"
@@ -60,10 +63,10 @@
                 <items>
                   <ColumnListItem type="Active" vAlign="Middle">
                     <cells>
-                      <ObjectIdentifier title="{MaterialNumber}" />
+                      <ObjectIdentifier title="{Material}" />
                       <Text text="{MaterialDescription}" />
-                      <ObjectStatus text="{= ${Plant} + ' / ' + ${StorageLocation} }" state="Information" />
-                      <ObjectNumber number="{AvailableStock}" unit="{BaseUnit}" />
+                      <ObjectStatus text="P001 / FG01" state="Information" />
+                      <ObjectNumber number="{StockQuantity}" unit="{MaterialBaseUnit}" />
                     </cells>
                   </ColumnListItem>
                 </items>
@@ -72,6 +75,7 @@
           </content>
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: 2. Review BOM and Material Availability -->
         <Panel headerText="2. Review BOM and Material Availability" class="productionStepCard">
           <content>
             <MessageStrip
@@ -137,6 +141,7 @@
           </content>
         </Panel>
 
+        <!-- Khu vực nghiệp vụ: 3. Enter Order Quantity -->
         <Panel headerText="3. Enter Order Quantity" class="productionStepCard">
           <content>
             <HBox class="productionOrderEntry" justifyContent="SpaceBetween" alignItems="End" wrap="Wrap">

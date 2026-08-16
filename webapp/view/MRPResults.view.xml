@@ -1,3 +1,4 @@
+<!-- View MRPResults.view: định nghĩa bố cục UI, data binding và ánh xạ sự kiện sang controller tương ứng. -->
 <mvc:View
   controllerName="sap490g7fioriapp.controller.MRPResults"
   xmlns:mvc="sap.ui.core.mvc"
@@ -5,6 +6,7 @@
   xmlns:core="sap.ui.core"
   displayBlock="true">
 
+  <!-- Trang chính: MRP Results -->
   <Page title="MRP Results" showNavButton="true" navButtonPress="onNavBack">
     <headerContent>
       <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
@@ -26,6 +28,7 @@
           showIcon="true"
           class="sapUiSmallMarginBottom" />
 
+        <!-- Khu vực nghiệp vụ: Filters -->
         <Panel headerText="Filters" class="staffWorkflowPanel">
           <content>
             <Toolbar>
@@ -34,6 +37,14 @@
                 id="mrpMaterialFilter"
                 width="18rem"
                 placeholder="e.g. FG00015 or RW00001"
+                search="onFilter"
+                liveChange="onFilter" />
+              <ToolbarSeparator />
+              <Label text="Purchase Requisition" labelFor="mrpPRFilter" />
+              <SearchField
+                id="mrpPRFilter"
+                width="14rem"
+                placeholder="Enter PR number"
                 search="onFilter"
                 liveChange="onFilter" />
               <ToolbarSeparator />
@@ -61,7 +72,9 @@
 
         <IconTabBar class="staffWorkflowPanel mrpActionTabs" expandable="false" selectedKey="PURCHASE">
           <items>
+          <!-- Tab chức năng: 1. Buy Missing Materials -->
           <IconTabFilter key="PURCHASE" text="1. Buy Missing Materials" icon="sap-icon://cart">
+        <!-- Khu vực nghiệp vụ: Purchase Requisitions — Raw Materials to Buy -->
         <Panel headerText="Purchase Requisitions — Raw Materials to Buy" class="staffWorkflowPanel">
           <content>
             <Toolbar>
@@ -84,7 +97,7 @@
                 growing="true"
                 growingThreshold="20"
                 noDataText="No raw materials need purchasing"
-                items="{path: '/MRPPurchaseRequisitions', sorter: [{path: 'DeliveryDate', descending: false}, {path: 'CreationDate', descending: false}, {path: 'PurchaseRequisition', descending: false}]}">
+                items="{path: 'prResults>/items', sorter: [{path: 'DeliveryDate', descending: false}, {path: 'CreationDate', descending: false}, {path: 'PurchaseRequisition', descending: false}]}">
                 <columns>
                   <Column width="9rem"><Text text="Priority" /></Column>
                   <Column width="11rem"><Text text="Purchase Requisition" /></Column>
@@ -96,19 +109,19 @@
                   <Column width="11rem"><Text text="Purchase Order" /></Column>
                 </columns>
                 <items>
-                  <ColumnListItem highlight="{path: 'ProcessingStatus', formatter: '.formatPRHighlight'}">
+                  <ColumnListItem highlight="{path: 'prResults>ProcessingStatus', formatter: '.formatPRHighlight'}">
                     <cells>
                       <ObjectStatus
-                        text="{path: 'DeliveryDate', formatter: '.formatPriorityText'}"
-                        state="{path: 'DeliveryDate', formatter: '.formatPriorityState'}"
-                        icon="{path: 'DeliveryDate', formatter: '.formatPriorityIcon'}" />
-                      <ObjectIdentifier title="{PurchaseRequisition}" text="Item {PurchaseRequisitionItem}" />
-                      <ObjectIdentifier title="{Material}" />
-                      <Text text="{MaterialDescription}" />
-                      <ObjectNumber number="{OpenQuantity}" unit="{Unit}" state="{path: 'OpenQuantity', formatter: '.formatOpenQuantityState'}" />
-                      <Text text="{path: 'DeliveryDate', formatter: '.formatDate'}" />
-                      <ObjectStatus text="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRStatus'}" state="{parts: ['ProcessingStatus', 'OpenQuantity', 'IsClosed', 'PurchaseOrder'], formatter: '.formatPRState'}" />
-                      <ObjectIdentifier title="{PurchaseOrder}" text="{PurchaseOrderItem}" />
+                        text="{path: 'prResults>DeliveryDate', formatter: '.formatPriorityText'}"
+                        state="{path: 'prResults>DeliveryDate', formatter: '.formatPriorityState'}"
+                        icon="{path: 'prResults>DeliveryDate', formatter: '.formatPriorityIcon'}" />
+                      <ObjectIdentifier title="{prResults>PurchaseRequisition}" text="Item {prResults>PurchaseRequisitionItem}" />
+                      <ObjectIdentifier title="{prResults>Material}" />
+                      <Text text="{prResults>MaterialDescription}" />
+                      <ObjectNumber number="{prResults>OpenQuantity}" unit="{prResults>Unit}" state="{path: 'prResults>OpenQuantity', formatter: '.formatOpenQuantityState'}" />
+                      <Text text="{path: 'prResults>DeliveryDate', formatter: '.formatDate'}" />
+                      <ObjectStatus text="{parts: ['prResults>ProcessingStatus', 'prResults>OpenQuantity', 'prResults>IsClosed', 'prResults>PurchaseOrder'], formatter: '.formatPRStatus'}" state="{parts: ['prResults>ProcessingStatus', 'prResults>OpenQuantity', 'prResults>IsClosed', 'prResults>PurchaseOrder'], formatter: '.formatPRState'}" />
+                      <ObjectIdentifier title="{prResults>PurchaseOrder}" text="{prResults>PurchaseOrderItem}" />
                     </cells>
                   </ColumnListItem>
                 </items>
@@ -118,7 +131,9 @@
         </Panel>
           </IconTabFilter>
 
+          <!-- Tab chức năng: 2. Create Production Order -->
           <IconTabFilter key="PRODUCTION" text="2. Create Production Order" icon="sap-icon://factory">
+        <!-- Khu vực nghiệp vụ: Planned Orders — Ready for Production -->
         <Panel headerText="Planned Orders — Ready for Production" class="staffWorkflowPanel">
           <content>
             <Toolbar>

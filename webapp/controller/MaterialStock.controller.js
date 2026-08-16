@@ -1,3 +1,7 @@
+/*
+ * Controller MaterialStock.controller: điều phối trạng thái, sự kiện giao diện và các lời gọi backend của màn hình.
+ * Các hàm on... là event handler; các hàm bắt đầu bằng _ là helper chỉ dùng nội bộ controller.
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -69,6 +73,7 @@ sap.ui.define([
         },
 
 
+        /** Kiểm tra quyền truy cập và chuẩn bị dữ liệu mỗi khi route được mở. */
         _onRouteMatched: function () {
 
             const oSession = this.getOwnerComponent().getModel("session");
@@ -106,11 +111,13 @@ sap.ui.define([
         },
 
 
+        /** Xử lý sự kiện Filter Change từ giao diện người dùng. */
         onFilterChange: function () {
             this._applyFilters();
         },
 
 
+        /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function () {
 
             const oTable = this.byId("stockTable");
@@ -211,6 +218,7 @@ sap.ui.define([
         },
 
 
+        /** Xử lý sự kiện Clear Filters từ giao diện người dùng. */
         onClearFilters: function () {
             this.byId("materialSearchField").setValue("");
             this.byId("plantFilter").setSelectedKey("All");
@@ -218,11 +226,13 @@ sap.ui.define([
             this._applyFilters();
         },
 
+        /** Xử lý sự kiện Refresh Stock từ giao diện người dùng. */
         onRefreshStock: function () {
             this._refreshStockData();
         },
 
 
+        /** Hàm nội bộ thực hiện refresh Stock Data. */
         _refreshStockData: async function () {
             const oStockModel = this.getView().getModel("stock");
             const sRequestUrl =
@@ -289,6 +299,7 @@ sap.ui.define([
         },
 
 
+        /** Định dạng Stock Status trước khi hiển thị trên giao diện. */
         formatStockStatus: function (vAvailable, vReorderPoint) {
             const fAvailable = Number(vAvailable);
             const fReorderPoint = Number(vReorderPoint);
@@ -307,6 +318,7 @@ sap.ui.define([
         },
 
 
+        /** Định dạng Stock State trước khi hiển thị trên giao diện. */
         formatStockState: function (vAvailable, vReorderPoint) {
             const sStatus = this.formatStockStatus(vAvailable, vReorderPoint);
 
@@ -318,6 +330,7 @@ sap.ui.define([
         },
 
 
+        /** Định dạng Stock Highlight trước khi hiển thị trên giao diện. */
         formatStockHighlight: function (vAvailable, vReorderPoint) {
             const sStatus = this.formatStockStatus(vAvailable, vReorderPoint);
 
@@ -329,6 +342,7 @@ sap.ui.define([
         },
 
 
+        /** Định dạng Total Amount trước khi hiển thị trên giao diện. */
         formatTotalAmount: function (vQuantity, vPrice) {
             const fQuantity = Number(String(vQuantity || 0).replace(",", "."));
             const fPrice = Number(String(vPrice || 0).replace(",", "."));
@@ -458,6 +472,7 @@ sap.ui.define([
             ].join("-");
         },
 
+        /** Hàm nội bộ thực hiện open Value Help. */
         _openValueHelp: function (mConfig) {
             const oDialog = new SelectDialog({
                 title: mConfig.title,
@@ -507,6 +522,7 @@ sap.ui.define([
             oDialog.open();
         },
 
+        /** Xử lý sự kiện Vendor Value Help từ giao diện người dùng. */
         onVendorValueHelp: function () {
             const oUiModel = this.getView().getModel("ui");
             const sPurchOrg = oUiModel.getProperty("/purchOrg");
@@ -527,6 +543,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Purch Org Value Help từ giao diện người dùng. */
         onPurchOrgValueHelp: function () {
             const oUiModel = this.getView().getModel("ui");
 
@@ -550,6 +567,7 @@ sap.ui.define([
             });
         },
 
+        /** Xử lý sự kiện Purch Group Value Help từ giao diện người dùng. */
         onPurchGroupValueHelp: function () {
             const oUiModel = this.getView().getModel("ui");
 
@@ -1115,6 +1133,7 @@ sap.ui.define([
                 .navTo("RoutePOHistory");
         },
 
+        /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
 
             this.getOwnerComponent()
