@@ -202,6 +202,12 @@ body, html {
     border-radius: 0 0 0.75rem 0.75rem;
 }
 
+.foodListImage.sapFAvatar {
+    border: 1px solid #d9e2ec;
+    background-color: #f5f7f9;
+    box-shadow: 0 0.125rem 0.35rem rgba(34, 53, 72, 0.12);
+}
+
 .wideTableScroll .sapMScrollContScroll {
     width: max-content !important;
     min-width: 100%;
