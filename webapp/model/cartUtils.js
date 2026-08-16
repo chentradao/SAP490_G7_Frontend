@@ -8,7 +8,25 @@ sap.ui.define([
     var CART_ITEM_ENTITY_SET = "/CartItems";
 
     function getCartUnitPrice(vMaterialPrice) {
-        return Number(vMaterialPrice) || 0;
+        if (typeof vMaterialPrice === "number") {
+            return Number.isFinite(vMaterialPrice) ? vMaterialPrice : 0;
+        }
+
+        var sValue = String(vMaterialPrice === null || vMaterialPrice === undefined ? "" : vMaterialPrice)
+            .trim()
+            .replace(/\s/g, "");
+
+        if (sValue.indexOf(",") !== -1 && sValue.indexOf(".") !== -1) {
+            sValue = sValue.lastIndexOf(",") > sValue.lastIndexOf(".") ?
+                sValue.replace(/\./g, "").replace(",", ".") :
+                sValue.replace(/,/g, "");
+        } else if (/^-?\d{1,3}(,\d{3})+$/.test(sValue)) {
+            sValue = sValue.replace(/,/g, "");
+        } else {
+            sValue = sValue.replace(",", ".");
+        }
+
+        return Number(sValue) || 0;
     }
 
     // ------------------------------------------------------------

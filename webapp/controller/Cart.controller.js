@@ -10,11 +10,33 @@ sap.ui.define([
     "use strict";
 
     function toAmount(vPrice) {
-        return parseFloat(vPrice) || 0;
+        if (typeof vPrice === "number") {
+            return Number.isFinite(vPrice) ? vPrice : 0;
+        }
+
+        var sValue = String(vPrice === null || vPrice === undefined ? "" : vPrice)
+            .trim()
+            .replace(/\s/g, "");
+
+        if (sValue.indexOf(",") !== -1 && sValue.indexOf(".") !== -1) {
+            sValue = sValue.lastIndexOf(",") > sValue.lastIndexOf(".") ?
+                sValue.replace(/\./g, "").replace(",", ".") :
+                sValue.replace(/,/g, "");
+        } else if (/^-?\d{1,3}(,\d{3})+$/.test(sValue)) {
+            sValue = sValue.replace(/,/g, "");
+        } else {
+            sValue = sValue.replace(",", ".");
+        }
+
+        return Number(sValue) || 0;
     }
 
     function getAmountText(vAmount, sCurrency) {
-        var sAmount = vAmount === null || vAmount === undefined || vAmount === "" ? "0" : String(vAmount);
+        var fAmount = toAmount(vAmount);
+        var sAmount = fAmount.toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
         return sAmount + (sCurrency ? " " + sCurrency : "");
     }
 
@@ -29,8 +51,6 @@ sap.ui.define([
                 checkoutBusy: false
             });
             this.getView().setModel(oViewModel, "cartView");
-            this.getView().setModel(new JSONModel({}), "cartNames");
-
             this.getOwnerComponent().getRouter().getRoute("RouteCart")
                 .attachPatternMatched(this._onRouteMatched, this);
         },
@@ -93,7 +113,7 @@ sap.ui.define([
             }
 
             var oItem = oContext.getObject();
-            var fUnitPrice = parseFloat(oItem.UnitPrice) || 0;
+            var fUnitPrice = toAmount(oItem.UnitPrice);
             var oModel = oContext.getModel();
 
             oStepInput.setValue(iQuantity);
@@ -141,47 +161,18 @@ sap.ui.define([
             });
         },
 
-        formatFoodName: function (sFoodId, mFoodNames) {
-            return (mFoodNames && mFoodNames[sFoodId]) || sFoodId || "";
+        formatFoodName: function (sFoodName, sFoodId) {
+            return sFoodName || sFoodId || "";
         },
 
-        _loadFoodNames: function (aContexts) {
-            var oNamesModel = this.getView().getModel("cartNames");
-            var mFoodNames = oNamesModel.getData() || {};
-            var oModel = this.getOwnerComponent().getModel();
-            var aFoodIds = (aContexts || []).map(function (oContext) {
-                return oContext.getObject().FoodID;
-            }).filter(function (sFoodId) {
-                return sFoodId && !mFoodNames[sFoodId];
-            });
-
-            if (!aFoodIds.length) {
-                return;
-            }
-
-            Promise.all(aFoodIds.map(function (sFoodId) {
-                return oModel.bindList("/Food2", undefined, undefined, [
-                    new Filter("MaterialNumber", FilterOperator.EQ, sFoodId)
-                ], { $$groupId: "$auto" }).requestContexts(0, 1).then(function (aFoodContexts) {
-                    var oFood = aFoodContexts && aFoodContexts.length ? aFoodContexts[0].getObject() : null;
-                    return { foodId: sFoodId, foodName: oFood && oFood.MaterialDescription };
-                });
-            })).then(function (aNames) {
-                aNames.forEach(function (oName) {
-                    if (oName.foodName) {
-                        mFoodNames[oName.foodId] = oName.foodName;
-                    }
-                });
-                oNamesModel.setData(mFoodNames);
-            });
+        formatCartAmount: function (vAmount, sCurrency) {
+            return getAmountText(vAmount, sCurrency);
         },
 
         onCartListUpdateFinished: function (oEvent) {
             var oList = this.byId("cartList");
             var oBinding = oList.getBinding("items");
             var aContexts = oBinding ? oBinding.getCurrentContexts() : [];
-
-            this._loadFoodNames(aContexts);
 
             var fTotal = 0;
             var sCurrency = "";
@@ -197,7 +188,7 @@ sap.ui.define([
             aContexts.forEach(function (oCtx) {
                 if (!oCtx) { return; }
                 var oData = oCtx.getObject();
-                fTotal += Number(oData.LineAmount) || (toAmount(oData.UnitPrice) * (parseInt(oData.Quantity, 10) || 0));
+                fTotal += toAmount(oData.LineAmount) || (toAmount(oData.UnitPrice) * (parseInt(oData.Quantity, 10) || 0));
             });
 
             var oViewModel = this.getView().getModel("cartView");
@@ -210,14 +201,16 @@ sap.ui.define([
         _validateCartStock: function (aItems) {
             var oModel = this.getOwnerComponent().getModel();
             return Promise.all(aItems.map(function (oItem) {
+                var sMaterialNumber = oItem.materialNumber || oItem.MaterialNumber;
+                var sMaterialDescription = oItem.materialDescription || oItem.MaterialDescription;
                 return oModel.bindList("/Food2", undefined, undefined, [
-                    new Filter("MaterialNumber", FilterOperator.EQ, oItem.MaterialNumber)
+                    new Filter("MaterialNumber", FilterOperator.EQ, sMaterialNumber)
                 ], { $$groupId: "$auto" }).requestContexts(0, 1).then(function (aContexts) {
                     var oFood = aContexts && aContexts.length ? aContexts[0].getObject() : null;
                     return {
-                        materialNumber: oItem.MaterialNumber,
-                        materialDescription: (oFood && oFood.MaterialDescription) || oItem.MaterialDescription || oItem.MaterialNumber,
-                        requestedQuantity: Number(oItem.Quantity) || 0,
+                        materialNumber: sMaterialNumber,
+                        materialDescription: (oFood && oFood.MaterialDescription) || sMaterialDescription || sMaterialNumber,
+                        requestedQuantity: Number(oItem.quantity || oItem.Quantity) || 0,
                         availableStock: oFood ? (Number(oFood.AvailableStock) || 0) : 0,
                         found: !!oFood
                     };
@@ -238,13 +231,22 @@ sap.ui.define([
 
             var aItems = aContexts.map(function (oCtx) {
                 var d = oCtx.getObject();
+                var oFood = d._Food || {};
+                var fUnitPrice = toAmount(d.UnitPrice);
+                var iQuantity = parseInt(d.Quantity, 10) || 0;
+                var fLineAmount = fUnitPrice * iQuantity;
                 return {
-                    MaterialNumber: d._Food ? d._Food.MaterialNumber : d.FoodID,
-                    MaterialDescription: d._Food ? d._Food.MaterialDescription : "",
-                    Quantity: d.Quantity,
-                    UnitPrice: toAmount(d.UnitPrice),
-                    Currency: d.Currency,
-                    LineAmount: toAmount(d.UnitPrice) * (parseInt(d.Quantity, 10) || 0)
+                    materialNumber: oFood.MaterialNumber || d.FoodID,
+                    materialDescription: oFood.MaterialDescription || d.FoodID,
+                    foodId: d.FoodID,
+                    foodName: oFood.MaterialDescription || d.FoodID,
+                    imageUrl: oFood.ImageUrl || "",
+                    quantity: iQuantity,
+                    unitPrice: fUnitPrice,
+                    unitPriceText: getAmountText(fUnitPrice, ""),
+                    currency: d.Currency || "VND",
+                    lineAmount: fLineAmount,
+                    lineAmountText: getAmountText(fLineAmount, "")
                 };
             });
 
@@ -259,11 +261,12 @@ sap.ui.define([
                 }
 
                 var fTotalAmount = aItems.reduce(function (sum, item) {
-                    return sum + ((parseFloat(item.UnitPrice) || 0) * (parseInt(item.Quantity, 10) || 0));
+                    return sum + (Number(item.lineAmount) || 0);
                 }, 0);
                 this.getOwnerComponent().setModel(new JSONModel({
                     items: aItems,
                     totalAmount: fTotalAmount,
+                    totalAmountText: getAmountText(fTotalAmount, ""),
                     currency: oViewModel.getProperty("/currency"),
                     note: "",
                     sourceRoute: "cart"

@@ -40,15 +40,24 @@ sap.ui.define([
             var bActive = oEvent.getParameter("state");
             var sDescription = oContext && oContext.getProperty("MaterialDescription") || "Food item";
             var oModel = this.getOwnerComponent().getModel();
+            var oAction;
 
             if (!oContext) { return; }
             oSwitch.setEnabled(false);
-            oContext.setProperty("Status", bActive ? "A" : "I");
-            oModel.submitBatch("$auto").then(function () {
+            oAction = oModel.bindContext(
+                "com.sap.gateway.srvd.zsd_g7_canteen.v0001.setFoodStatus(...)",
+                oContext,
+                { $$groupId: "$direct" }
+            );
+            oAction.setParameter("Status", bActive ? "A" : "I");
+
+            oAction.execute().then(function () {
+                return oContext.refresh();
+            }).then(function () {
                 MessageToast.show(sDescription + " is now " + (bActive ? "active" : "inactive") + ".");
             }).catch(function (oError) {
                 console.error("Could not update food status:", oError);
-                oContext.setProperty("Status", bActive ? "I" : "A");
+                oSwitch.setState(!bActive);
                 MessageBox.error("Could not update the food status. Please try again.");
             }).finally(function () {
                 oSwitch.setEnabled(true);

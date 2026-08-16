@@ -3,8 +3,10 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
+    "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap490g7fioriapp/model/sessionUtils"
-], function (Controller, JSONModel, Filter, FilterOperator, sessionUtils) {
+], function (Controller, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, sessionUtils) {
     "use strict";
 
     function formatDate(sValue) {
@@ -41,7 +43,7 @@ sap.ui.define([
         _refreshOrders: function () {
             var oComponent = this.getOwnerComponent();
             var oOrdersModel = oComponent.getModel("orders") || new JSONModel({
-                orders: [], filteredOrders: [], statusOptions: [], selectedOrder: null
+                orders: [], filteredOrders: [], statusOptions: [], selectedOrder: null, showHidden: false
             });
             oComponent.setModel(oOrdersModel, "orders");
             this.getView().setModel(oOrdersModel, "orders");
@@ -94,6 +96,7 @@ sap.ui.define([
                 paymentStatus: oRow.PaymentStatus || "Unknown",
                 note: oRow.Note || "",
                 createdAt: oRow.CreatedAt || "",
+                isHidden: this._getHiddenOrderIds().indexOf(oRow.OrderID) !== -1,
                 items: aItems.map(function (oItem) {
                     return {
                         foodId: oItem.FoodID,
@@ -120,6 +123,12 @@ sap.ui.define([
             this._applyFilters();
         },
 
+        onToggleHiddenOrders: function (oEvent) {
+            var oModel = this.getOwnerComponent().getModel("orders");
+            oModel.setProperty("/showHidden", oEvent.getParameter("pressed"));
+            this._applyFilters();
+        },
+
         _applyFilters: function () {
             var oModel = this.getOwnerComponent().getModel("orders");
             if (!oModel) { return; }
@@ -127,12 +136,89 @@ sap.ui.define([
             var sTo = this.byId("toDate") ? this.byId("toDate").getValue() : "";
             var sStatus = this.byId("statusFilter") ? this.byId("statusFilter").getSelectedKey() : "";
             var aOrders = oModel.getProperty("/orders") || [];
+            var bShowHidden = Boolean(oModel.getProperty("/showHidden"));
 
             oModel.setProperty("/filteredOrders", aOrders.filter(function (oOrder) {
                 return (!sFrom || oOrder.orderDate >= sFrom) &&
                     (!sTo || oOrder.orderDate <= sTo) &&
-                    (!sStatus || oOrder.orderStatus === sStatus);
+                    (!sStatus || oOrder.orderStatus === sStatus) &&
+                    Boolean(oOrder.isHidden) === bShowHidden;
             }));
+        },
+
+        onSoftDeleteOrder: function (oEvent) {
+            var oContext = oEvent.getSource().getBindingContext("orders");
+            var oOrder = oContext && oContext.getObject();
+
+            if (!oOrder) {
+                return;
+            }
+
+            if (oOrder.isHidden) {
+                this._setOrderHidden(oOrder.orderId, false);
+                MessageToast.show("Order restored to My Orders.");
+                return;
+            }
+
+            MessageBox.confirm(
+                "Hide order " + oOrder.orderId + " from My Orders? The SAP order and payment data will not be deleted.",
+                {
+                    title: "Hide order",
+                    actions: ["Hide", MessageBox.Action.CANCEL],
+                    emphasizedAction: "Hide",
+                    onClose: function (sAction) {
+                        if (sAction === "Hide") {
+                            this._setOrderHidden(oOrder.orderId, true);
+                            MessageToast.show("Order hidden from My Orders.");
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        _setOrderHidden: function (sOrderId, bHidden) {
+            var oModel = this.getOwnerComponent().getModel("orders");
+            var aOrders = oModel.getProperty("/orders") || [];
+            var aHiddenOrderIds = this._getHiddenOrderIds();
+            var iHiddenIndex = aHiddenOrderIds.indexOf(sOrderId);
+
+            if (bHidden && iHiddenIndex === -1) {
+                aHiddenOrderIds.push(sOrderId);
+            } else if (!bHidden && iHiddenIndex !== -1) {
+                aHiddenOrderIds.splice(iHiddenIndex, 1);
+            }
+
+            aOrders.forEach(function (oOrder) {
+                if (oOrder.orderId === sOrderId) {
+                    oOrder.isHidden = bHidden;
+                }
+            });
+            this._saveHiddenOrderIds(aHiddenOrderIds);
+            oModel.setProperty("/orders", aOrders.slice());
+            this._applyFilters();
+        },
+
+        _getHiddenStorageKey: function () {
+            var oSession = this.getOwnerComponent().getModel("session");
+            var sUserId = String(oSession && oSession.getProperty("/userId") || "anonymous");
+            return "sap490g7.hiddenOrders." + sUserId;
+        },
+
+        _getHiddenOrderIds: function () {
+            try {
+                var aOrderIds = JSON.parse(window.localStorage.getItem(this._getHiddenStorageKey()) || "[]");
+                return Array.isArray(aOrderIds) ? aOrderIds : [];
+            } catch (oError) {
+                return [];
+            }
+        },
+
+        _saveHiddenOrderIds: function (aOrderIds) {
+            try {
+                window.localStorage.setItem(this._getHiddenStorageKey(), JSON.stringify(aOrderIds));
+            } catch (oError) {
+                console.warn("Could not save hidden orders:", oError);
+            }
         },
 
         onOrderPress: function (oEvent) {

@@ -60,6 +60,14 @@ body, html {
     vertical-align: middle;
 }
 
+.cartItemImage,
+.checkoutItemImage,
+.orderDetailItemImage {
+    border: 1px solid #d9e2ec;
+    border-radius: 0.4rem;
+    background-color: #f7f9fb;
+}
+
 .materialStockShell {
     max-width: none;
     width: 100%;
@@ -369,6 +377,37 @@ body, html {
     gap: 1rem;
 }
 
+.staffFinanceToolbar {
+    gap: 1rem;
+}
+
+.foodListImage {
+    border: 1px solid #d9e2ec;
+    border-radius: 0.5rem;
+    background-color: #f7f9fb;
+}
+
+.foodDetailHero {
+    gap: 2rem;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    border-radius: 0.75rem;
+    background: #f7f9fb;
+}
+
+.foodDetailImage {
+    flex: 0 0 auto;
+    border: 1px solid #d9e2ec;
+    border-radius: 0.75rem;
+    background-color: #fff;
+    box-shadow: 0 0.25rem 1rem rgba(34, 53, 72, 0.12);
+}
+
+.foodDetailInfo {
+    flex: 1 1 24rem;
+    min-width: 0;
+}
+
 .staffSalesKpi {
     flex: 1 1 13rem;
     min-height: 6rem;
@@ -380,7 +419,13 @@ body, html {
 
 .staffSalesKpiCancelled { border-left-color: #bb0000; }
 .staffSalesKpiRevenue { border-left-color: #107e3e; }
-.staffSalesKpiItems { border-left-color: #925ace; }
+.staffSalesKpiCancelledAmount { border-left-color: #d14900; }
+.staffSalesKpiCost { border-left-color: #e9730c; }
+.staffSalesKpiHint {
+    margin-top: 0.25rem;
+    color: #556b82;
+    font-size: 0.75rem;
+}
 
 .revenueAnalyticsShell {
     max-width: 92rem;

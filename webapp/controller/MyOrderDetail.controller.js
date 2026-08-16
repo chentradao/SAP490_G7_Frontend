@@ -1,9 +1,11 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
     "sap490g7fioriapp/model/sessionUtils"
-], function (Controller, JSONModel, MessageBox, sessionUtils) {
+], function (Controller, JSONModel, Filter, FilterOperator, MessageBox, sessionUtils) {
     "use strict";
 
     function formatDate(sValue) {
@@ -46,6 +48,7 @@ sap.ui.define([
                     return;
                 }
                 oOrdersModel.setProperty("/selectedOrder", oOrder);
+                this._loadOrderItemImages(oOrder.items);
             }.bind(this)).catch(function (oError) {
                 console.error("Could not load order detail:", oError);
                 oOrdersModel.setProperty("/selectedOrder", null);
@@ -65,6 +68,8 @@ sap.ui.define([
 
             var aItems = Array.isArray(oRow._Items) ? oRow._Items : [];
             var sOrderDate = oRow.OrderDate || oRow.CreatedAt || "";
+            var sOrderStatus = String(oRow.OrderStatus || "Unknown").trim().toUpperCase();
+            var sPaymentStatus = String(oRow.PaymentStatus || "Unknown").trim().toUpperCase();
             return {
                 orderId: oRow.OrderID,
                 userId: oRow.UserID,
@@ -72,13 +77,15 @@ sap.ui.define([
                 orderTime: oRow.OrderTime || "",
                 totalAmountText: oRow.TotalAmount,
                 currency: oRow.Currency || "VND",
-                orderStatus: oRow.OrderStatus || "Unknown",
-                paymentStatus: oRow.PaymentStatus || "Unknown",
+                orderStatus: sOrderStatus,
+                paymentStatus: sPaymentStatus,
+                canCheckout: ["CREATED", "PENDING"].indexOf(sOrderStatus) !== -1 && sPaymentStatus !== "PAID",
                 note: oRow.Note || "",
                 items: aItems.map(function (oItem) {
                     return {
                         foodId: oItem.FoodID,
                         foodName: oItem.FoodName || oItem.FoodID || "",
+                        imageUrl: "",
                         quantity: oItem.Quantity,
                         unitPriceText: oItem.UnitPrice,
                         lineAmountText: oItem.LineAmount,
@@ -89,9 +96,37 @@ sap.ui.define([
             };
         },
 
+        _loadOrderItemImages: function (aItems) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            var oOrdersModel = this.getOwnerComponent().getModel("orders");
+
+            Promise.all((aItems || []).map(function (oItem, iIndex) {
+                return oODataModel.bindList("/Food2", undefined, undefined, [
+                    new Filter("MaterialNumber", FilterOperator.EQ, oItem.foodId)
+                ], { $$groupId: "$auto" }).requestContexts(0, 1).then(function (aContexts) {
+                    var oFood = aContexts && aContexts.length ? aContexts[0].getObject() : null;
+                    return { index: iIndex, food: oFood };
+                }).catch(function () {
+                    return { index: iIndex, food: null };
+                });
+            })).then(function (aResults) {
+                aResults.forEach(function (oResult) {
+                    if (oResult.food) {
+                        oOrdersModel.setProperty(
+                            "/selectedOrder/items/" + oResult.index + "/imageUrl",
+                            oResult.food.ImageUrl || ""
+                        );
+                    }
+                });
+            });
+        },
+
         onCheckout: function () {
             var oOrder = this.getOwnerComponent().getModel("orders").getProperty("/selectedOrder");
-            if (!oOrder) { return; }
+            if (!oOrder || !oOrder.canCheckout) {
+                MessageBox.warning("Only unpaid CREATED or PENDING orders can be checked out.");
+                return;
+            }
             this.getOwnerComponent().setModel(new JSONModel({
                 orderId: oOrder.orderId,
                 items: oOrder.items,

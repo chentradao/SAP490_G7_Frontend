@@ -8,25 +8,37 @@
     <Page title="{i18n>foodDetailTitle}" showNavButton="true" navButtonPress=".onNavBack" fitContainer="true">
         <content>
             <VBox class="sapUiSmallMargin" width="100%">
+                <HBox class="foodDetailHero" alignItems="Center" wrap="Wrap" width="100%">
+                    <Avatar
+                        src="{ImageUrl}"
+                        fallbackIcon="sap-icon://meal"
+                        displayShape="Square"
+                        displaySize="Custom"
+                        customDisplaySize="18rem"
+                        customFontSize="5rem"
+                        tooltip="{MaterialDescription}"
+                        class="foodDetailImage" />
 
-                <ObjectHeader
-                    title="{MaterialDescription}"
-                    icon="{ImageUrl}"
-                    number="{path: 'Price', formatter: '.formatPrice'}"
-                    numberUnit="{Currency}">
-                    <attributes>
-                        <ObjectAttribute title="{i18n>labelMaterialNumber}" text="{MaterialNumber}" />
-                        <ObjectAttribute title="{i18n>labelMaterialGroup}" text="{MaterialGroup}" />
-                        <ObjectAttribute title="{i18n>labelMaterialType}" text="{MaterialType}" />
-                        <ObjectAttribute title="{i18n>labelStock}" text="{= ${AvailableStock} + ' ' + ${BaseUnit} }" />
-                        <ObjectAttribute title="{i18n>labelPlant}" text="{= ${Plant} + ' / ' + ${StorageLocation} }" />
-                    </attributes>
-                    <statuses>
-                        <ObjectStatus
-                            text="{= ${Status} === 'A' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
-                            state="{= ${Status} === 'A' ? 'Success' : 'Error' }" />
-                    </statuses>
-                </ObjectHeader>
+                    <VBox class="foodDetailInfo">
+                        <ObjectHeader
+                            title="{MaterialDescription}"
+                            number="{path: 'Price', formatter: '.formatPrice'}"
+                            numberUnit="{Currency}">
+                            <attributes>
+                                <ObjectAttribute title="{i18n>labelMaterialNumber}" text="{MaterialNumber}" />
+                                <ObjectAttribute title="{i18n>labelMaterialGroup}" text="{MaterialGroup}" />
+                                <ObjectAttribute title="{i18n>labelMaterialType}" text="{MaterialType}" />
+                                <ObjectAttribute title="{i18n>labelStock}" text="{= ${AvailableStock} + ' ' + ${BaseUnit} }" />
+                                <ObjectAttribute title="{i18n>labelPlant}" text="{= ${Plant} + ' / ' + ${StorageLocation} }" />
+                            </attributes>
+                            <statuses>
+                                <ObjectStatus
+                                    text="{= ${Status} === 'A' ? ${i18n>statusActive} : ${i18n>statusInactive} }"
+                                    state="{= ${Status} === 'A' ? 'Success' : 'Error' }" />
+                            </statuses>
+                        </ObjectHeader>
+                    </VBox>
+                </HBox>
 
                 <Panel
                     headerText="Order Options"

@@ -135,8 +135,7 @@
         <Panel
           class="staffWorkflowPanel"
           headerText="4. Menu Management"
-          expandable="false"
-          visible="{= ${session>/role} !== 'ADMIN' }">
+          expandable="false">
           <content>
             <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="staffMenuAction">
               <VBox>
@@ -148,29 +147,56 @@
           </content>
         </Panel>
 
-        <Panel class="staffWorkflowPanel" headerText="5. Today's Sales Performance" expandable="false">
+        <Panel class="staffWorkflowPanel" headerText="5. Revenue and Purchasing Performance" expandable="false">
           <content>
+            <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="staffFinanceToolbar sapUiSmallMarginBottom">
+              <SegmentedButton
+                selectedKey="{dashboard>/financePeriod}"
+                selectionChange="onFinancePeriodChange">
+                <items>
+                  <SegmentedButtonItem key="TODAY" text="Today" />
+                  <SegmentedButtonItem key="WEEK" text="This week" />
+                  <SegmentedButtonItem key="MONTH" text="This month" />
+                </items>
+              </SegmentedButton>
+              <ObjectStatus
+                title="Reporting period"
+                text="{dashboard>/financePeriodLabel}"
+                icon="sap-icon://calendar" />
+            </HBox>
+            <MessageStrip
+              visible="{= !${dashboard>/financeDataAvailable} }"
+              text="{dashboard>/financeMessage}"
+              type="Warning"
+              showIcon="true"
+              class="sapUiSmallMarginBottom" />
             <FlexBox wrap="Wrap" class="staffSalesKpiRow">
               <VBox class="staffSalesKpi staffSalesKpiConfirmed">
-                <Text text="Confirmed orders" />
-                <Title text="{dashboard>/todayConfirmedCount}" level="H2" />
+                <Text text="Successful orders" />
+                <Title text="{dashboard>/financeSuccessfulCount}" level="H2" />
+                <Text text="Paid and confirmed" class="staffSalesKpiHint" />
+              </VBox>
+              <VBox class="staffSalesKpi staffSalesKpiRevenue">
+                <Text text="Revenue" />
+                <Title text="{= ${dashboard>/financeRevenueText} + ' ' + ${dashboard>/financeCurrency} }" level="H2" />
+                <Text text="Successful orders only" class="staffSalesKpiHint" />
               </VBox>
               <VBox class="staffSalesKpi staffSalesKpiCancelled">
                 <Text text="Cancelled orders" />
-                <Title text="{dashboard>/todayCancelledCount}" level="H2" />
+                <Title text="{dashboard>/financeCancelledCount}" level="H2" />
               </VBox>
-              <VBox class="staffSalesKpi staffSalesKpiRevenue">
-                <Text text="Paid revenue" />
-                <Title text="{= ${dashboard>/todayRevenueText} + ' VND' }" level="H2" />
+              <VBox class="staffSalesKpi staffSalesKpiCancelledAmount">
+                <Text text="Cancelled order value" />
+                <Title text="{= ${dashboard>/financeCancelledAmountText} + ' ' + ${dashboard>/financeCurrency} }" level="H2" />
               </VBox>
-              <VBox class="staffSalesKpi staffSalesKpiItems">
-                <Text text="Items sold" />
-                <Title text="{dashboard>/todayItemsSold}" level="H2" />
+              <VBox class="staffSalesKpi staffSalesKpiCost">
+                <Text text="Raw-material receipt cost" />
+                <Title
+                  text="{= ${dashboard>/financeDataAvailable} ? ${dashboard>/financePurchaseCostText} + ' ' + ${dashboard>/financeCurrency} : '—' }"
+                  level="H2" />
+                <Text text="Posted GR 101 less reversals 102" class="staffSalesKpiHint" />
               </VBox>
             </FlexBox>
-            <HBox justifyContent="End" class="sapUiSmallMarginTop">
-              <Button text="View Revenue" icon="sap-icon://line-chart" type="Emphasized" press="onOpenRevenueAnalytics" />
-            </HBox>
           </content>
         </Panel>
       </VBox>

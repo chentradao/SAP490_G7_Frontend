@@ -15,6 +15,29 @@ sap.ui.define([
     var CREATE_CHECKOUT_ACTION = "/Payments/com.sap.gateway.srvd.zsd_g7_canteen.v0001.createCheckout(...)";
     var PAYMENT_STATUS_POLL_INTERVAL_MS = 3000;
 
+    function formatAmount(vAmount) {
+        var sValue = String(vAmount === null || vAmount === undefined ? "" : vAmount)
+            .trim()
+            .replace(/\s/g, "");
+        var fAmount;
+
+        if (sValue.indexOf(",") !== -1 && sValue.indexOf(".") !== -1) {
+            sValue = sValue.lastIndexOf(",") > sValue.lastIndexOf(".") ?
+                sValue.replace(/\./g, "").replace(",", ".") :
+                sValue.replace(/,/g, "");
+        } else if (/^-?\d{1,3}(,\d{3})+$/.test(sValue)) {
+            sValue = sValue.replace(/,/g, "");
+        } else {
+            sValue = sValue.replace(",", ".");
+        }
+        fAmount = Number(sValue) || 0;
+
+        return fAmount.toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+    }
+
     return Controller.extend("sap490g7fioriapp.controller.Checkout", {
         onInit: function () {
             this.getView().setModel(new JSONModel({
@@ -374,19 +397,29 @@ sap.ui.define([
             var aItems = Array.isArray(oOrder._Items) ? oOrder._Items : [];
             var oCurrentModel = this.getOwnerComponent().getModel("checkoutData");
             var oCurrentData = oCurrentModel ? oCurrentModel.getData() : {};
+            var mCurrentItems = {};
+            (oCurrentData.items || []).forEach(function (oItem) {
+                var sFoodId = oItem.foodId || oItem.FoodID || oItem.materialNumber;
+                if (sFoodId) {
+                    mCurrentItems[sFoodId] = oItem;
+                }
+            });
+            var aCheckoutItems = aItems.map(function (oItem) {
+                var oCurrentItem = mCurrentItems[oItem.FoodID] || {};
+                return {
+                    foodId: oItem.FoodID,
+                    foodName: oItem.FoodName || oCurrentItem.foodName || oItem.FoodID || "",
+                    imageUrl: oCurrentItem.imageUrl || "",
+                    quantity: oItem.Quantity,
+                    unitPriceText: formatAmount(oItem.UnitPrice),
+                    lineAmountText: formatAmount(oItem.LineAmount),
+                    currency: oItem.Currency || oOrder.Currency || "VND"
+                };
+            });
             this.getOwnerComponent().setModel(new JSONModel({
                 orderId: oOrder.OrderID,
-                items: aItems.map(function (oItem) {
-                    return {
-                        foodId: oItem.FoodID,
-                        foodName: oItem.FoodName || oItem.FoodID || "",
-                        quantity: oItem.Quantity,
-                        unitPriceText: oItem.UnitPrice,
-                        lineAmountText: oItem.LineAmount,
-                        currency: oItem.Currency || oOrder.Currency || "VND"
-                    };
-                }),
-                totalAmountText: oOrder.TotalAmount,
+                items: aCheckoutItems,
+                totalAmountText: formatAmount(oOrder.TotalAmount),
                 currency: oOrder.Currency || "VND",
                 note: oOrder.Note || "",
                 paymentStatus: oOrder.PaymentStatus || "",
@@ -395,6 +428,34 @@ sap.ui.define([
                 existingOrder: true,
                 creatingCheckout: false
             }), "checkoutData");
+            this._loadCheckoutFoodDetails(aCheckoutItems);
+        },
+
+        _loadCheckoutFoodDetails: function (aItems) {
+            var oModel = this.getOwnerComponent().getModel();
+            var oCheckoutData = this.getOwnerComponent().getModel("checkoutData");
+
+            Promise.all((aItems || []).map(function (oItem, iIndex) {
+                return oModel.bindList("/Food2", undefined, undefined, [
+                    new Filter("MaterialNumber", FilterOperator.EQ, oItem.foodId)
+                ], { $$groupId: "$auto" }).requestContexts(0, 1).then(function (aContexts) {
+                    var oFood = aContexts && aContexts.length ? aContexts[0].getObject() : null;
+                    return { index: iIndex, food: oFood };
+                }).catch(function () {
+                    return { index: iIndex, food: null };
+                });
+            })).then(function (aResults) {
+                aResults.forEach(function (oResult) {
+                    if (!oResult.food) {
+                        return;
+                    }
+                    oCheckoutData.setProperty("/items/" + oResult.index + "/imageUrl", oResult.food.ImageUrl || "");
+                    oCheckoutData.setProperty(
+                        "/items/" + oResult.index + "/foodName",
+                        oResult.food.MaterialDescription || oCheckoutData.getProperty("/items/" + oResult.index + "/foodName")
+                    );
+                });
+            });
         },
 
         onSaveNote: function () {

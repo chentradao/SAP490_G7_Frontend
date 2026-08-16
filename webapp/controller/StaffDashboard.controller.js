@@ -16,10 +16,16 @@ sap.ui.define([
                 activeProductionCount: 0,
                 goodsIssueCount: 0,
                 productionGoodsReceiptCount: 0,
-                todayConfirmedCount: 0,
-                todayCancelledCount: 0,
-                todayRevenueText: "0",
-                todayItemsSold: 0
+                financePeriod: "TODAY",
+                financePeriodLabel: "Today",
+                financeSuccessfulCount: 0,
+                financeCancelledCount: 0,
+                financeRevenueText: "0",
+                financeCancelledAmountText: "0",
+                financePurchaseCostText: "0",
+                financeCurrency: "VND",
+                financeDataAvailable: true,
+                financeMessage: ""
             }), "dashboard");
 
             this.getOwnerComponent().getRouter().getRoute("RouteStaffDashboard")
@@ -67,7 +73,14 @@ sap.ui.define([
                     requestObjects("/GoodsReceiptRequests", "request_id,status,material_document"),
                     requestObjects("/ProductionOrderRequests", "request_id,status,production_order,goods_issue_status,goods_receipt_status"),
                     requestObjects("/ProductionConfirmationHistory", "confirmation_id,confirmation_status"),
-                    requestObjects("/Orders", "OrderID,OrderDate,OrderStatus,PaymentStatus,TotalAmount", { $expand: "_Items($select=Quantity)" })
+                    requestObjects("/Orders", "OrderID,OrderDate,OrderStatus,PaymentStatus,TotalAmount,Currency"),
+                    requestObjects(
+                        "/AdminFinanceDaily",
+                        "BusinessDate,Currency,SuccessfulOrderCount,Revenue,CancelledOrderCount,CancelledOrderAmount,PurchaseCost"
+                    ).catch(function (oError) {
+                        console.error("AdminFinanceDaily could not be loaded:", oError);
+                        return null;
+                    })
                 ]);
 
                 const iLowStock = aResults[0].filter(function (oItem) {
@@ -91,30 +104,10 @@ sap.ui.define([
                     return String(oItem.goods_receipt_status || "").toUpperCase() === "POSTED";
                 }).length;
 
-                const oToday = new Date();
-                const sTodayCompact = [oToday.getFullYear(), String(oToday.getMonth() + 1).padStart(2, "0"), String(oToday.getDate()).padStart(2, "0")].join("");
-                const sTodayIso = [oToday.getFullYear(), String(oToday.getMonth() + 1).padStart(2, "0"), String(oToday.getDate()).padStart(2, "0")].join("-");
-                const aTodayOrders = aResults[5].filter(function (oOrder) {
-                    const sDate = String(oOrder.OrderDate || "").slice(0, 10);
-                    return sDate === sTodayCompact || sDate === sTodayIso;
-                });
-                const iConfirmed = aTodayOrders.filter(function (oOrder) {
-                    return String(oOrder.OrderStatus || "").toUpperCase() === "CONFIRMED";
-                }).length;
-                const iCancelled = aTodayOrders.filter(function (oOrder) {
-                    return String(oOrder.OrderStatus || "").toUpperCase() === "CANCELLED";
-                }).length;
-                const aPaidOrders = aTodayOrders.filter(function (oOrder) {
-                    return String(oOrder.PaymentStatus || "").toUpperCase() === "PAID";
-                });
-                const fRevenue = aPaidOrders.reduce(function (fTotal, oOrder) {
-                    return fTotal + (Number(oOrder.TotalAmount) || 0);
-                }, 0);
-                const iItemsSold = aPaidOrders.reduce(function (iTotal, oOrder) {
-                    return iTotal + (oOrder._Items || []).reduce(function (iOrderTotal, oItem) {
-                        return iOrderTotal + (Number(oItem.Quantity) || 0);
-                    }, 0);
-                }, 0);
+                const bFinanceDataAvailable = Array.isArray(aResults[6]);
+                this._financeOrders = aResults[5];
+                this._financeDailyRows = bFinanceDataAvailable ? aResults[6] : [];
+                this._financeDataAvailable = bFinanceDataAvailable;
 
                 oDashboard.setData({
                     lowStockCount: iLowStock,
@@ -125,15 +118,141 @@ sap.ui.define([
                     goodsIssueCount: iGoodsIssues,
                     productionGoodsReceiptCount: iProductionGoodsReceipts,
                     confirmationCount: aResults[4].length,
-                    todayConfirmedCount: iConfirmed,
-                    todayCancelledCount: iCancelled,
-                    todayRevenueText: fRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 }),
-                    todayItemsSold: iItemsSold
+                    financePeriod: oDashboard.getProperty("/financePeriod") || "TODAY",
+                    financePeriodLabel: "",
+                    financeSuccessfulCount: 0,
+                    financeCancelledCount: 0,
+                    financeRevenueText: "0",
+                    financeCancelledAmountText: "0",
+                    financePurchaseCostText: "0",
+                    financeCurrency: "VND",
+                    financeDataAvailable: bFinanceDataAvailable,
+                    financeMessage: bFinanceDataAvailable ? "" :
+                        "Purchase cost is unavailable. Sales KPIs are temporarily calculated from Orders."
                 });
+                this._applyFinancePeriod();
             } catch (oError) {
                 // Navigation remains usable even when one summary endpoint is unavailable.
                 MessageBox.warning("The dashboard could not refresh all summary counts.");
             }
+        },
+
+        onFinancePeriodChange: function (oEvent) {
+            this.getView().getModel("dashboard").setProperty(
+                "/financePeriod",
+                oEvent.getParameter("item").getKey()
+            );
+            this._applyFinancePeriod();
+        },
+
+        _applyFinancePeriod: function () {
+            const oDashboard = this.getView().getModel("dashboard");
+            const sPeriod = oDashboard.getProperty("/financePeriod") || "TODAY";
+            const oRange = this._getFinanceRange(sPeriod);
+            const isInRange = function (vDate) {
+                const sDate = this._normalizeBusinessDate(vDate);
+                return sDate && sDate >= oRange.start && sDate <= oRange.end;
+            }.bind(this);
+            const aOrders = (this._financeOrders || []).filter(function (oOrder) {
+                return isInRange(oOrder.OrderDate);
+            });
+            const aSuccessfulOrders = aOrders.filter(function (oOrder) {
+                const sOrderStatus = String(oOrder.OrderStatus || "").toUpperCase();
+                return String(oOrder.PaymentStatus || "").toUpperCase() === "PAID" &&
+                    ["CONFIRMED", "COMPLETED"].includes(sOrderStatus);
+            });
+            const aCancelledOrders = aOrders.filter(function (oOrder) {
+                return String(oOrder.OrderStatus || "").toUpperCase() === "CANCELLED";
+            });
+            const oFallback = {
+                successful: aSuccessfulOrders.length,
+                revenue: aSuccessfulOrders.reduce(function (fTotal, oOrder) {
+                    return fTotal + (Number(oOrder.TotalAmount) || 0);
+                }, 0),
+                cancelled: aCancelledOrders.length,
+                cancelledAmount: aCancelledOrders.reduce(function (fTotal, oOrder) {
+                    return fTotal + (Number(oOrder.TotalAmount) || 0);
+                }, 0),
+                purchaseCost: 0
+            };
+            const oFinance = (this._financeDailyRows || []).filter(function (oRow) {
+                return isInRange(oRow.BusinessDate) &&
+                    String(oRow.Currency || "VND").toUpperCase() === "VND";
+            }).reduce(function (oTotal, oRow) {
+                oTotal.successful += Number(oRow.SuccessfulOrderCount) || 0;
+                oTotal.revenue += Number(oRow.Revenue) || 0;
+                oTotal.cancelled += Number(oRow.CancelledOrderCount) || 0;
+                oTotal.cancelledAmount += Number(oRow.CancelledOrderAmount) || 0;
+                oTotal.purchaseCost += Number(oRow.PurchaseCost) || 0;
+                return oTotal;
+            }, {
+                successful: 0,
+                revenue: 0,
+                cancelled: 0,
+                cancelledAmount: 0,
+                purchaseCost: 0
+            });
+            const oTotals = this._financeDataAvailable ? oFinance : oFallback;
+            const formatAmount = function (fAmount) {
+                return Number(fAmount || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
+            };
+
+            oDashboard.setProperty("/financePeriodLabel", oRange.label);
+            oDashboard.setProperty("/financeSuccessfulCount", oTotals.successful);
+            oDashboard.setProperty("/financeCancelledCount", oTotals.cancelled);
+            oDashboard.setProperty("/financeRevenueText", formatAmount(oTotals.revenue));
+            oDashboard.setProperty("/financeCancelledAmountText", formatAmount(oTotals.cancelledAmount));
+            oDashboard.setProperty(
+                "/financePurchaseCostText",
+                this._financeDataAvailable ? formatAmount(oTotals.purchaseCost) : "—"
+            );
+        },
+
+        _getFinanceRange: function (sPeriod) {
+            const oToday = new Date();
+            const oStart = new Date(oToday.getFullYear(), oToday.getMonth(), oToday.getDate());
+            const oEnd = new Date(oStart);
+
+            if (sPeriod === "WEEK") {
+                const iDaysFromMonday = (oToday.getDay() + 6) % 7;
+                oStart.setDate(oStart.getDate() - iDaysFromMonday);
+                oEnd.setDate(oStart.getDate() + 6);
+            } else if (sPeriod === "MONTH") {
+                oStart.setDate(1);
+                oEnd.setMonth(oEnd.getMonth() + 1, 0);
+            }
+
+            const formatIso = function (oDate) {
+                return [
+                    oDate.getFullYear(),
+                    String(oDate.getMonth() + 1).padStart(2, "0"),
+                    String(oDate.getDate()).padStart(2, "0")
+                ].join("-");
+            };
+            const formatDisplay = function (oDate) {
+                return oDate.toLocaleDateString("en-GB");
+            };
+
+            return {
+                start: formatIso(oStart),
+                end: formatIso(oEnd),
+                label: sPeriod === "TODAY" ? formatDisplay(oStart) :
+                    formatDisplay(oStart) + " - " + formatDisplay(oEnd)
+            };
+        },
+
+        _normalizeBusinessDate: function (vDate) {
+            if (vDate instanceof Date && !Number.isNaN(vDate.getTime())) {
+                return [
+                    vDate.getFullYear(),
+                    String(vDate.getMonth() + 1).padStart(2, "0"),
+                    String(vDate.getDate()).padStart(2, "0")
+                ].join("-");
+            }
+            const sDate = String(vDate || "").slice(0, 10);
+            return /^\d{8}$/.test(sDate) ?
+                sDate.slice(0, 4) + "-" + sDate.slice(4, 6) + "-" + sDate.slice(6, 8) :
+                sDate;
         },
 
         _navTo: function (sRoute) {

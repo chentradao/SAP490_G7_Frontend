@@ -31,17 +31,6 @@
                         <core:Item key="Desc" text="Quantity: high to low" />
                     </Select>
                 </contentMiddle>
-                <contentRight>
-                    <Select
-                        id="statusFilter"
-                        width="10rem"
-                        selectedKey="All"
-                        change=".onStatusChange">
-                        <core:Item key="All" text="All Status" />
-                        <core:Item key="A" text="Active" />
-                        <core:Item key="I" text="Inactive" />
-                    </Select>
-                </contentRight>
             </Bar>
         </subHeader>
         <content>
@@ -55,6 +44,9 @@
                 growing="true"
                 growingScrollToLoad="true">
                 <columns>
+                    <Column width="6rem" hAlign="Center">
+                        <Text text="{i18n>colFoodImage}" />
+                    </Column>
                     <Column width="12rem">
                         <Text text="{i18n>colMaterialDescription}" />
                     </Column>
@@ -77,6 +69,15 @@
                 <items>
                     <ColumnListItem type="Navigation" press=".onFoodPress">
                         <cells>
+                            <Avatar
+                                src="{ImageUrl}"
+                                fallbackIcon="sap-icon://meal"
+                                displayShape="Square"
+                                displaySize="Custom"
+                                customDisplaySize="4rem"
+                                customFontSize="1.5rem"
+                                tooltip="{ImageUrl}"
+                                class="foodListImage" />
                             <ObjectIdentifier
                                 title="{MaterialDescription}"
                                 text="{MaterialNumber}" />
@@ -88,7 +89,7 @@
                                 state="{= ${Status} === 'A' ? 'Success' : 'Error' }" />
                             <Button
                                 text="Add to Cart"
-                                enabled="{= ${Status} === 'A' }"
+                                enabled="{= ${Status} === 'A' &amp;&amp; ${AvailableStock} > 0 }"
                                 press=".onAddToCart" />
                         </cells>
                     </ColumnListItem>

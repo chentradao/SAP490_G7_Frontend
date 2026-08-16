@@ -34,7 +34,8 @@
                 <Panel headerText="Order Items" class="sapUiSmallMarginTop">
                     <Table items="{orders>/selectedOrder/items}" class="orderItemsTable">
                         <columns>
-                            <Column width="38%"><Text text="Product" /></Column>
+                            <Column hAlign="Center" width="10%"><Text text="Image" /></Column>
+                            <Column width="28%"><Text text="Product" /></Column>
                             <Column hAlign="End" width="18%"><Text text="Unit Price" /></Column>
                             <Column hAlign="Center" width="12%"><Text text="Quantity" /></Column>
                             <Column hAlign="End" width="20%"><Text text="Line Amount" /></Column>
@@ -43,6 +44,14 @@
                         <items>
                             <ColumnListItem vAlign="Middle">
                                 <cells>
+                                    <Avatar
+                                        src="{orders>imageUrl}"
+                                        fallbackIcon="sap-icon://meal"
+                                        displayShape="Square"
+                                        displaySize="Custom"
+                                        customDisplaySize="3.5rem"
+                                        customFontSize="1.25rem"
+                                        class="orderDetailItemImage" />
                                     <ObjectIdentifier title="{orders>foodName}" text="{orders>foodId}" />
                                     <Text text="{= ${orders>unitPriceText} + ' ' + ${orders>currency} }" class="orderItemAmount" />
                                     <Text text="{orders>quantity}" textAlign="Center" />
@@ -62,7 +71,7 @@
                     text="Checkout"
                     type="Emphasized"
                     icon="sap-icon://cart"
-                    visible="{= ${orders>/selectedOrder/orderStatus} === 'CREATED' }"
+                    visible="{orders>/selectedOrder/canCheckout}"
                     press=".onCheckout" />
             </Toolbar>
         </footer>

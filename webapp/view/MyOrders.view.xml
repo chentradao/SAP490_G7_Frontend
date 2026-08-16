@@ -12,6 +12,12 @@
                 <Label text="To" labelFor="toDate" class="sapUiSmallMarginBegin" />
                 <DatePicker id="toDate" valueFormat="yyyyMMdd" displayFormat="dd/MM/yyyy" change=".onFilterChange" class="sapUiTinyMarginBegin" />
                 <ToolbarSpacer />
+                <ToggleButton
+                    text="{= ${orders>/showHidden} ? 'Show active orders' : 'Show hidden orders' }"
+                    icon="sap-icon://hide"
+                    pressed="{orders>/showHidden}"
+                    press=".onToggleHiddenOrders"
+                    class="sapUiTinyMarginEnd" />
                 <ComboBox id="statusFilter" width="12rem" placeholder="Order status" selectionChange=".onFilterChange" items="{orders>/statusOptions}">
                     <core:Item key="{orders>key}" text="{orders>text}" />
                 </ComboBox>
@@ -20,11 +26,11 @@
         <content>
             <Table id="orderList" items="{orders>/filteredOrders}" noDataText="You do not have any orders yet" class="ordersTable">
                 <columns>
-                    <Column width="24%"><Text text="Order ID" /></Column>
-                    <Column width="22%"><Text text="Created Date" /></Column>
-                    <Column width="20%"><Text text="Order Status" /></Column>
-                    <Column hAlign="End" width="22%"><Text text="Total Amount" /></Column>
-                    <Column hAlign="Center" width="12%"><Text text="" /></Column>
+                    <Column width="22%"><Text text="Order ID" /></Column>
+                    <Column width="19%"><Text text="Created Date" /></Column>
+                    <Column width="18%"><Text text="Order Status" /></Column>
+                    <Column hAlign="End" width="19%"><Text text="Total Amount" /></Column>
+                    <Column hAlign="Center" width="22%"><Text text="Actions" /></Column>
                 </columns>
                 <items>
                     <ColumnListItem vAlign="Middle">
@@ -33,7 +39,15 @@
                             <Text text="{orders>orderDateDisplay}" />
                             <ObjectStatus text="{orders>orderStatus}" state="{= ${orders>orderStatus} === 'COMPLETED' ? 'Success' : 'Information' }" />
                             <ObjectNumber number="{orders>totalAmountText}" unit="{orders>currency}" state="Success" class="orderAmount" />
-                            <Button text="Details" type="Emphasized" press=".onOrderPress" />
+                            <HBox justifyContent="Center">
+                                <Button text="Details" type="Emphasized" press=".onOrderPress" />
+                                <Button
+                                    text="{= ${orders>isHidden} ? 'Restore' : 'Hide' }"
+                                    icon="{= ${orders>isHidden} ? 'sap-icon://undo' : 'sap-icon://hide' }"
+                                    type="{= ${orders>isHidden} ? 'Accept' : 'Reject' }"
+                                    press=".onSoftDeleteOrder"
+                                    class="sapUiTinyMarginBegin" />
+                            </HBox>
                         </cells>
                     </ColumnListItem>
                 </items>

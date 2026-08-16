@@ -91,32 +91,18 @@ sap.ui.define([
             this._applyFilters();
         },
 
-        onStatusChange: function () {
-            this._applyFilters();
-        },
-
         _applyFilters: function (sQuery) {
             var oTable = this.byId("foodTable");
             var oBinding = oTable.getBinding("items");
             var aFilters = [];
             var sSearchQuery = sQuery || this.byId("foodSearchField").getValue() || "";
             var sQuantitySort = this.byId("quantitySort").getSelectedKey();
-            var sStatus = this.byId("statusFilter").getSelectedKey();
 
             if (sSearchQuery) {
                 aFilters.push(new Filter({
                     filters: [
                         new Filter("MaterialNumber", FilterOperator.Contains, sSearchQuery),
                         new Filter("MaterialDescription", FilterOperator.Contains, sSearchQuery)
-                    ],
-                    and: false
-                }));
-            }
-
-            if (sStatus && sStatus !== "All") {
-                aFilters.push(new Filter({
-                    filters: [
-                        new Filter("Status", FilterOperator.EQ, sStatus === "ACTIVE" ? "A" : "I")
                     ],
                     and: false
                 }));
@@ -150,6 +136,11 @@ sap.ui.define([
             var oMaterial = oContext && typeof oContext.getObject === "function" ? oContext.getObject() : null;
 
             if (!oMaterial) {
+                return;
+            }
+
+            if (Number(oMaterial.AvailableStock || 0) <= 0) {
+                MessageToast.show("This item is out of stock.");
                 return;
             }
 
