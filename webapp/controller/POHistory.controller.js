@@ -33,6 +33,20 @@ sap.ui.define([
                 minimumPostingDate: oToday
             }), "gr");
 
+            this.getView().setModel(new JSONModel({
+                busy: false,
+                groups: []
+            }), "poGroups");
+
+            if (!this.getOwnerComponent().getModel("poSuccess")) {
+                this.getOwnerComponent().setModel(new JSONModel({
+                    visible: false,
+                    purchaseOrder: "",
+                    materialCount: 0,
+                    vendor: ""
+                }), "poSuccess");
+            }
+
             this.getOwnerComponent().getRouter().getRoute("RoutePOHistory")
                 .attachPatternMatched(this._onRouteMatched, this);
         },
@@ -65,6 +79,10 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        onOpenMRPResults: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteMRPResults");
+        },
+
         /** Xử lý sự kiện Search từ giao diện người dùng. */
         onSearch: function (oEvent) {
             const sQuery = (
@@ -84,44 +102,9 @@ sap.ui.define([
 
         /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function (sQuery) {
-            const oTable = this.byId("poHistoryTable");
-            const oBinding = oTable && oTable.getBinding("items");
-            if (!oBinding) {
-                return;
-            }
-
-            const aFilters = [];
             const oStatusFilter = this.byId("poStatusFilter");
             const sStatus = oStatusFilter ? oStatusFilter.getSelectedKey() : "ALL";
-
-            if (sStatus === "CREATED") {
-                aFilters.push(new Filter("purchase_order", FilterOperator.NE, ""));
-            } else if (sStatus === "ERROR") {
-                aFilters.push(new Filter("status", FilterOperator.EQ, "ERROR"));
-            } else if (sStatus === "PENDING") {
-                aFilters.push(new Filter({
-                    filters: [
-                        new Filter("purchase_order", FilterOperator.EQ, ""),
-                        new Filter("status", FilterOperator.NE, "ERROR")
-                    ],
-                    and: true
-                }));
-            }
-
-            if (sQuery) {
-                aFilters.push(new Filter({
-                    filters: [
-                        new Filter("purchase_order", FilterOperator.EQ, sQuery),
-                        new Filter("material", FilterOperator.EQ, sQuery.toUpperCase()),
-                        new Filter("vendor", FilterOperator.EQ, sQuery.toUpperCase())
-                    ],
-                    and: false
-                }));
-            }
-
-            oBinding.filter(aFilters.length > 0
-                ? new Filter({ filters: aFilters, and: true })
-                : []);
+            this._loadPOGroups(sQuery, sStatus);
         },
 
         /** Xử lý sự kiện Clear Filters từ giao diện người dùng. */
@@ -133,10 +116,144 @@ sap.ui.define([
 
         /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
-            const oTable = this.byId("poHistoryTable");
-            const oBinding = oTable && oTable.getBinding("items");
-            if (oBinding) {
-                oBinding.refresh();
+            const oSearchField = this.byId("poHistorySearch");
+            const oStatusFilter = this.byId("poStatusFilter");
+            this._loadPOGroups(
+                oSearchField ? oSearchField.getValue().trim() : "",
+                oStatusFilter ? oStatusFilter.getSelectedKey() : "ALL"
+            );
+        },
+
+        _formatForecastBatchCode: function (sBatchId, vDate) {
+            if (!sBatchId) {
+                return "MANUAL";
+            }
+            const sDate = String(vDate || "").slice(0, 10).replace(/-/g, "") || "UNKNOWN";
+            const sShortId = String(sBatchId).replace(/-/g, "").slice(0, 8).toUpperCase();
+            return "FORECAST-" + sDate + "-" + sShortId;
+        },
+
+        _loadPOGroups: async function (sQuery, sStatus) {
+            const oGroupsModel = this.getView().getModel("poGroups");
+            const oModel = this.getOwnerComponent().getModel();
+            oGroupsModel.setProperty("/busy", true);
+
+            try {
+                const oPOBinding = oModel.bindList(
+                    "/ZP_G7_PO_REQUEST",
+                    undefined,
+                    undefined,
+                    undefined,
+                    { $$groupId: "$direct" }
+                );
+                const oOverviewBinding = oModel.bindList(
+                    "/POReceivingOverview",
+                    undefined,
+                    undefined,
+                    undefined,
+                    { $$groupId: "$direct" }
+                );
+
+                const aResults = await Promise.all([
+                    oPOBinding.requestContexts(0, 5000),
+                    oOverviewBinding.requestContexts(0, 5000)
+                ]);
+
+                const mOverview = {};
+                aResults[1].forEach(function (oContext) {
+                    const oItem = oContext.getObject();
+                    mOverview[oItem.request_id] = oItem;
+                });
+
+                const sNormalizedQuery = String(sQuery || "").trim().toUpperCase();
+                const mGroups = {};
+
+                aResults[0].forEach(function (oContext) {
+                    const oPO = Object.assign({}, oContext.getObject());
+                    const oOverview = mOverview[oPO.request_id] || {};
+                    const sDerivedStatus = oPO.purchase_order
+                        ? "CREATED"
+                        : (String(oPO.status || "").toUpperCase() === "ERROR" ? "ERROR" : "PENDING");
+
+                    if (sStatus && sStatus !== "ALL" && sStatus !== sDerivedStatus) {
+                        return;
+                    }
+
+                    const sSearchText = [
+                        oPO.purchase_order,
+                        oPO.material,
+                        oPO.material_description,
+                        oPO.vendor,
+                        oPO.vendor_name,
+                        oPO.purchase_requisition
+                    ].join(" ").toUpperCase();
+
+                    if (sNormalizedQuery && sSearchText.indexOf(sNormalizedQuery) === -1) {
+                        return;
+                    }
+
+                    const oItem = Object.assign({}, oPO, oOverview, {
+                        ordered_quantity: oOverview.ordered_quantity !== undefined
+                            ? oOverview.ordered_quantity
+                            : oPO.quantity,
+                        received_quantity: oOverview.received_quantity || 0,
+                        remaining_quantity: oOverview.remaining_quantity !== undefined
+                            ? oOverview.remaining_quantity
+                            : oPO.quantity,
+                        purchase_order_item: oOverview.purchase_order_item || ""
+                    });
+                    const sGroupKey = oPO.purchase_order || ("REQUEST-" + oPO.request_id);
+
+                    if (!mGroups[sGroupKey]) {
+                        mGroups[sGroupKey] = {
+                            key: sGroupKey,
+                            purchaseOrder: oPO.purchase_order || "Not generated",
+                            batchId: oPO.batch_id || "",
+                            batchCode: oPO.batch_id
+                                ? this._formatForecastBatchCode(
+                                    oPO.batch_id,
+                                    oPO.delivery_date || oPO.created_at
+                                )
+                                : (oPO.purchase_requisition ? "LEGACY · NO BATCH" : "MANUAL"),
+                            vendor: oPO.vendor || "-",
+                            createdAt: oPO.created_at || "",
+                            statusText: sDerivedStatus,
+                            statusState: sDerivedStatus === "CREATED"
+                                ? "Success"
+                                : (sDerivedStatus === "ERROR" ? "Error" : "Warning"),
+                            items: []
+                        };
+                    }
+
+                    const bDuplicatePOItem = Boolean(oItem.purchase_order_item) &&
+                        mGroups[sGroupKey].items.some(function (oExistingItem) {
+                            return String(oExistingItem.purchase_order_item) === String(oItem.purchase_order_item);
+                        });
+
+                    if (!bDuplicatePOItem) {
+                        mGroups[sGroupKey].items.push(oItem);
+                    }
+                }, this);
+
+                const aGroups = Object.keys(mGroups).map(function (sKey) {
+                    const oGroup = mGroups[sKey];
+                    oGroup.items.sort(function (a, b) {
+                        return String(a.purchase_order_item || "").localeCompare(String(b.purchase_order_item || ""));
+                    });
+                    oGroup.itemCount = oGroup.items.length;
+                    oGroup.remainingItemCount = oGroup.items.filter(function (oItem) {
+                        return Number(oItem.remaining_quantity || 0) > 0 && Boolean(oItem.purchase_order_item);
+                    }).length;
+                    return oGroup;
+                }).sort(function (a, b) {
+                    return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+                });
+
+                oGroupsModel.setProperty("/groups", aGroups);
+            } catch (oError) {
+                MessageBox.error(oError.message || "Could not load grouped Purchase Orders.");
+            } finally {
+                oGroupsModel.setProperty("/busy", false);
             }
         },
 
@@ -259,6 +376,179 @@ sap.ui.define([
             this.byId("poDetailsDialog").close();
         },
 
+        onOpenSingleGR: function (oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("poGroups");
+            const oItem = oContext && oContext.getObject();
+
+            if (!oItem || !oItem.purchase_order || !oItem.purchase_order_item) {
+                MessageBox.warning("Purchase Order item data is incomplete.");
+                return;
+            }
+
+            const oToday = new Date();
+            const sToday = this._formatDateForOData(oToday);
+            const fRemaining = Number(oItem.remaining_quantity || 0);
+
+            if (fRemaining <= 0) {
+                MessageBox.information("This Purchase Order item has already been received in full.");
+                return;
+            }
+
+            this.getView().getModel("gr").setData({
+                busy: false,
+                purchaseOrder: oItem.purchase_order,
+                purchaseOrderItem: oItem.purchase_order_item,
+                batchId: oItem.batch_id || "",
+                mrpRunId: oItem.mrp_run_id || "",
+                mrpRunItemNo: oItem.mrp_run_item_no || "",
+                batchCode: oItem.batch_id
+                    ? this._formatForecastBatchCode(
+                        oItem.batch_id,
+                        oItem.delivery_date || oItem.created_at
+                    )
+                    : (oItem.purchase_requisition ? "LEGACY · NO BATCH" : "MANUAL"),
+                material: oItem.material || "",
+                materialDescription: oItem.material_description || "",
+                plant: oItem.plant || "",
+                storageLoc: oItem.storage_loc || "",
+                unit: oItem.unit || "",
+                quantity: String(fRemaining),
+                orderedQuantity: oItem.ordered_quantity || "0",
+                receivedQuantity: oItem.received_quantity || "0",
+                remainingQuantity: oItem.remaining_quantity || "0",
+                postingDate: sToday,
+                documentDate: sToday,
+                minimumPostingDate: oToday
+            });
+
+            this.byId("postGRDialog").open();
+        },
+
+        onPostBatchGR: async function (oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("poGroups");
+            const oGroup = oContext && oContext.getObject();
+            const aItems = oGroup && Array.isArray(oGroup.items)
+                ? oGroup.items.filter(function (oItem) {
+                    return Number(oItem.remaining_quantity || 0) > 0 && Boolean(oItem.purchase_order_item);
+                })
+                : [];
+
+            if (!oGroup || !oGroup.purchaseOrder || !aItems.length) {
+                MessageBox.information("This Purchase Order has no open item available for Goods Receipt.");
+                return;
+            }
+
+            const bConfirmed = await new Promise(function (resolve) {
+                MessageBox.confirm(
+                    "Forecast Batch: " + (oGroup.batchCode || "MANUAL") + "\n" +
+                    "Batch ID: " + (oGroup.batchId || "-") + "\n" +
+                    "Purchase Order: " + oGroup.purchaseOrder + "\n" +
+                    "Open items: " + aItems.length + "\n\n" +
+                    aItems.map(function (oItem) {
+                        return "• Item " + oItem.purchase_order_item + " — " +
+                            oItem.material + " — " + oItem.remaining_quantity + " " + oItem.unit;
+                    }).join("\n") +
+                    "\n\nPost Goods Receipt for all open items?",
+                    {
+                        title: "Post GR for Entire PO",
+                        emphasizedAction: MessageBox.Action.OK,
+                        onClose: function (sAction) {
+                            resolve(sAction === MessageBox.Action.OK);
+                        }
+                    }
+                );
+            });
+
+            if (!bConfirmed) {
+                return;
+            }
+
+            const oGroupsModel = this.getView().getModel("poGroups");
+            const oModel = this.getOwnerComponent().getModel();
+            const oToday = new Date();
+            const sToday = this._formatDateForOData(oToday);
+            oGroupsModel.setProperty("/busy", true);
+
+            try {
+                const oList = oModel.bindList(
+                    "/GoodsReceiptRequests",
+                    undefined,
+                    undefined,
+                    undefined,
+                    { $$updateGroupId: "$direct" }
+                );
+                const aContexts = aItems.map(function (oItem) {
+                    return oList.create({
+                        batch_id: oItem.batch_id || "",
+                        mrp_run_id: oItem.mrp_run_id || "",
+                        mrp_run_item_no: oItem.mrp_run_item_no || "",
+                        purchase_order: oItem.purchase_order,
+                        purchase_order_item: oItem.purchase_order_item,
+                        material: oItem.material,
+                        plant: oItem.plant,
+                        storage_loc: oItem.storage_loc,
+                        gr_quantity: this._formatQuantity(oItem.remaining_quantity),
+                        unit: oItem.unit,
+                        movement_type: "101",
+                        posting_date: sToday,
+                        document_date: sToday
+                    });
+                }, this);
+
+                await Promise.all(aContexts.map(function (oGRContext) {
+                    return oGRContext.created();
+                }));
+
+                const sRequestIDs = aContexts.map(function (oGRContext) {
+                    return oGRContext.getProperty("request_id") || "";
+                }).filter(Boolean).join(",");
+
+                if (!sRequestIDs) {
+                    throw new Error("SAP did not return Goods Receipt Request IDs.");
+                }
+
+                const oCollectionContext = oList.getHeaderContext();
+                if (!oCollectionContext) {
+                    throw new Error("Could not bind the Goods Receipt Request collection.");
+                }
+
+                const oAction = oModel.bindContext(
+                    "com.sap.gateway.srvd.zsd_g7_canteen.v0001.PostGoodsReceiptBatch(...)",
+                    oCollectionContext
+                );
+                oAction.setParameter("RequestIDs", sRequestIDs);
+                await oAction.execute("$direct");
+
+                const oResultContext = oAction.getBoundContext();
+                const oResult = oResultContext && oResultContext.getObject();
+                const bSuccess = Boolean(oResult && (oResult.Success || oResult.success));
+                const sMaterialDocument = oResult && (oResult.MaterialDocument || oResult.materialDocument) || "";
+                const sDocumentYear = oResult && (oResult.DocumentYear || oResult.documentYear) || "";
+                const sMessage = oResult && (oResult.Message || oResult.message) || "";
+
+                oModel.refresh();
+                await this._loadPOGroups("", "ALL");
+
+                if (bSuccess && sMaterialDocument) {
+                    MessageBox.success(
+                        "Forecast Batch: " + (oGroup.batchCode || "MANUAL") + "\n" +
+                        "Batch ID: " + (oGroup.batchId || "-") + "\n" +
+                        "Purchase Order: " + oGroup.purchaseOrder + "\n\n" +
+                        "Goods Receipt posted successfully.\n\nMaterial Document: " +
+                        sMaterialDocument + (sDocumentYear ? "/" + sDocumentYear : "") +
+                        "\nItems received: " + aItems.length,
+                        { title: "Entire PO Received" }
+                    );
+                } else {
+                    MessageBox.error(sMessage || "Batch Goods Receipt was not posted.");
+                }
+            } catch (oError) {
+                MessageBox.error(oError.message || "Could not post Goods Receipt for the entire Purchase Order.");
+            } finally {
+                oGroupsModel.setProperty("/busy", false);
+            }
+        },
+
         /** Xử lý sự kiện Open GR Dialog từ giao diện người dùng. */
         onOpenGRDialog: async function () {
             const oPOContext = this.byId("poDetailsDialog").getBindingContext();
@@ -277,6 +567,15 @@ sap.ui.define([
                 busy: false,
                 purchaseOrder: oPO.purchase_order,
                 purchaseOrderItem: "00010",
+                batchId: oPO.batch_id || "",
+                mrpRunId: oPO.mrp_run_id || "",
+                mrpRunItemNo: oPO.mrp_run_item_no || "",
+                batchCode: oPO.batch_id
+                    ? this._formatForecastBatchCode(
+                        oPO.batch_id,
+                        oPO.delivery_date || oPO.created_at
+                    )
+                    : (oPO.purchase_requisition ? "LEGACY · NO BATCH" : "MANUAL"),
                 material: oPO.material || "",
                 materialDescription: oPO.material_description || "",
                 plant: oPO.plant || "",
@@ -369,6 +668,9 @@ sap.ui.define([
                 );
 
                 const oGRContext = oListBinding.create({
+                    batch_id: oGR.batchId || "",
+                    mrp_run_id: oGR.mrpRunId || "",
+                    mrp_run_item_no: oGR.mrpRunItemNo || "",
                     purchase_order: oGR.purchaseOrder,
                     purchase_order_item: oGR.purchaseOrderItem,
                     material: oGR.material,
@@ -433,7 +735,14 @@ sap.ui.define([
                     this.onRefresh();
 
                     MessageBox.success(
-                        "Goods Receipt posted successfully.\n\nMaterial Document: " + sMaterialDocument
+                        "Forecast Batch: " + (oGR.batchCode || "MANUAL") + "\n" +
+                        "Batch ID: " + (oGR.batchId || "-") + "\n" +
+                        "Purchase Order: " + oGR.purchaseOrder + "\n" +
+                        "PO Item: " + oGR.purchaseOrderItem + "\n" +
+                        "Material: " + oGR.material + "\n" +
+                        "Quantity Received: " + fQuantity + " " + oGR.unit + "\n\n" +
+                        "Material Document: " + sMaterialDocument,
+                        { title: "Goods Receipt Posted" }
                     );
                 } else {
                     MessageBox.error(

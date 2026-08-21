@@ -35,14 +35,15 @@ sap.ui.define([
             const oTomorrow = new Date();
             oTomorrow.setDate(oTomorrow.getDate() + 1);
             return {
-                material: "",
-                description: "",
                 plant: "P001",
-                currentStock: "0",
                 requirementDate: this._formatLocalDate(oTomorrow),
                 minimumDate: oTomorrow,
-                quantity: "10",
-                unit: "EA",
+                selectedMeals: [],
+                batchRequestId: "",
+                batchMealCount: 0,
+                batchStatusText: "",
+                batchStatusState: "None",
+                historyBatches: [],
                 requirementType: "VSF",
                 version: "00",
                 versionActive: true,
@@ -64,15 +65,26 @@ sap.ui.define([
             this.onRefresh();
         },
 
-        /** Xử lý sự kiện Finished Good Selected từ giao diện người dùng. */
+        /** Đồng bộ các món đã chọn để người dùng nhập nhu cầu cho từng món. */
         onFinishedGoodSelected: function (oEvent) {
-            const oContext = oEvent.getParameter("listItem").getBindingContext();
             const oPIR = this.getView().getModel("pir");
-            oPIR.setProperty("/material", oContext.getProperty("Material") || "");
-            oPIR.setProperty("/description", oContext.getProperty("MaterialDescription") || "");
-            oPIR.setProperty("/plant", oContext.getProperty("Plant") || "P001");
-            oPIR.setProperty("/currentStock", oContext.getProperty("StockQuantity") || "0");
-            oPIR.setProperty("/unit", oContext.getProperty("MaterialBaseUnit") || "EA");
+            const mExistingQuantities = (oPIR.getProperty("/selectedMeals") || []).reduce(function (mQuantities, oMeal) {
+                mQuantities[oMeal.material] = oMeal.quantity;
+                return mQuantities;
+            }, {});
+            const aSelectedMeals = oEvent.getSource().getSelectedItems().map(function (oItem) {
+                const oContext = oItem.getBindingContext();
+                const sMaterial = oContext.getProperty("Material") || "";
+                return {
+                    material: sMaterial,
+                    description: oContext.getProperty("MaterialDescription") || "",
+                    plant: oContext.getProperty("Plant") || "P001",
+                    currentStock: oContext.getProperty("StockQuantity") || "0",
+                    unit: oContext.getProperty("MaterialBaseUnit") || "EA",
+                    quantity: mExistingQuantities[sMaterial] || "10"
+                };
+            });
+            oPIR.setProperty("/selectedMeals", aSelectedMeals);
         },
 
         /** Xử lý sự kiện Finished Goods Search từ giao diện người dùng. */
@@ -95,26 +107,29 @@ sap.ui.define([
         onCreatePIR: async function () {
             const oPIR = this.getView().getModel("pir");
             const oData = oPIR.getData();
-            const nQuantity = Number(oData.quantity);
+            const aMeals = Array.isArray(oData.selectedMeals) ? oData.selectedMeals : [];
 
-            if (!oData.material) {
-                MessageBox.error("Select a Finished Good first.");
+            if (!aMeals.length) {
+                MessageBox.error("Select one or more Finished Goods first.");
                 return;
             }
             if (!oData.requirementDate) {
                 MessageBox.error("Requirement Date is required.");
                 return;
             }
-            if (!Number.isFinite(nQuantity) || nQuantity <= 0) {
-                MessageBox.error("Forecast Quantity must be greater than zero.");
+            const oInvalidMeal = aMeals.find(function (oMeal) {
+                const nQuantity = Number(oMeal.quantity);
+                return !oMeal.material || !Number.isFinite(nQuantity) || nQuantity <= 0;
+            });
+            if (oInvalidMeal) {
+                MessageBox.error("Every selected meal must have a forecast quantity greater than zero.");
                 return;
             }
 
             const bConfirmed = await new Promise(function (resolve) {
                 MessageBox.confirm(
-                    "Create an active PIR for " + oData.material + "?\n\n" +
+                    "Create active PIRs for " + aMeals.length + " selected meal(s)?\n\n" +
                     "Date: " + oData.requirementDate + "\n" +
-                    "Quantity: " + oData.quantity + " " + oData.unit + "\n" +
                     "Requirement Type: VSF / Version: 00",
                     {
                         title: "Create Planned Independent Requirement",
@@ -131,70 +146,83 @@ sap.ui.define([
             }
 
             oPIR.setProperty("/busy", true);
+            const sBatchId = this._createBatchId();
+            const sBatchCode = this._formatForecastBatchCode(sBatchId, oData.requirementDate);
 
             try {
                 const oModel = this.getOwnerComponent().getModel();
                 const oList = oModel.bindList("/PIRRequests", undefined, undefined, undefined, {
                     $$updateGroupId: "$direct"
                 });
-                const oContext = oList.create({
-                    material: oData.material,
-                    plant: oData.plant,
-                    requirement_date: oData.requirementDate,
-                    requirement_quantity: String(oData.quantity),
-                    unit: oData.unit,
-                    requirement_type: oData.requirementType,
-                    version: oData.version,
-                    version_active: oData.versionActive ? "X" : "",
-                    requirement_plan_number: ""
-                });
-                await oContext.created();
-
-                const oAction = oModel.bindContext(
-                    "com.sap.gateway.srvd.zsd_g7_canteen.v0001.CreatePIR(...)",
-                    oContext
-                );
-                await oAction.execute("$direct");
-
-                const sRequestId = oContext.getProperty("pir_request_id") || "";
-                const oPollBinding = oModel.bindList(
-                    "/PIRRequests",
-                    undefined,
-                    undefined,
-                    [new Filter("pir_request_id", FilterOperator.EQ, sRequestId)],
-                    {
-                        $$groupId: "$direct",
-                        $select: "pir_request_id,status,bapi_message,material,requirement_date"
-                    }
-                );
-
-                let sStatus = "";
-                let sMessage = "";
-
-                for (let iAttempt = 0; iAttempt < 5; iAttempt += 1) {
-                    await new Promise(function (resolve) {
-                        setTimeout(resolve, 800);
+                const aFailures = [];
+                const aCreatedRequestIds = [];
+                for (const oMeal of aMeals) {
+                    const oContext = oList.create({
+                        batch_id: sBatchId,
+                        material: oMeal.material,
+                        plant: oMeal.plant || oData.plant,
+                        requirement_date: oData.requirementDate,
+                        requirement_quantity: String(oMeal.quantity),
+                        unit: oMeal.unit,
+                        requirement_type: oData.requirementType,
+                        version: oData.version,
+                        version_active: oData.versionActive ? "X" : "",
+                        requirement_plan_number: ""
                     });
+                    await oContext.created();
 
-                    oPollBinding.refresh();
+                    const oAction = oModel.bindContext(
+                        "com.sap.gateway.srvd.zsd_g7_canteen.v0001.CreatePIR(...)",
+                        oContext
+                    );
+                    await oAction.execute("$direct");
+
+                    const sRequestId = oContext.getProperty("pir_request_id") || "";
+                    const oPollBinding = oModel.bindList(
+                        "/PIRRequests",
+                        undefined,
+                        undefined,
+                        [new Filter("pir_request_id", FilterOperator.EQ, sRequestId)],
+                        { $$groupId: "$direct", $select: "status,bapi_message" }
+                    );
+                    await new Promise(function (resolve) { setTimeout(resolve, 800); });
                     const aContexts = await oPollBinding.requestContexts(0, 1);
-                    if (aContexts.length > 0) {
-                        sStatus = String(aContexts[0].getProperty("status") || "").toUpperCase();
-                        sMessage = aContexts[0].getProperty("bapi_message") || "";
-                    }
-
-                    if (sStatus === "CREATED" || sStatus === "ERROR") {
-                        break;
+                    const oResult = aContexts[0] && aContexts[0].getObject();
+                    if (oResult && String(oResult.status || "").toUpperCase() === "CREATED") {
+                        aCreatedRequestIds.push(sRequestId);
+                    } else {
+                        aFailures.push(oMeal.material + ": " + ((oResult && oResult.bapi_message) || "PIR was not created"));
                     }
                 }
 
-                oContext.refresh();
                 this.onRefresh();
 
-                if (sStatus === "CREATED") {
-                    MessageBox.success("PIR was created successfully." + (sMessage ? "\n\n" + sMessage : ""));
+                if (!aFailures.length) {
+                    const sCreatedDetails = aMeals.map(function (oMeal) {
+                        return "• " + oMeal.material + " — " + oMeal.description +
+                            " — " + oMeal.quantity + " " + oMeal.unit;
+                    }).join("\n");
+                    MessageBox.success(
+                        "Forecast Batch: " + sBatchCode + "\n" +
+                        "Batch ID: " + sBatchId + "\n\n" +
+                        aMeals.length + " forecast(s) were created successfully.\n\n" +
+                        "Requirement date: " + oData.requirementDate + "\n" +
+                        "Plant: " + oData.plant + "\n\n" +
+                        "Created forecasts:\n" + sCreatedDetails +
+                        "\n\nThe batch is available in Previous Forecasts and MRP Runs.",
+                        { title: "Forecast Batch Created" }
+                    );
+                    oPIR.setProperty("/selectedMeals", []);
+                    oPIR.setProperty("/batchRequestId", "");
+                    oPIR.setProperty("/batchMealCount", 0);
+                    oPIR.setProperty("/batchStatusText", "");
+                    oPIR.setProperty("/batchStatusState", "None");
                 } else {
-                    MessageBox.error(sMessage || "SAP did not return PIR status CREATED.");
+                    MessageBox.error(
+                        "Forecast Batch: " + sBatchCode + "\n" +
+                        "Batch ID: " + sBatchId + "\n\n" +
+                        "Some forecasts could not be created:\n" + aFailures.join("\n")
+                    );
                 }
             } catch (oError) {
                 MessageBox.error(oError.message || "Could not create the PIR.");
@@ -204,8 +232,163 @@ sap.ui.define([
         },
 
         /** Xử lý sự kiện Run MRP từ giao diện người dùng. */
-        onRunMRP: async function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext();
+        onRunTotalMRP: async function () {
+            const sRequestId = this.getView().getModel("pir").getProperty("/batchRequestId");
+            if (!sRequestId) {
+                MessageBox.warning("Create a forecast batch first.");
+                return;
+            }
+
+            try {
+                const oBinding = this.getOwnerComponent().getModel().bindList(
+                    "/PIRRequests",
+                    undefined,
+                    undefined,
+                    [new Filter("pir_request_id", FilterOperator.EQ, sRequestId)],
+                    { $$groupId: "$direct" }
+                );
+                const aContexts = await oBinding.requestContexts(0, 1);
+                if (!aContexts.length) {
+                    MessageBox.error("The latest forecast batch could not be found.");
+                    return;
+                }
+                await this.onRunMRP(aContexts[0]);
+            } catch (oError) {
+                MessageBox.error(oError.message || "Could not load the forecast batch.");
+            }
+        },
+
+        onRunHistoryBatch: async function (oEvent) {
+            const oBatch = oEvent.getSource().getBindingContext("pir").getObject();
+            const oRunnableItem = oBatch && (oBatch.items || []).find(function (oItem) {
+                const sStatus = String(oItem.status || "").toUpperCase();
+                return sStatus === "CREATED" || sStatus === "MRP_ERROR";
+            });
+            const sRunnableRequestId = oRunnableItem && oRunnableItem.pir_request_id;
+
+            if (!oBatch || !sRunnableRequestId) {
+                MessageBox.warning("This forecast batch has no runnable forecast.");
+                return;
+            }
+            const oBinding = this.getOwnerComponent().getModel().bindList(
+                "/PIRRequests", undefined, undefined,
+                [new Filter("pir_request_id", FilterOperator.EQ, sRunnableRequestId)],
+                { $$groupId: "$direct" }
+            );
+            const aContexts = await oBinding.requestContexts(0, 1);
+            if (aContexts.length) {
+                await this.onRunMRP(aContexts[0]);
+            }
+        },
+
+        onRunSingleMRP: async function (oEvent) {
+            const oHistoryContext = oEvent.getSource().getBindingContext("pir");
+            const oHistoryItem = oHistoryContext && oHistoryContext.getObject();
+            if (!oHistoryItem || !oHistoryItem.pir_request_id) {
+                MessageBox.error("The selected PIR could not be read.");
+                return;
+            }
+
+            const sRequestId = oHistoryItem.pir_request_id;
+            const sMaterial = oHistoryItem.material || "";
+            const sStatus = String(oHistoryItem.status || "").toUpperCase();
+
+            if (sStatus !== "CREATED" && sStatus !== "MRP_ERROR") {
+                MessageBox.warning("This PIR is not ready for single-item MRP.");
+                return;
+            }
+
+            const bConfirmed = await new Promise(function (resolve) {
+                MessageBox.confirm(
+                    "Run MRP only for " + sMaterial + "?\n\nOther items in this batch will not be processed.",
+                    {
+                        title: "Run Single MRP",
+                        emphasizedAction: MessageBox.Action.OK,
+                        onClose: function (sAction) {
+                            resolve(sAction === MessageBox.Action.OK);
+                        }
+                    }
+                );
+            });
+
+            if (!bConfirmed) {
+                return;
+            }
+
+            const oPIR = this.getView().getModel("pir");
+            oPIR.setProperty("/busy", true);
+
+            try {
+                const oModel = this.getOwnerComponent().getModel();
+                const oRequestBinding = oModel.bindList(
+                    "/PIRRequests", undefined, undefined,
+                    [new Filter("pir_request_id", FilterOperator.EQ, sRequestId)],
+                    { $$groupId: "$direct" }
+                );
+                const aRequestContexts = await oRequestBinding.requestContexts(0, 1);
+                if (!aRequestContexts.length) {
+                    throw new Error("The selected PIR could not be loaded from SAP.");
+                }
+                const oBackendContext = aRequestContexts[0];
+                const oAction = oModel.bindContext(
+                    "com.sap.gateway.srvd.zsd_g7_canteen.v0001.RunSingleMRP(...)",
+                    oBackendContext
+                );
+                await oAction.execute("$direct");
+
+                const oPollBinding = oModel.bindList(
+                    "/PIRRequests", undefined, undefined,
+                    [new Filter("pir_request_id", FilterOperator.EQ, sRequestId)],
+                    { $$groupId: "$direct", $select: "status,bapi_message,material" }
+                );
+
+                let sStatus = "";
+                let sMessage = "";
+                for (let iAttempt = 0; iAttempt < 8; iAttempt += 1) {
+                    await new Promise(function (resolve) { setTimeout(resolve, 800); });
+                    oPollBinding.refresh();
+                    const aContexts = await oPollBinding.requestContexts(0, 1);
+                    if (aContexts.length) {
+                        sStatus = String(aContexts[0].getProperty("status") || "").toUpperCase();
+                        sMessage = aContexts[0].getProperty("bapi_message") || "";
+                    }
+                    if (sStatus === "MRP_COMPLETED" || sStatus === "MRP_ERROR") {
+                        break;
+                    }
+                }
+
+                await this._loadPIRHistory();
+
+                if (sStatus === "MRP_COMPLETED") {
+                    MessageBox.success("MRP completed for " + sMaterial + "." + (sMessage ? "\n\n" + sMessage : ""));
+                } else {
+                    MessageBox.error(sMessage || "Single-item MRP failed.");
+                }
+            } catch (oError) {
+                MessageBox.error(oError.message || "Could not run single-item MRP.");
+            } finally {
+                oPIR.setProperty("/busy", false);
+            }
+        },
+
+        _createBatchId: function () {
+            if (window.crypto && typeof window.crypto.randomUUID === "function") {
+                return window.crypto.randomUUID().replace(/-/g, "").toUpperCase();
+            }
+            return (Date.now().toString(16) + Math.random().toString(16).slice(2)).slice(0, 32).toUpperCase();
+        },
+
+        _formatForecastBatchCode: function (sBatchId, vRequirementDate) {
+            const sDate = String(vRequirementDate || "").slice(0, 10).replace(/-/g, "") || "UNKNOWN";
+            const sShortId = String(sBatchId || "").replace(/-/g, "").slice(0, 8).toUpperCase();
+            return "FORECAST-" + sDate + "-" + (sShortId || "LEGACY");
+        },
+
+        /** Xử lý một lần chạy MRP tổng dựa trên PIR đại diện của batch. */
+        onRunMRP: async function (oEventOrContext) {
+            const oContext = oEventOrContext && typeof oEventOrContext.getSource === "function"
+                ? oEventOrContext.getSource().getBindingContext()
+                : oEventOrContext;
             if (!oContext) {
                 MessageBox.error("Select a PIR request first.");
                 return;
@@ -215,6 +398,9 @@ sap.ui.define([
             const sPlant = oContext.getProperty("plant") || "";
             const sStatus = String(oContext.getProperty("status") || "").toUpperCase();
             const sRequestId = oContext.getProperty("pir_request_id") || "";
+            const sBatchId = oContext.getProperty("batch_id") || "";
+            const sRequirementDate = oContext.getProperty("requirement_date") || "";
+            const sBatchCode = this._formatForecastBatchCode(sBatchId, sRequirementDate);
 
             if (sStatus !== "CREATED" && sStatus !== "MRP_ERROR") {
                 MessageBox.warning("MRP can only be run for a created PIR or retried after an MRP error.");
@@ -223,8 +409,12 @@ sap.ui.define([
 
             const bConfirmed = await new Promise(function (resolve) {
                 MessageBox.confirm(
-                    "Run single-item, multi-level MRP for " + sMaterial + " in plant " + sPlant + "?\n\n" +
-                    "SAP will create a Planned Order for the finished good and Purchase Requisitions for missing BOM components.",
+                    "Forecast Batch: " + sBatchCode + "\n" +
+                    "Batch ID: " + (sBatchId || "-") + "\n" +
+                    "Plant: " + sPlant + "\n" +
+                    "Requirement Date: " + (sRequirementDate || "-") + "\n\n" +
+                    "Run total MRP for all created forecasts in this batch?\n\n" +
+                    "SAP will calculate material requirements once and generate planning and procurement proposals.",
                     {
                         title: "Run MRP",
                         emphasizedAction: MessageBox.Action.OK,
@@ -241,6 +431,8 @@ sap.ui.define([
 
             const oPIR = this.getView().getModel("pir");
             oPIR.setProperty("/busy", true);
+            oPIR.setProperty("/batchStatusText", "Total MRP is running...");
+            oPIR.setProperty("/batchStatusState", "Information");
 
             try {
                 const oModel = this.getOwnerComponent().getModel();
@@ -284,9 +476,17 @@ sap.ui.define([
                 this.onRefresh();
 
                 if (sUpdatedStatus === "MRP_COMPLETED") {
+                    oPIR.setProperty("/batchStatusText", "Total MRP completed");
+                    oPIR.setProperty("/batchStatusState", "Success");
                     const sCreatedDocuments = await this._getMRPCreatedDocuments(sRequestId);
                     MessageBox.success(
-                        "MRP completed successfully for " + sMaterial + "." +
+                        "Forecast Batch: " + sBatchCode + "\n" +
+                        "Batch ID: " + (sBatchId || "-") + "\n" +
+                        "Plant: " + sPlant + "\n" +
+                        "Requirement Date: " + (sRequirementDate || "-") + "\n\n" +
+                        "Total MRP completed successfully for " +
+                        (oPIR.getProperty("/batchMealCount") || "the selected") +
+                        " forecast(s) in plant " + sPlant + "." +
                         (sMessage ? "\n\n" + sMessage : "") +
                         (sCreatedDocuments ? "\n\nDocuments created:\n" + sCreatedDocuments :
                             "\n\nNo new Planned Order or Purchase Requisition was recorded."),
@@ -298,9 +498,13 @@ sap.ui.define([
                         }
                     );
                 } else {
+                    oPIR.setProperty("/batchStatusText", "Total MRP failed");
+                    oPIR.setProperty("/batchStatusState", "Error");
                     MessageBox.error(sMessage || "SAP did not return MRP status MRP_COMPLETED.");
                 }
             } catch (oError) {
+                oPIR.setProperty("/batchStatusText", "Total MRP failed");
+                oPIR.setProperty("/batchStatusState", "Error");
                 MessageBox.error(oError.message || "Could not run MRP.");
             } finally {
                 oPIR.setProperty("/busy", false);
@@ -348,12 +552,51 @@ sap.ui.define([
 
         /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
-            ["pirFinishedGoodsTable", "pirHistoryTable"].forEach(function (sId) {
-                const oBinding = this.byId(sId).getBinding("items");
-                if (oBinding) {
-                    oBinding.refresh();
-                }
-            }, this);
+            const oFinishedGoodsBinding = this.byId("pirFinishedGoodsTable").getBinding("items");
+            if (oFinishedGoodsBinding) {
+                oFinishedGoodsBinding.refresh();
+            }
+            this._loadPIRHistory();
+        },
+
+        _loadPIRHistory: async function () {
+            try {
+                const oBinding = this.getOwnerComponent().getModel().bindList(
+                    "/PIRRequests", undefined, undefined,
+                    [new Filter("material", FilterOperator.GE, "FG00009")],
+                    {
+                        $$groupId: "$direct",
+                        $select: "pir_request_id,batch_id,material,plant,requirement_date,requirement_quantity,unit,status,bapi_message,created_at"
+                    }
+                );
+                const aContexts = await oBinding.requestContexts(0, 5000);
+                const mGroups = {};
+                aContexts.map(function (oContext) { return oContext.getObject(); }).forEach(function (oItem) {
+                    const sBatchId = oItem.batch_id || "LEGACY-" + (oItem.requirement_date || "UNKNOWN");
+                    if (!mGroups[sBatchId]) {
+                        mGroups[sBatchId] = {
+                            batchId: sBatchId,
+                            requestId: oItem.pir_request_id,
+                            plant: oItem.plant,
+                            requirementDate: oItem.requirement_date,
+                            createdAt: oItem.created_at || "",
+                            items: []
+                        };
+                    }
+                    mGroups[sBatchId].items.push(oItem);
+                });
+                const aGroups = Object.keys(mGroups).map(function (sKey) {
+                    const oGroup = mGroups[sKey];
+                    oGroup.summary = oGroup.items.length + " meal(s) · " + (oGroup.requirementDate || "") + " · " + (oGroup.plant || "");
+                    return oGroup;
+                });
+                aGroups.sort(function (a, b) {
+                    return String(b.createdAt || b.requirementDate).localeCompare(String(a.createdAt || a.requirementDate));
+                });
+                this.getView().getModel("pir").setProperty("/historyBatches", aGroups);
+            } catch (oError) {
+                console.error("Could not load PIR batches:", oError);
+            }
         },
 
         /** Định dạng State trước khi hiển thị trên giao diện. */

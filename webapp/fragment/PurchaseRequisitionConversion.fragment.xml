@@ -5,7 +5,7 @@
   xmlns:f="sap.ui.layout.form">
   <Dialog
     id="purchaseRequisitionConversionDialog"
-    title="Convert Purchase Requisition to Purchase Order"
+    title="Create Purchase Order from Selected Requisitions"
     contentWidth="48rem"
     stretchOnPhone="true"
     busy="{mrp>/busy}"
@@ -13,7 +13,7 @@
     <content>
       <VBox class="sapUiSmallMargin">
         <MessageStrip
-          text="Review the open quantity, supplier and purchasing data before creating the Purchase Order in SAP."
+          text="One Purchase Order will be created for all selected requisitions. All items must use the same vendor, purchasing organization, purchasing group, currency and delivery date."
           type="Information"
           showIcon="true"
           class="sapUiSmallMarginBottom" />
@@ -27,20 +27,8 @@
           columnsXL="2"
           columnsL="2"
           columnsM="1">
-          <Label text="Purchase Requisition" />
-          <Input value="{prConvert>/purchaseRequisition}" editable="false" />
-
-          <Label text="PR Item" />
-          <Input value="{prConvert>/prItem}" editable="false" />
-
-          <Label text="Material" />
-          <Input value="{prConvert>/material}" editable="false" />
-
-          <Label text="Description" />
-          <Input value="{prConvert>/description}" editable="false" />
-
-          <Label text="Open Quantity" required="true" />
-          <Input value="{prConvert>/quantity}" type="Number" description="{prConvert>/unit}" />
+          <Label text="Selected Requisitions" />
+          <Input value="{prConvert>/selectedCount}" editable="false" />
 
           <Label text="Delivery Date" required="true" />
           <DatePicker
@@ -78,9 +66,28 @@
             showValueHelp="true"
             valueHelpRequest="onPRPurchGroupValueHelp" />
 
-          <Label text="Net Price" required="true" />
-          <Input value="{prConvert>/price}" type="Number" description="{prConvert>/currency}" />
         </f:SimpleForm>
+
+        <Table
+          class="sapUiSmallMarginTop"
+          items="{prConvert>/items}">
+          <columns>
+            <Column><Text text="PR" /></Column>
+            <Column><Text text="Material" /></Column>
+            <Column hAlign="End"><Text text="Quantity" /></Column>
+            <Column hAlign="End"><Text text="Net Price" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem>
+              <cells>
+                <Text text="{prConvert>purchaseRequisition}" />
+                <Text text="{prConvert>material}" />
+                <ObjectNumber number="{prConvert>quantity}" unit="{prConvert>unit}" />
+                <ObjectNumber number="{prConvert>price}" unit="{prConvert>currency}" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
       </VBox>
     </content>
     <beginButton>

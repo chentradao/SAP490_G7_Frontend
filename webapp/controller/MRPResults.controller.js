@@ -36,6 +36,14 @@ sap.ui.define([
             this.getView().setModel(new JSONModel({
                 items: []
             }), "prResults");
+            this.getView().setModel(new JSONModel({
+                items: []
+            }), "plannedResults");
+            this.getView().setModel(new JSONModel({
+                items: [],
+                selectedBatchId: "",
+                selectedBatch: null
+            }), "mrpBatches");
             this.getView().setModel(new JSONModel({}), "prConvert");
 
             this.getOwnerComponent().getRouter().getRoute("RouteMRPResults")
@@ -96,7 +104,7 @@ sap.ui.define([
             const oPlannedBinding = this.byId("plannedOrdersTable").getBinding("items");
             if (oPlannedBinding) {
                 oPlannedBinding.filter([
-                    new Filter("Material", FilterOperator.GE, "FG00009")
+                    new Filter("Material", FilterOperator.StartsWith, "FG")
                 ].concat(aCommonFilters));
             }
 
@@ -136,12 +144,212 @@ sap.ui.define([
 
         /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
-            const oPlannedBinding = this.byId("plannedOrdersTable").getBinding("items");
-            if (oPlannedBinding) {
-                oPlannedBinding.refresh();
-            }
+            this._loadBatchResults();
+        },
 
-            this._loadPurchaseRequisitions();
+        onBatchChange: function () {
+            this._applySelectedBatch();
+        },
+
+        _formatForecastBatchCode: function (sBatchId, vDate) {
+            const sDate = String(vDate || "").slice(0, 10).replace(/-/g, "") || "UNKNOWN";
+            const sShortId = String(sBatchId || "").replace(/-/g, "").slice(0, 8).toUpperCase();
+            return "FORECAST-" + sDate + "-" + (sShortId || "LEGACY");
+        },
+
+        _readCollection: async function (sPath) {
+            const oBinding = this.getOwnerComponent().getModel().bindList(
+                sPath,
+                undefined,
+                undefined,
+                undefined,
+                { $$groupId: "$direct" }
+            );
+            const aContexts = await oBinding.requestContexts(0, 5000);
+            return aContexts.map(function (oContext) {
+                return Object.assign({}, oContext.getObject());
+            });
+        },
+
+        _loadBatchResults: async function () {
+            const oBatchModel = this.getView().getModel("mrpBatches");
+            const sCurrentBatchId = oBatchModel.getProperty("/selectedBatchId") || "";
+            this.getView().getModel("mrp").setProperty("/busy", true);
+
+            try {
+                const aResults = await Promise.all([
+                    this._readCollection("/MRPRuns"),
+                    this._readCollection("/MRPRunItems"),
+                    this._readCollection("/MRPPurchaseRequisitions"),
+                    this._readCollection("/MRPPlannedOrders")
+                ]);
+                const aRuns = aResults[0];
+                const aRunItems = aResults[1];
+                const aPurchaseRequisitions = aResults[2];
+                const aPlannedOrders = aResults[3];
+                const mRuns = new Map();
+                const mBatches = new Map();
+                const mPR = new Map();
+                const mPlanned = new Map();
+
+                aRuns.forEach(function (oRun) {
+                    mRuns.set(String(oRun.MRPRunID || ""), oRun);
+                    const sBatchId = String(oRun.BatchID || "");
+                    if (!sBatchId) {
+                        return;
+                    }
+                    const oExisting = mBatches.get(sBatchId);
+                    const sTimestamp = String(oRun.StartedAt || oRun.FinishedAt || "");
+                    if (!oExisting || sTimestamp > oExisting.timestamp) {
+                        mBatches.set(sBatchId, {
+                            batchId: sBatchId,
+                            code: this._formatForecastBatchCode(
+                                sBatchId,
+                                oRun.RequirementDate || oRun.StartedAt
+                            ),
+                            plant: oRun.Plant || "",
+                            requirementDate: oRun.RequirementDate || "",
+                            status: oRun.RunStatus || "",
+                            timestamp: sTimestamp,
+                            purchaseCount: 0,
+                            plannedCount: 0
+                        });
+                    }
+                }, this);
+
+                aPurchaseRequisitions.forEach(function (oPR) {
+                    mPR.set(
+                        String(oPR.PurchaseRequisition || "") + "|" +
+                        String(oPR.PurchaseRequisitionItem || ""),
+                        oPR
+                    );
+                });
+                aPlannedOrders.forEach(function (oPlanned) {
+                    mPlanned.set(String(oPlanned.PlannedOrder || ""), oPlanned);
+                });
+
+                const mTrackedDocuments = new Map();
+                aRunItems.forEach(function (oTracked) {
+                    const oRun = mRuns.get(String(oTracked.MRPRunID || ""));
+                    const sBatchId = String(oTracked.BatchID || (oRun && oRun.BatchID) || "");
+                    if (!sBatchId || !mBatches.has(sBatchId)) {
+                        return;
+                    }
+                    const sDocumentKey = [
+                        sBatchId,
+                        oTracked.DocumentCategory,
+                        oTracked.DocumentNumber,
+                        oTracked.DocumentItem || ""
+                    ].join("|");
+                    mTrackedDocuments.set(sDocumentKey, Object.assign({}, oTracked, {
+                        BatchID: sBatchId
+                    }));
+                });
+
+                const aTrackedPRs = [];
+                const aTrackedPlannedOrders = [];
+                mTrackedDocuments.forEach(function (oTracked) {
+                    const sCategory = String(oTracked.DocumentCategory || "").toUpperCase();
+                    const oBatch = mBatches.get(oTracked.BatchID);
+                    if (sCategory === "PURCHASE_REQ") {
+                        const sKey = String(oTracked.DocumentNumber || "") + "|" +
+                            String(oTracked.DocumentItem || "");
+                        const oStandard = mPR.get(sKey) || {};
+                        aTrackedPRs.push(Object.assign({}, oStandard, {
+                            BatchID: oTracked.BatchID,
+                            MRPRunID: oTracked.MRPRunID,
+                            MRPRunItemNo: oTracked.ItemNo,
+                            PurchaseRequisition: oStandard.PurchaseRequisition || oTracked.DocumentNumber,
+                            PurchaseRequisitionItem: oStandard.PurchaseRequisitionItem || oTracked.DocumentItem,
+                            Material: oStandard.Material || oTracked.Material,
+                            MaterialDescription: oStandard.MaterialDescription || oTracked.MaterialDescription,
+                            Plant: oStandard.Plant || oTracked.Plant,
+                            StorageLocation: oStandard.StorageLocation || oTracked.StorageLocation,
+                            OpenQuantity: oStandard.OpenQuantity !== undefined
+                                ? oStandard.OpenQuantity
+                                : oTracked.RequiredQuantity,
+                            RequestedQuantity: oStandard.RequestedQuantity !== undefined
+                                ? oStandard.RequestedQuantity
+                                : oTracked.RequiredQuantity,
+                            Unit: oStandard.Unit || oTracked.Unit,
+                            DeliveryDate: oStandard.DeliveryDate || oTracked.RequirementDate,
+                            ProcessingStatus: oStandard.ProcessingStatus || oTracked.ProcessingStatus,
+                            PurchaseOrder: oStandard.PurchaseOrder || oTracked.PurchaseOrder,
+                            PurchaseOrderItem: oStandard.PurchaseOrderItem || oTracked.PurchaseOrderItem
+                        }));
+                        oBatch.purchaseCount += 1;
+                    } else if (sCategory === "PLANNED_ORDER") {
+                        const oStandard = mPlanned.get(String(oTracked.DocumentNumber || "")) || {};
+                        const sMaterial = oStandard.Material || oTracked.Material || "";
+                        if (!String(sMaterial).startsWith("FG")) {
+                            return;
+                        }
+                        aTrackedPlannedOrders.push(Object.assign({}, oStandard, {
+                            BatchID: oTracked.BatchID,
+                            MRPRunID: oTracked.MRPRunID,
+                            MRPRunItemNo: oTracked.ItemNo,
+                            PlannedOrder: oStandard.PlannedOrder || oTracked.DocumentNumber,
+                            Material: sMaterial,
+                            MaterialDescription: oStandard.MaterialDescription || oTracked.MaterialDescription,
+                            Plant: oStandard.Plant || oTracked.Plant,
+                            PlannedOrderQuantity: oStandard.PlannedOrderQuantity !== undefined
+                                ? oStandard.PlannedOrderQuantity
+                                : oTracked.RequiredQuantity,
+                            Unit: oStandard.Unit || oTracked.Unit,
+                            PlannedStartDate: oStandard.PlannedStartDate || oTracked.RequirementDate,
+                            ProcessingStatus: oTracked.ProcessingStatus
+                        }));
+                        oBatch.plannedCount += 1;
+                    }
+                });
+
+                const aBatches = Array.from(mBatches.values()).sort(function (a, b) {
+                    return String(b.timestamp).localeCompare(String(a.timestamp));
+                });
+                const sSelectedBatchId = aBatches.some(function (oBatch) {
+                    return oBatch.batchId === sCurrentBatchId;
+                }) ? sCurrentBatchId : ((aBatches[0] && aBatches[0].batchId) || "");
+
+                this._allTrackedPRs = aTrackedPRs;
+                this._allTrackedPlannedOrders = aTrackedPlannedOrders;
+                oBatchModel.setData({
+                    items: aBatches,
+                    selectedBatchId: sSelectedBatchId,
+                    selectedBatch: null
+                });
+                this._applySelectedBatch();
+            } catch (oError) {
+                console.error("Could not load Forecast Batch results:", oError);
+                MessageBox.error(oError.message || "Could not load Forecast Batch results.");
+            } finally {
+                this.getView().getModel("mrp").setProperty("/busy", false);
+            }
+        },
+
+        _applySelectedBatch: function () {
+            const oBatchModel = this.getView().getModel("mrpBatches");
+            const sBatchId = oBatchModel.getProperty("/selectedBatchId") || "";
+            const aBatches = oBatchModel.getProperty("/items") || [];
+            const oSelectedBatch = aBatches.find(function (oBatch) {
+                return oBatch.batchId === sBatchId;
+            }) || null;
+
+            oBatchModel.setProperty("/selectedBatch", oSelectedBatch);
+            this.getView().getModel("prResults").setProperty(
+                "/items",
+                (this._allTrackedPRs || []).filter(function (oItem) {
+                    return oItem.BatchID === sBatchId;
+                })
+            );
+            this.getView().getModel("plannedResults").setProperty(
+                "/items",
+                (this._allTrackedPlannedOrders || []).filter(function (oItem) {
+                    return oItem.BatchID === sBatchId;
+                })
+            );
+            this.byId("purchaseRequisitionsTable").removeSelections(true);
+            this.byId("plannedOrdersTable").removeSelections(true);
+            this.onFilter();
         },
 
         /** Tải Purchase Requisitions từ nguồn dữ liệu và cập nhật trạng thái màn hình. */
@@ -233,55 +441,68 @@ sap.ui.define([
         /** Xử lý sự kiện Convert Purchase Requisition từ giao diện người dùng. */
         onConvertPurchaseRequisition: async function () {
             const oTable = this.byId("purchaseRequisitionsTable");
-            const oItem = oTable.getSelectedItem();
+            const aSelectedItems = oTable.getSelectedItems();
 
-            if (!oItem) {
-                MessageBox.warning("Select one Purchase Requisition item first.");
+            if (!aSelectedItems.length) {
+                MessageBox.warning("Select one or more open Purchase Requisition items first.");
                 return;
             }
 
-            const oPRContext = oItem.getBindingContext("prResults");
-            const oPR = oPRContext && oPRContext.getObject();
+            const aItems = aSelectedItems.map(function (oItem) {
+                const oContext = oItem.getBindingContext("prResults");
+                return oContext && oContext.getObject();
+            }).filter(Boolean);
 
-            if (!oPR) {
-                MessageBox.error("The selected Purchase Requisition could not be read.");
-                return;
-            }
-            const nOpenQuantity = this._parseQuantity(oPR.OpenQuantity);
+            const oInvalidPR = aItems.find(function (oPR) {
+                return this._parseQuantity(oPR.OpenQuantity) <= 0 ||
+                    this._isClosed(oPR.IsClosed) ||
+                    Boolean(oPR.PurchaseOrder);
+            }, this);
 
-            if (nOpenQuantity <= 0) {
-                MessageBox.error("This Purchase Requisition has no open quantity remaining.");
+            if (oInvalidPR) {
+                MessageBox.error("Every selected Purchase Requisition must be open and not linked to a Purchase Order.");
                 return;
             }
-            if (this._isClosed(oPR.IsClosed)) {
-                MessageBox.error("This Purchase Requisition item is closed.");
+
+            const aBatchItems = aItems.map(function (oPR) {
+                return {
+                    batchId: oPR.BatchID || "",
+                    mrpRunId: oPR.MRPRunID || "",
+                    mrpRunItemNo: oPR.MRPRunItemNo || "",
+                    purchaseRequisition: oPR.PurchaseRequisition || "",
+                    prItem: oPR.PurchaseRequisitionItem || "",
+                    material: oPR.Material || "",
+                    description: oPR.MaterialDescription || "",
+                    quantity: String(oPR.OpenQuantity || ""),
+                    unit: oPR.Unit || "",
+                    plant: oPR.Plant || "P001",
+                    storageLocation: oPR.StorageLocation || "RM01",
+                    price: this._getPurchaseRequisitionPrice(oPR),
+                    currency: this._getPurchaseRequisitionCurrency(oPR)
+                };
+            }, this);
+
+            if (aBatchItems.some(function (oItem) {
+                return this._parseQuantity(oItem.quantity) <= 0 ||
+                    this._parseQuantity(oItem.price) <= 0;
+            }, this)) {
+                MessageBox.error("Every selected Purchase Requisition must have an open quantity and net price greater than zero.");
                 return;
             }
-            if (oPR.PurchaseOrder) {
-                MessageBox.error("This Purchase Requisition is already linked to Purchase Order " + oPR.PurchaseOrder + ".");
-                return;
-            }
+
+            const oFirstPR = aItems[0];
 
             this.getView().getModel("prConvert").setData({
-                purchaseRequisition: oPR.PurchaseRequisition || "",
-                prItem: oPR.PurchaseRequisitionItem || "",
-                material: oPR.Material || "",
-                description: oPR.MaterialDescription || "",
-                quantity: String(oPR.OpenQuantity || ""),
-                unit: oPR.Unit || "",
-                plant: oPR.Plant || "P001",
-                storageLocation: oPR.StorageLocation || "RM01",
-                deliveryDate: this._getSafeDeliveryDate(oPR.DeliveryDate),
-                vendor: oPR.FixedSupplier || oPR.DesiredSupplier || "",
+                items: aBatchItems,
+                selectedCount: String(aBatchItems.length),
+                deliveryDate: this._getSafeDeliveryDate(oFirstPR.DeliveryDate),
+                vendor: oFirstPR.FixedSupplier || oFirstPR.DesiredSupplier || "",
                 vendorName: "",
                 companyCode: "PT01",
-                purchOrg: oPR.PurchasingOrganization || "",
+                purchOrg: oFirstPR.PurchasingOrganization || "",
                 purchOrgName: "",
-                purchGroup: oPR.PurchasingGroup || "324",
-                purchGroupName: "",
-                // Tự động điền đúng giá của PR thay vì bắt người dùng nhập lại.
-                price: this._getPurchaseRequisitionPrice(oPR),
-                currency: this._getPurchaseRequisitionCurrency(oPR)
+                purchGroup: oFirstPR.PurchasingGroup || "324",
+                purchGroupName: ""
             });
 
             if (!this._prConversionDialog) {
@@ -425,15 +646,14 @@ sap.ui.define([
         onSubmitPRConversion: async function () {
             const oDataModel = this.getView().getModel("prConvert");
             const oData = oDataModel.getData();
-            const nQuantity = this._parseQuantity(oData.quantity);
-            const nPrice = this._parseQuantity(oData.price);
+            const aItems = Array.isArray(oData.items) ? oData.items : [];
 
             if (!oData.vendor || !oData.purchOrg || !oData.purchGroup || !oData.companyCode) {
                 MessageBox.error("Vendor and purchasing organization data are required.");
                 return;
             }
-            if (nQuantity <= 0 || nPrice <= 0) {
-                MessageBox.error("Open Quantity and Net Price must be greater than zero.");
+            if (!aItems.length) {
+                MessageBox.error("Select at least one Purchase Requisition item.");
                 return;
             }
 
@@ -446,44 +666,80 @@ sap.ui.define([
                 const oList = oModel.bindList("/ZP_G7_PO_REQUEST", undefined, undefined, undefined, {
                     $$updateGroupId: "$direct"
                 });
-                const oContext = oList.create({
-                    vendor: oData.vendor,
-                    vendor_name: oData.vendorName || "",
-                    material: oData.material,
-                    material_description: oData.description || "",
-                    quantity: nQuantity.toFixed(3),
-                    unit: oData.unit,
-                    price: nPrice.toFixed(2),
-                    currency: oData.currency || "VND",
-                    delivery_date: oData.deliveryDate,
-                    company_code: oData.companyCode,
-                    plant: oData.plant,
-                    storage_loc: oData.storageLocation || "RM01",
-                    purch_org: oData.purchOrg,
-                    purch_group: oData.purchGroup,
-                    purchase_requisition: oData.purchaseRequisition,
-                    purchase_requisition_item: oData.prItem
-                });
+                const aContexts = aItems.map(function (oItem) {
+                    return oList.create({
+                        vendor: oData.vendor,
+                        vendor_name: oData.vendorName || "",
+                        material: oItem.material,
+                        material_description: oItem.description || "",
+                        quantity: this._parseQuantity(oItem.quantity).toFixed(3),
+                        unit: oItem.unit,
+                        price: this._parseQuantity(oItem.price).toFixed(2),
+                        currency: oItem.currency || "VND",
+                        delivery_date: oData.deliveryDate,
+                        company_code: oData.companyCode,
+                        plant: oItem.plant,
+                        storage_loc: oItem.storageLocation || "RM01",
+                        purch_org: oData.purchOrg,
+                        purch_group: oData.purchGroup,
+                        purchase_requisition: oItem.purchaseRequisition,
+                        purchase_requisition_item: oItem.prItem,
+                        batch_id: oItem.batchId,
+                        mrp_run_id: oItem.mrpRunId,
+                        mrp_run_item_no: oItem.mrpRunItemNo
+                    });
+                }, this);
 
-                await oContext.created();
-                const sRequestId = oContext.getProperty("request_id") || "";
+                await Promise.all(aContexts.map(function (oContext) {
+                    return oContext.created();
+                }));
+
+                const sRequestIds = aContexts.map(function (oContext) {
+                    return oContext.getProperty("request_id") || "";
+                }).filter(Boolean).join(",");
+
+                if (!sRequestIds) {
+                    throw new Error("Could not create Purchase Order requests.");
+                }
+
+                const oCollectionContext = oList.getHeaderContext();
+                if (!oCollectionContext) {
+                    throw new Error("Could not bind the Purchase Order Request collection.");
+                }
+
                 const oAction = oModel.bindContext(
-                    "com.sap.gateway.srvd.zsd_g7_canteen.v0001.CreatePurchaseOrderFromPR(...)",
-                    oContext
+                    "com.sap.gateway.srvd.zsd_g7_canteen.v0001.CreatePurchaseOrderBatch(...)",
+                    oCollectionContext
                 );
+                oAction.setParameter("RequestIDs", sRequestIds);
                 await oAction.execute("$direct");
 
-                const oResult = await this._readPOConversionResult(sRequestId);
-                const sStatus = String((oResult && oResult.status) || "").toUpperCase();
-                const sPO = (oResult && oResult.purchase_order) || "";
-                const sMessage = (oResult && oResult.bapi_message) || "";
+                const oResultContext = oAction.getBoundContext();
+                const oResult = oResultContext && oResultContext.getObject();
+                const bSuccess = Boolean(oResult && oResult.Success);
+                const sPO = (oResult && oResult.PurchaseOrder) || "";
+                const sMessage = (oResult && oResult.Message) || "";
 
-                if (sStatus === "CREATED" && sPO) {
+                if (bSuccess && sPO) {
                     this._prConversionDialog.close();
                     this.byId("purchaseRequisitionsTable").removeSelections(true);
                     this.onRefresh();
-                    MessageBox.success("Purchase Order " + sPO + " was created successfully." +
-                        (sMessage ? "\n\n" + sMessage : ""));
+                    this.getOwnerComponent().setModel(new JSONModel({
+                        visible: true,
+                        purchaseOrder: sPO,
+                        materialCount: aItems.length,
+                        vendor: oData.vendor || "-",
+                        batchId: aItems[0].batchId || "",
+                        batchCode: (this.getView().getModel("mrpBatches").getProperty("/selectedBatch/code")) || "MANUAL"
+                    }), "poSuccess");
+                    this.getOwnerComponent().getRouter().navTo("RoutePOHistory");
+                    const sReadableMessage = this._formatPurchaseOrderMessage(sMessage);
+                    MessageBox.success(
+                        "Purchase Order " + sPO + " was created successfully.\n\n" +
+                        "Materials: " + aItems.length +
+                        (sReadableMessage ? "\n\nSAP information:\n" + sReadableMessage : ""),
+                        { title: "Purchase Order Created" }
+                    );
                 } else {
                     MessageBox.error(sMessage || "SAP did not return a Purchase Order number.");
                 }
@@ -493,6 +749,30 @@ sap.ui.define([
                 oButton.setBusy(false);
                 this.getView().getModel("mrp").setProperty("/busy", false);
             }
+        },
+
+        _formatPurchaseOrderMessage: function (sMessage) {
+            if (!sMessage) {
+                return "";
+            }
+
+            const aParts = String(sMessage)
+                .split(/\s*\/\s*(?=[SEWA]:)/)
+                .map(function (sPart) {
+                    return sPart.trim();
+                })
+                .filter(Boolean);
+
+            const aUniqueParts = [];
+            aParts.forEach(function (sPart) {
+                if (aUniqueParts.indexOf(sPart) === -1) {
+                    aUniqueParts.push(sPart);
+                }
+            });
+
+            return aUniqueParts.slice(0, 6).map(function (sPart) {
+                return "• " + sPart;
+            }).join("\n");
         },
 
         /** Hàm nội bộ thực hiện wait. */
@@ -611,104 +891,177 @@ sap.ui.define([
         },
 
         /** Xử lý sự kiện Convert Planned Order từ giao diện người dùng. */
-        onConvertPlannedOrder: async function () {
+        onConvertPlannedOrders: async function () {
             const oTable = this.byId("plannedOrdersTable");
-            const oSelectedItem = oTable.getSelectedItem();
+            const aSelectedItems = oTable.getSelectedItems();
+            const oSelectedBatch = this.getView().getModel("mrpBatches").getProperty("/selectedBatch") || {};
 
-            if (!oSelectedItem) {
-                MessageBox.warning("Select one Planned Order first.");
+            if (!aSelectedItems.length) {
+                MessageBox.warning("Select one or more Planned Orders first.");
                 return;
             }
 
-            const oSourceContext = oSelectedItem.getBindingContext();
-            const oPlannedOrder = oSourceContext && oSourceContext.getObject();
+            const aPlannedOrders = aSelectedItems.map(function (oItem) {
+                const oContext = oItem.getBindingContext("plannedResults");
+                return oContext && oContext.getObject();
+            }).filter(function (oPlannedOrder) {
+                return oPlannedOrder && oPlannedOrder.PlannedOrder;
+            });
 
-            if (!oPlannedOrder || !oPlannedOrder.PlannedOrder) {
-                MessageBox.error("The selected Planned Order could not be read.");
+            if (!aPlannedOrders.length) {
+                MessageBox.error("The selected Planned Orders could not be read.");
+                return;
+            }
+
+            const bConfirmed = await new Promise(function (resolve) {
+                MessageBox.confirm(
+                    "Forecast Batch: " + (oSelectedBatch.code || "-") + "\n" +
+                    "Plant: " + (oSelectedBatch.plant || "-") + "\n" +
+                    "Planned Orders selected: " + aPlannedOrders.length + "\n\n" +
+                    aPlannedOrders.map(function (oPlannedOrder) {
+                        return "• " + oPlannedOrder.PlannedOrder + " — " +
+                            oPlannedOrder.Material + " — " +
+                            oPlannedOrder.PlannedOrderQuantity + " " + oPlannedOrder.Unit;
+                    }).join("\n") +
+                    "\n\nCreate Production Orders for the selected items?",
+                    {
+                        title: "Create Production Orders",
+                        emphasizedAction: MessageBox.Action.OK,
+                        onClose: function (sAction) {
+                            resolve(sAction === MessageBox.Action.OK);
+                        }
+                    }
+                );
+            });
+
+            if (!bConfirmed) {
                 return;
             }
 
             const oMRPModel = this.getView().getModel("mrp");
             oMRPModel.setProperty("/busy", true);
-            try {
-                const aShortages = await this._getBomShortages(oPlannedOrder);
-                if (aShortages.length) {
-                    const sDetails = aShortages.map(function (oItem) {
-                        return oItem.material + " - " + oItem.description +
-                            ": required " + this._formatBomQuantity(oItem.required) + " " + oItem.unit +
-                            ", available " + this._formatBomQuantity(oItem.available) + " " + oItem.unit +
-                            ", shortage " + this._formatBomQuantity(oItem.shortage) + " " + oItem.unit;
-                    }.bind(this)).join("\n");
-                    MessageBox.error(
-                        "This Planned Order cannot be converted because BOM components are still short.\n\n" +
-                        sDetails +
-                        "\n\nConvert the MRP Purchase Requisitions to Purchase Orders and post Goods Receipt into RM01 first.",
-                        { title: "Raw Materials Not Yet Available" }
-                    );
-                    return;
-                }
-            } catch (oError) {
-                MessageBox.error(oError.message || "Could not validate BOM material availability.");
-                return;
-            } finally {
-                oMRPModel.setProperty("/busy", false);
-            }
 
-            if (!await this._confirmConversion(oPlannedOrder)) {
-                return;
-            }
-
-            oMRPModel.setProperty("/busy", true);
+            const aCreated = [];
+            const aSkipped = [];
 
             try {
-                const oModel = this.getOwnerComponent().getModel();
-                const oRequestList = oModel.bindList(
-                    "/ProductionOrderRequests",
-                    undefined,
-                    undefined,
-                    undefined,
-                    { $$updateGroupId: "$direct" }
-                );
-
-                const oRequestContext = oRequestList.create({
-                    material: oPlannedOrder.Material,
-                    plant: oPlannedOrder.Plant,
-                    order_quantity: String(oPlannedOrder.PlannedOrderQuantity),
-                    unit: oPlannedOrder.Unit,
-                    order_type: "PP01",
-                    planned_order: oPlannedOrder.PlannedOrder
-                });
-
-                await oRequestContext.created();
-
-                const sRequestId = oRequestContext.getProperty("request_id") || "";
-                const oAction = oModel.bindContext(
-                    "com.sap.gateway.srvd.zsd_g7_canteen.v0001.ConvertPlannedOrder(...)",
-                    oRequestContext
-                );
-
-                await oAction.execute("$direct");
-
-                const oResult = await this._readConversionResult(sRequestId);
-                const sStatus = String((oResult && oResult.status) || "").toUpperCase();
-                const sProductionOrder = (oResult && oResult.production_order) || "";
-                const sMessage = (oResult && oResult.bapi_message) || "";
-
-                if (sStatus === "CREATED" && sProductionOrder) {
-                    oTable.removeSelections(true);
-                    this.onRefresh();
-                    MessageBox.success(
-                        "Production Order " + sProductionOrder + " was created successfully." +
-                        (sMessage ? "\n\n" + sMessage : "")
-                    );
-                } else {
-                    MessageBox.error(sMessage || "SAP did not return a Production Order number.");
+                for (const oPlannedOrder of aPlannedOrders) {
+                    try {
+                        const oResult = await this._convertSinglePlannedOrder(oPlannedOrder);
+                        aCreated.push({
+                            plannedOrder: oPlannedOrder.PlannedOrder,
+                            productionOrder: oResult.productionOrder
+                        });
+                    } catch (oError) {
+                        aSkipped.push({
+                            plannedOrder: oPlannedOrder.PlannedOrder,
+                            message: oError.message || "Conversion failed"
+                        });
+                    }
                 }
+
+                oTable.removeSelections(true);
+                this.onRefresh();
+
+                const sCreatedText = aCreated.length
+                    ? aCreated.map(function (oItem) {
+                        return "• Planned Order " + oItem.plannedOrder +
+                            " → Production Order " + oItem.productionOrder;
+                    }).join("\n")
+                    : "None";
+
+                const sSkippedText = aSkipped.length
+                    ? "\n\nSkipped / failed:\n" + aSkipped.map(function (oItem) {
+                        return "• Planned Order " + oItem.plannedOrder + ": " + oItem.message;
+                    }).join("\n")
+                    : "";
+
+                const sResultText = aCreated.length
+                    ? "Forecast Batch: " + (oSelectedBatch.code || "-") + "\n" +
+                        "Batch ID: " + (oSelectedBatch.batchId || "-") + "\n\n" +
+                        aCreated.length + " Production Order(s) created successfully.\n\n" +
+                        sCreatedText + sSkippedText
+                    : "Forecast Batch: " + (oSelectedBatch.code || "-") + "\n" +
+                        "Batch ID: " + (oSelectedBatch.batchId || "-") + "\n\n" +
+                        "No Production Order was created because the required raw materials are not available.\n\n" +
+                        "Create the Purchase Orders, post Goods Receipt into RM01, then retry.\n\n" +
+                        sSkippedText;
+
+                const fnMessage = aCreated.length
+                    ? MessageBox.success
+                    : MessageBox.warning;
+
+                fnMessage(
+                    sResultText,
+                    { title: aCreated.length ? "Production Orders Created" : "Production Orders Not Created" }
+                );
             } catch (oError) {
                 MessageBox.error(oError.message || "Could not convert the Planned Order.");
             } finally {
                 oMRPModel.setProperty("/busy", false);
             }
+        },
+
+        _convertSinglePlannedOrder: async function (oPlannedOrder) {
+            const aShortages = await this._getBomShortages(oPlannedOrder);
+
+            if (aShortages.length) {
+                const sDetails = aShortages.map(function (oItem) {
+                    return oItem.material + " - " + oItem.description +
+                        ": shortage " + this._formatBomQuantity(oItem.shortage) + " " + oItem.unit;
+                }.bind(this)).join("; ");
+
+                throw new Error("Raw-material shortage: " + sDetails);
+            }
+
+            const oModel = this.getOwnerComponent().getModel();
+            const oRequestList = oModel.bindList(
+                "/ProductionOrderRequests",
+                undefined,
+                undefined,
+                undefined,
+                { $$updateGroupId: "$direct" }
+            );
+
+            const oRequestContext = oRequestList.create({
+                batch_id: oPlannedOrder.BatchID || "",
+                mrp_run_id: oPlannedOrder.MRPRunID || "",
+                mrp_run_item_no: oPlannedOrder.MRPRunItemNo || "",
+                material: oPlannedOrder.Material,
+                plant: oPlannedOrder.Plant,
+                order_quantity: String(oPlannedOrder.PlannedOrderQuantity),
+                unit: oPlannedOrder.Unit,
+                order_type: "PP01",
+                planned_order: oPlannedOrder.PlannedOrder
+            });
+
+            await oRequestContext.created();
+
+            const sRequestId = oRequestContext.getProperty("request_id") || "";
+            const oAction = oModel.bindContext(
+                "com.sap.gateway.srvd.zsd_g7_canteen.v0001.ConvertPlannedOrder(...)",
+                oRequestContext
+            );
+
+            await oAction.execute("$direct");
+
+            const oResult = await this._readConversionResult(sRequestId);
+            const sStatus = String((oResult && oResult.status) || "").toUpperCase();
+            const sProductionOrder = (oResult && oResult.production_order) || "";
+            const sMessage = (oResult && oResult.bapi_message) || "";
+
+            if (sStatus !== "CREATED" || !sProductionOrder) {
+                throw new Error(sMessage || "SAP did not return a Production Order number.");
+            }
+
+            return {
+                productionOrder: sProductionOrder,
+                message: sMessage
+            };
+        },
+
+        onConvertPlannedOrder: function () {
+            return this.onConvertPlannedOrders();
         },
 
         /** Định dạng Date trước khi hiển thị trên giao diện. */

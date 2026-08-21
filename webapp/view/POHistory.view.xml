@@ -23,6 +23,28 @@
 
     <content>
       <VBox class="poHistoryShell">
+        <Panel
+          visible="{poSuccess>/visible}"
+          class="poHistorySuccessPanel"
+          backgroundDesign="Solid">
+          <content>
+            <HBox alignItems="Center" justifyContent="SpaceBetween" wrap="Wrap">
+              <HBox alignItems="Center">
+                <core:Icon src="sap-icon://message-success" size="2rem" color="#188918" class="sapUiSmallMarginEnd" />
+                <VBox>
+                  <Title text="Purchase Order Created Successfully" level="H2" />
+                  <Text text="The selected raw materials were grouped into one Purchase Order." />
+                </VBox>
+              </HBox>
+              <VBox alignItems="End" class="sapUiSmallMarginBegin">
+                <Label text="Purchase Order" />
+                <ObjectIdentifier title="{poSuccess>/purchaseOrder}" />
+                <Text text="{poSuccess>/materialCount} material(s) • Vendor {poSuccess>/vendor} • {poSuccess>/batchCode}" />
+              </VBox>
+            </HBox>
+          </content>
+        </Panel>
+
         <HBox
           class="poHistoryHero"
           justifyContent="SpaceBetween"
@@ -72,66 +94,72 @@
         </OverflowToolbar>
 
         <ScrollContainer width="100%" height="58vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
-        <Table
-          id="poHistoryTable"
-          class="poHistoryTable wideDataTable wideDataTableXL"
-          sticky="ColumnHeaders"
-          alternateRowColors="true"
-          growing="true"
-          growingScrollToLoad="true"
-          growingThreshold="20"
-          noDataText="No purchase orders match the selected filters"
-          items="{path: '/ZP_G7_PO_REQUEST', sorter: {path: 'created_at', descending: true}}">
-
-          <columns>
-            <Column width="11rem"><Text text="PO Number" /></Column>
-            <Column width="13rem"><Text text="Source" /></Column>
-            <Column width="10rem"><Text text="Material" /></Column>
-            <Column width="11rem"><Text text="Vendor" /></Column>
-            <Column width="8rem" hAlign="End"><Text text="Quantity" /></Column>
-            <Column width="10rem" hAlign="End"><Text text="Total Amount" /></Column>
-            <Column minScreenWidth="Tablet" demandPopin="true" width="9rem"><Text text="Delivery Date" /></Column>
-            <Column minScreenWidth="Desktop" demandPopin="true" width="11rem"><Text text="Created At" /></Column>
-            <Column minScreenWidth="Desktop" demandPopin="true" width="9rem"><Text text="Location" /></Column>
-            <Column minScreenWidth="Desktop" demandPopin="true" width="10rem"><Text text="Purchasing" /></Column>
-            <Column width="8rem"><Text text="Status" /></Column>
-            <Column minScreenWidth="Desktop" demandPopin="true" width="16rem"><Text text="BAPI Message" /></Column>
-          </columns>
-
-          <items>
-            <ColumnListItem
-              type="Active"
-              press="onOpenPODetails"
-              vAlign="Middle"
-              highlight="{parts: ['purchase_order', 'status'], formatter: '.formatStatusState'}">
-              <cells>
-                <ObjectIdentifier title="{= ${purchase_order} || 'Not generated' }" text="{request_id}" />
-                <VBox>
-                  <ObjectStatus text="{path: 'purchase_requisition', formatter: '.formatPurchaseSource'}" state="Information" />
-                  <ObjectIdentifier
-                    title="{purchase_requisition}"
-                    text="{= ${purchase_requisition_item} ? 'PR Item ' + ${purchase_requisition_item} : '' }"
-                    visible="{= !!${purchase_requisition} }" />
-                </VBox>
-                <ObjectIdentifier title="{material}" text="{material_description}" />
-                <ObjectIdentifier title="{vendor}" text="{vendor_name}" />
-                <ObjectNumber number="{quantity}" unit="{unit}" />
-                <ObjectNumber
-                  number="{parts: ['quantity', 'price'], formatter: '.formatTotalAmount'}"
-                  unit="{currency}"
-                  emphasized="true" />
-                <Text text="{path: 'delivery_date', formatter: '.formatDate'}" />
-                <Text text="{path: 'created_at', formatter: '.formatDateTime'}" />
-                <ObjectIdentifier title="{plant}" text="{storage_loc}" />
-                <ObjectIdentifier title="{purch_org}" text="{purch_group}" />
-                <ObjectStatus
-                  text="{parts: ['purchase_order', 'status'], formatter: '.formatStatus'}"
-                  state="{parts: ['purchase_order', 'status'], formatter: '.formatStatusState'}" />
-                <Text text="{bapi_message}" wrapping="true" maxLines="2" />
-              </cells>
-            </ColumnListItem>
-          </items>
-        </Table>
+          <List
+            id="poHistoryList"
+            busy="{poGroups>/busy}"
+            showSeparators="None"
+            noDataText="No purchase orders match the selected filters"
+            items="{poGroups>/groups}">
+            <CustomListItem>
+              <Panel expandable="true" expanded="true" class="staffWorkflowPanel sapUiSmallMarginBottom">
+                <headerToolbar>
+                  <OverflowToolbar>
+                    <Title text="PO {poGroups>purchaseOrder}" level="H3" />
+                    <ObjectStatus text="{poGroups>statusText}" state="{poGroups>statusState}" />
+                    <Button
+                      text="{= ${poGroups>remainingItemCount} > 0 ? 'GR Entire PO' : 'GR Completed' }"
+                      icon="sap-icon://shipping-status"
+                      type="{= ${poGroups>remainingItemCount} > 0 ? 'Emphasized' : 'Transparent' }"
+                      press="onPostBatchGR"
+                      visible="{= !!${poGroups>purchaseOrder} }"
+                      enabled="{= ${poGroups>remainingItemCount} > 0 &amp;&amp; !${poGroups>/busy} }" />
+                    <Text text="{poGroups>itemCount} item(s) • Vendor {poGroups>vendor} • {poGroups>batchCode}" />
+                    <ToolbarSpacer />
+                  </OverflowToolbar>
+                </headerToolbar>
+                <content>
+                  <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true">
+                    <Table
+                      width="92rem"
+                      class="poHistoryTable wideDataTable"
+                      alternateRowColors="true"
+                      items="{poGroups>items}">
+                    <columns>
+                      <Column width="7rem"><Text text="PO Item" /></Column>
+                      <Column width="11rem"><Text text="Source PR" /></Column>
+                      <Column width="11rem"><Text text="Material" /></Column>
+                      <Column width="15rem"><Text text="Description" /></Column>
+                      <Column width="9rem" hAlign="End"><Text text="Ordered" /></Column>
+                      <Column width="9rem" hAlign="End"><Text text="Received" /></Column>
+                      <Column width="9rem" hAlign="End"><Text text="Remaining" /></Column>
+                      <Column width="8rem"><Text text="Location" /></Column>
+                      <Column width="8rem"><Text text="Action" /></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem highlight="{= ${poGroups>remaining_quantity} > 0 ? 'Information' : 'Success' }">
+                        <cells>
+                          <ObjectIdentifier title="{poGroups>purchase_order_item}" />
+                          <ObjectIdentifier title="{poGroups>purchase_requisition}" text="Item {poGroups>purchase_requisition_item}" />
+                          <ObjectIdentifier title="{poGroups>material}" />
+                          <Text text="{poGroups>material_description}" />
+                          <ObjectNumber number="{poGroups>ordered_quantity}" unit="{poGroups>unit}" />
+                          <ObjectNumber number="{poGroups>received_quantity}" unit="{poGroups>unit}" />
+                          <ObjectNumber number="{poGroups>remaining_quantity}" unit="{poGroups>unit}" state="{= ${poGroups>remaining_quantity} > 0 ? 'Warning' : 'Success' }" />
+                          <ObjectIdentifier title="{poGroups>plant}" text="{poGroups>storage_loc}" />
+                          <Button
+                            text="{= ${poGroups>remaining_quantity} > 0 ? 'GR Item' : 'GR Completed' }"
+                            icon="sap-icon://shipping-status"
+                            press="onOpenSingleGR"
+                            enabled="{= ${poGroups>remaining_quantity} > 0 &amp;&amp; !!${poGroups>purchase_order_item} &amp;&amp; !${poGroups>/busy} }" />
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                    </Table>
+                  </ScrollContainer>
+                </content>
+              </Panel>
+            </CustomListItem>
+          </List>
         </ScrollContainer>
       </VBox>
     </content>

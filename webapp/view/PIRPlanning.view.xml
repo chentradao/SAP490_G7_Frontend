@@ -17,13 +17,13 @@
         <HBox class="poHistoryHero" justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
           <VBox class="poHistoryHeroText">
             <Title text="Tomorrow's Meal Forecast" level="H2" />
-            <Text text="Select a finished meal and create an active Planned Independent Requirement before running MRP." class="poHistorySubtitle" />
+            <Text text="Select multiple finished meals, enter each forecast quantity, then create all Planned Independent Requirements in one step." class="poHistorySubtitle" />
           </VBox>
           <ObjectStatus text="Strategy 40 · VSF · Version 00" icon="sap-icon://business-objects-experience" state="Information" />
         </HBox>
 
         <MessageStrip
-          text="Demo flow: Select a meal → enter tomorrow's demand → Create PIR → Run MRP → review procurement and production proposals."
+          text="Demo flow: Select meals → enter each demand quantity → Create PIR batch → Run total MRP once → review procurement and production proposals."
           type="Information"
           showIcon="true"
           class="sapUiSmallMarginBottom" />
@@ -41,7 +41,7 @@
               <Table
                 id="pirFinishedGoodsTable"
                 class="wideDataTableMD"
-                mode="SingleSelectMaster"
+                mode="MultiSelect"
                 selectionChange="onFinishedGoodSelected"
                 growing="true"
                 growingThreshold="10"
@@ -70,13 +70,6 @@
         <Panel headerText="2. Plan Tomorrow's Demand" class="staffWorkflowPanel pirPlanningColumn">
           <content>
             <VBox class="sapUiSmallMargin">
-              <ObjectHeader
-                title="{pir>/material}"
-                intro="{pir>/description}"
-                number="{pir>/currentStock}"
-                numberUnit="{pir>/unit}"
-                visible="{= !!${pir>/material} }" />
-
               <f:SimpleForm
                 editable="true"
                 layout="ResponsiveGridLayout"
@@ -94,10 +87,30 @@
                   displayFormat="medium"
                   minDate="{pir>/minimumDate}" />
 
-                <Label text="Forecast Quantity" required="true" />
-                <Input value="{pir>/quantity}" type="Number" description="{pir>/unit}" />
-
               </f:SimpleForm>
+
+              <Table
+                id="pirSelectedMealsTable"
+                class="sapUiSmallMarginTop"
+                noDataText="Select one or more meals from the table on the left"
+                items="{pir>/selectedMeals}">
+                <columns>
+                  <Column width="8rem"><Text text="Material" /></Column>
+                  <Column width="11rem"><Text text="Meal" /></Column>
+                  <Column width="8rem" hAlign="End"><Text text="Current Stock" /></Column>
+                  <Column width="10rem"><Text text="Forecast Quantity" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <ObjectIdentifier title="{pir>material}" />
+                      <Text text="{pir>description}" />
+                      <ObjectNumber number="{pir>currentStock}" unit="{pir>unit}" />
+                      <Input value="{pir>quantity}" type="Number" description="{pir>unit}" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
 
               <ObjectStatus
                 text="SAP parameters: P001 · VSF · Version 00 (Active)"
@@ -109,11 +122,11 @@
                 <ToolbarSpacer />
                 <Button
                   id="createPIRButton"
-                  text="Create Forecast (PIR)"
+                  text="Create Forecasts (PIR)"
                   icon="sap-icon://add-document"
                   type="Emphasized"
                   press="onCreatePIR"
-                  enabled="{= !!${pir>/material} &amp;&amp; !${pir>/busy} }" />
+                  enabled="{= ${pir>/selectedMeals}.length > 0 &amp;&amp; !${pir>/busy} }" />
               </Toolbar>
             </VBox>
           </content>
@@ -126,42 +139,54 @@
           expanded="false"
           class="staffWorkflowPanel sapUiMediumMarginTop">
         <ScrollContainer width="100%" height="34vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
-          <Table
-            id="pirHistoryTable"
+          <List
+            id="pirHistoryList"
             class="poHistoryTable wideDataTable"
             sticky="ColumnHeaders"
             alternateRowColors="true"
             growing="true"
             growingThreshold="20"
             noDataText="No PIR requests found"
-            items="{path: '/PIRRequests', filters: [{path: 'material', operator: 'GE', value1: 'FG00009'}], sorter: {path: 'created_at', descending: true}}">
-            <columns>
-              <Column width="11rem"><Text text="Material" /></Column>
-              <Column width="11rem" hAlign="Center"><Text text="MRP Action" /></Column>
-              <Column width="12rem"><Text text="Requirement Date" /></Column>
-              <Column width="11rem" hAlign="End"><Text text="Quantity" /></Column>
-              <Column width="10rem"><Text text="Status" /></Column>
-              <Column width="24rem"><Text text="SAP Message" /></Column>
-            </columns>
+            items="{pir>/historyBatches}">
             <items>
-              <ColumnListItem highlight="{path: 'status', formatter: '.formatHighlight'}">
-                <cells>
-                  <ObjectIdentifier title="{material}" text="{pir_request_id}" />
-                  <Button
-                    text="Run MRP"
-                    icon="sap-icon://process"
-                    type="{= (${status} === 'CREATED' || ${status} === 'MRP_ERROR') ? 'Emphasized' : 'Default' }"
-                    class="workflowActionButton"
-                    press="onRunMRP"
-                    enabled="{= (${status} === 'CREATED' || ${status} === 'MRP_ERROR') &amp;&amp; !${pir>/busy} }" />
-                  <Text text="{path: 'requirement_date', formatter: '.formatDate'}" />
-                  <ObjectNumber number="{requirement_quantity}" unit="{unit}" />
-                  <ObjectStatus text="{status}" state="{path: 'status', formatter: '.formatState'}" />
-                  <Text text="{bapi_message}" wrapping="true" maxLines="3" />
-                </cells>
-              </ColumnListItem>
+              <CustomListItem>
+                <Panel expandable="true" expanded="true" class="sapUiTinyMarginBottom">
+                  <headerToolbar>
+                    <Toolbar>
+                      <Title text="Forecast Batch {pir>batchId}" level="H5" />
+                      <Text text="{pir>summary}" class="sapUiSmallMarginBegin" />
+                      <ToolbarSpacer />
+                      <Button text="Run Total MRP" icon="sap-icon://process" type="Emphasized" press="onRunHistoryBatch" enabled="{= !!${pir>requestId} &amp;&amp; !${pir>/busy} }" />
+                    </Toolbar>
+                  </headerToolbar>
+                  <content>
+                    <Table items="{pir>items}" inset="false">
+                      <columns>
+                        <Column><Text text="Material" /></Column>
+                        <Column><Text text="Requirement Date" /></Column>
+                        <Column hAlign="End"><Text text="Quantity" /></Column>
+                        <Column><Text text="Status" /></Column>
+                        <Column><Text text="SAP Message" /></Column>
+                        <Column width="9rem" hAlign="Center"><Text text="Action" /></Column>
+                      </columns>
+                      <items>
+                        <ColumnListItem highlight="{path: 'pir>status', formatter: '.formatHighlight'}">
+                          <cells>
+                            <ObjectIdentifier title="{pir>material}" text="{pir>pir_request_id}" />
+                            <Text text="{path: 'pir>requirement_date', formatter: '.formatDate'}" />
+                            <ObjectNumber number="{pir>requirement_quantity}" unit="{pir>unit}" />
+                          <ObjectStatus text="{pir>status}" state="{path: 'pir>status', formatter: '.formatState'}" />
+                          <Text text="{pir>bapi_message}" wrapping="true" maxLines="2" />
+                          <Button text="Run MRP" icon="sap-icon://process" press="onRunSingleMRP" enabled="{= (${pir>status} === 'CREATED' || ${pir>status} === 'MRP_ERROR') &amp;&amp; !${pir>/busy} }" />
+                          </cells>
+                        </ColumnListItem>
+                      </items>
+                    </Table>
+                  </content>
+                </Panel>
+              </CustomListItem>
             </items>
-          </Table>
+          </List>
         </ScrollContainer>
         </Panel>
       </VBox>

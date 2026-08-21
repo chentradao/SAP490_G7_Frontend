@@ -9,8 +9,9 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function (Controller, History, Filter, FilterOperator, JSONModel, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "sap/m/GroupHeaderListItem"
+], function (Controller, History, Filter, FilterOperator, JSONModel, MessageBox, Fragment, GroupHeaderListItem) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.ProductionOrderHistory", {
@@ -57,6 +58,19 @@ sap.ui.define([
             this._applyFilters(oSearch ? oSearch.getValue().trim() : "");
         },
 
+        createProductionBatchHeader: function (oGroup) {
+            const sBatchId = String(oGroup && oGroup.key || "");
+            const sTitle = sBatchId
+                ? "FORECAST-" + sBatchId.replace(/-/g, "").slice(0, 8).toUpperCase()
+                : "LEGACY / MANUAL · NO BATCH";
+
+            return new GroupHeaderListItem({
+                title: sTitle,
+                description: sBatchId ? "Batch ID: " + sBatchId : "Historical records without Forecast Batch tracking",
+                upperCase: false
+            });
+        },
+
         /** Hàm nội bộ thực hiện apply Filters. */
         _applyFilters: function (sQuery) {
             const oBinding = this.byId("productionHistoryTable").getBinding("items");
@@ -91,7 +105,8 @@ sap.ui.define([
                         new Filter("production_order", FilterOperator.EQ, sQuery),
                         new Filter("material_document", FilterOperator.EQ, sQuery),
                         new Filter("material", FilterOperator.EQ, sQuery.toUpperCase()),
-                        new Filter("request_id", FilterOperator.EQ, sQuery)
+                        new Filter("request_id", FilterOperator.EQ, sQuery),
+                        new Filter("batch_id", FilterOperator.EQ, sQuery.replace(/-/g, ""))
                     ],
                     and: false
                 }));

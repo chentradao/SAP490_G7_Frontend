@@ -273,6 +273,12 @@ sap.ui.define([
 
         /** Xử lý sự kiện Open PIR Planning từ giao diện người dùng. */
         onOpenPIRPlanning: function () { this._navTo("RoutePIRPlanning"); },
+        /** Xử lý sự kiện Open Forecast Batch Overview. */
+        onOpenForecastBatchOverview: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteForecastBatchOverview", {
+                batchId: "latest"
+            });
+        },
         /** Xử lý sự kiện Open MRP Results từ giao diện người dùng. */
         onOpenMRPResults: function () { this._navTo("RouteMRPResults"); },
         /** Xử lý sự kiện Open Material Stock từ giao diện người dùng. */
