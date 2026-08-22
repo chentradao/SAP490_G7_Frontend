@@ -117,7 +117,7 @@ sap.ui.define([
                 ));
             }
             if (sPRScope === "OPEN") {
-                aPRFilters.push(new Filter("OpenQuantity", FilterOperator.GT, 0));
+                aPRFilters.push(new Filter("CanCreatePO", FilterOperator.EQ, true));
             }
             const oPRBinding = this.byId("purchaseRequisitionsTable").getBinding("items");
             if (oPRBinding) {
@@ -255,6 +255,12 @@ sap.ui.define([
                         const sKey = String(oTracked.DocumentNumber || "") + "|" +
                             String(oTracked.DocumentItem || "");
                         const oStandard = mPR.get(sKey) || {};
+                        const sProcessingStatus = oTracked.ProcessingStatus || oStandard.ProcessingStatus || "OPEN";
+                        const sPurchaseOrder = oTracked.PurchaseOrder || oStandard.PurchaseOrder || "";
+                        const sPurchaseOrderItem = oTracked.PurchaseOrderItem || oStandard.PurchaseOrderItem || "";
+                        const nOpenQuantity = oStandard.OpenQuantity !== undefined
+                            ? oStandard.OpenQuantity
+                            : oTracked.RequiredQuantity;
                         aTrackedPRs.push(Object.assign({}, oStandard, {
                             BatchID: oTracked.BatchID,
                             MRPRunID: oTracked.MRPRunID,
@@ -265,17 +271,21 @@ sap.ui.define([
                             MaterialDescription: oStandard.MaterialDescription || oTracked.MaterialDescription,
                             Plant: oStandard.Plant || oTracked.Plant,
                             StorageLocation: oStandard.StorageLocation || oTracked.StorageLocation,
-                            OpenQuantity: oStandard.OpenQuantity !== undefined
-                                ? oStandard.OpenQuantity
-                                : oTracked.RequiredQuantity,
+                            OpenQuantity: nOpenQuantity,
                             RequestedQuantity: oStandard.RequestedQuantity !== undefined
                                 ? oStandard.RequestedQuantity
                                 : oTracked.RequiredQuantity,
                             Unit: oStandard.Unit || oTracked.Unit,
                             DeliveryDate: oStandard.DeliveryDate || oTracked.RequirementDate,
-                            ProcessingStatus: oStandard.ProcessingStatus || oTracked.ProcessingStatus,
-                            PurchaseOrder: oStandard.PurchaseOrder || oTracked.PurchaseOrder,
-                            PurchaseOrderItem: oStandard.PurchaseOrderItem || oTracked.PurchaseOrderItem
+                            ProcessingStatus: sProcessingStatus,
+                            PurchaseOrder: sPurchaseOrder,
+                            PurchaseOrderItem: sPurchaseOrderItem,
+                            CanCreatePO: !sPurchaseOrder &&
+                                this._parseQuantity(nOpenQuantity) > 0 &&
+                                !this._isClosed(oStandard.IsClosed) &&
+                                !["PO_CREATED", "ORDERED", "COMPLETED", "CLOSED"].includes(
+                                    String(sProcessingStatus).toUpperCase()
+                                )
                         }));
                         oBatch.purchaseCount += 1;
                     } else if (sCategory === "PLANNED_ORDER") {
@@ -284,6 +294,8 @@ sap.ui.define([
                         if (!String(sMaterial).startsWith("FG")) {
                             return;
                         }
+                        const sPlannedStatus = oTracked.ProcessingStatus || "OPEN";
+                        const sProductionOrder = oTracked.ProductionOrder || "";
                         aTrackedPlannedOrders.push(Object.assign({}, oStandard, {
                             BatchID: oTracked.BatchID,
                             MRPRunID: oTracked.MRPRunID,
@@ -297,11 +309,18 @@ sap.ui.define([
                                 : oTracked.RequiredQuantity,
                             Unit: oStandard.Unit || oTracked.Unit,
                             PlannedStartDate: oStandard.PlannedStartDate || oTracked.RequirementDate,
-                            ProcessingStatus: oTracked.ProcessingStatus
+                            ProcessingStatus: sPlannedStatus,
+                            ProductionOrder: sProductionOrder,
+                            CanConvert: !sProductionOrder && ![
+                                "PROD_ORDER_CREATED",
+                                "CONVERTED",
+                                "COMPLETED",
+                                "CLOSED"
+                            ].includes(String(sPlannedStatus).toUpperCase())
                         }));
                         oBatch.plannedCount += 1;
                     }
-                });
+                }, this);
 
                 const aBatches = Array.from(mBatches.values()).sort(function (a, b) {
                     return String(b.timestamp).localeCompare(String(a.timestamp));
@@ -454,7 +473,8 @@ sap.ui.define([
             }).filter(Boolean);
 
             const oInvalidPR = aItems.find(function (oPR) {
-                return this._parseQuantity(oPR.OpenQuantity) <= 0 ||
+                return oPR.CanCreatePO === false ||
+                    this._parseQuantity(oPR.OpenQuantity) <= 0 ||
                     this._isClosed(oPR.IsClosed) ||
                     Boolean(oPR.PurchaseOrder);
             }, this);
@@ -483,10 +503,9 @@ sap.ui.define([
             }, this);
 
             if (aBatchItems.some(function (oItem) {
-                return this._parseQuantity(oItem.quantity) <= 0 ||
-                    this._parseQuantity(oItem.price) <= 0;
+                return this._parseQuantity(oItem.quantity) <= 0;
             }, this)) {
-                MessageBox.error("Every selected Purchase Requisition must have an open quantity and net price greater than zero.");
+                MessageBox.error("Every selected Purchase Requisition must have an open quantity greater than zero.");
                 return;
             }
 
@@ -496,6 +515,8 @@ sap.ui.define([
                 items: aBatchItems,
                 selectedCount: String(aBatchItems.length),
                 deliveryDate: this._getSafeDeliveryDate(oFirstPR.DeliveryDate),
+                plant: oFirstPR.Plant || "P001",
+                storageLocation: oFirstPR.StorageLocation || "RM01",
                 vendor: oFirstPR.FixedSupplier || oFirstPR.DesiredSupplier || "",
                 vendorName: "",
                 companyCode: "PT01",
@@ -654,6 +675,29 @@ sap.ui.define([
             }
             if (!aItems.length) {
                 MessageBox.error("Select at least one Purchase Requisition item.");
+                return;
+            }
+
+            const aInvalidQuantityItems = aItems.filter(function (oItem) {
+                return this._parseQuantity(oItem.quantity) <= 0;
+            }, this);
+            if (aInvalidQuantityItems.length) {
+                MessageBox.error("Every selected Purchase Requisition must have an open quantity greater than zero.");
+                return;
+            }
+
+            const aMissingPriceItems = aItems.filter(function (oItem) {
+                return this._parseQuantity(oItem.price) <= 0;
+            }, this);
+            if (aMissingPriceItems.length) {
+                MessageBox.error(
+                    "Enter a Net Price greater than zero for:\n" +
+                    aMissingPriceItems.map(function (oItem) {
+                        return "• " + (oItem.material || "Unknown material") +
+                            " — PR " + (oItem.purchaseRequisition || "-") +
+                            "/" + (oItem.prItem || "-");
+                    }).join("\n")
+                );
                 return;
             }
 
@@ -905,7 +949,7 @@ sap.ui.define([
                 const oContext = oItem.getBindingContext("plannedResults");
                 return oContext && oContext.getObject();
             }).filter(function (oPlannedOrder) {
-                return oPlannedOrder && oPlannedOrder.PlannedOrder;
+                return oPlannedOrder && oPlannedOrder.PlannedOrder && oPlannedOrder.CanConvert !== false;
             });
 
             if (!aPlannedOrders.length) {
@@ -987,13 +1031,17 @@ sap.ui.define([
                         "Create the Purchase Orders, post Goods Receipt into RM01, then retry.\n\n" +
                         sSkippedText;
 
-                const fnMessage = aCreated.length
-                    ? MessageBox.success
-                    : MessageBox.warning;
+                const bPartiallyCreated = aCreated.length > 0 && aSkipped.length > 0;
+                const fnMessage = bPartiallyCreated || !aCreated.length
+                    ? MessageBox.warning
+                    : MessageBox.success;
+                const sResultTitle = bPartiallyCreated
+                    ? "Production Orders Partially Created"
+                    : (aCreated.length ? "Production Orders Created" : "Production Orders Not Created");
 
                 fnMessage(
                     sResultText,
-                    { title: aCreated.length ? "Production Orders Created" : "Production Orders Not Created" }
+                    { title: sResultTitle }
                 );
             } catch (oError) {
                 MessageBox.error(oError.message || "Could not convert the Planned Order.");
@@ -1136,6 +1184,54 @@ sap.ui.define([
         /** Định dạng PR Highlight trước khi hiển thị trên giao diện. */
         formatPRHighlight: function (sStatus) {
             return this.formatPRState(sStatus);
+        },
+
+        onPRSelectionChange: function (oEvent) {
+            const oTable = oEvent.getSource();
+            let iLocked = 0;
+            oTable.getSelectedItems().forEach(function (oItem) {
+                const oContext = oItem.getBindingContext("prResults");
+                if (oContext && oContext.getProperty("CanCreatePO") === false) {
+                    oTable.setSelectedItem(oItem, false);
+                    iLocked += 1;
+                }
+            });
+            if (iLocked > 0) {
+                MessageBox.information("The selected Purchase Requisition is already ordered and cannot be selected again.");
+            }
+        },
+
+        onPlannedSelectionChange: function (oEvent) {
+            const oTable = oEvent.getSource();
+            let iLocked = 0;
+            oTable.getSelectedItems().forEach(function (oItem) {
+                const oContext = oItem.getBindingContext("plannedResults");
+                if (oContext && oContext.getProperty("CanConvert") === false) {
+                    oTable.setSelectedItem(oItem, false);
+                    iLocked += 1;
+                }
+            });
+            if (iLocked > 0) {
+                MessageBox.information("The selected Planned Order was already converted and cannot be selected again.");
+            }
+        },
+
+        formatPlannedOrderStatus: function (sStatus, sProductionOrder) {
+            if (sProductionOrder) { return "Production Order Created"; }
+            const sValue = String(sStatus || "OPEN").toUpperCase();
+            if (["PROD_ORDER_CREATED", "CONVERTED"].includes(sValue)) {
+                return "Production Order Created";
+            }
+            if (sValue === "CONVERSION_ERROR") { return "Conversion Error"; }
+            return sValue === "OPEN" ? "Ready" : sValue;
+        },
+
+        formatPlannedOrderState: function (sStatus, sProductionOrder) {
+            if (sProductionOrder) { return "Success"; }
+            const sValue = String(sStatus || "OPEN").toUpperCase();
+            if (["PROD_ORDER_CREATED", "CONVERTED"].includes(sValue)) { return "Success"; }
+            if (sValue === "CONVERSION_ERROR") { return "Error"; }
+            return "Information";
         },
 
         /** Chuyển đổi Quantity về kiểu dữ liệu an toàn. */

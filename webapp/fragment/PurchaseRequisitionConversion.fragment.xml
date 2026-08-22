@@ -13,7 +13,7 @@
     <content>
       <VBox class="sapUiSmallMargin">
         <MessageStrip
-          text="One Purchase Order will be created for all selected requisitions. All items must use the same vendor, purchasing organization, purchasing group, currency and delivery date."
+          text="One Purchase Order will be created for all selected requisitions. Enter a Net Price greater than zero for every material before creating the Purchase Order."
           type="Information"
           showIcon="true"
           class="sapUiSmallMarginBottom" />
@@ -83,7 +83,14 @@
                 <Text text="{prConvert>purchaseRequisition}" />
                 <Text text="{prConvert>material}" />
                 <ObjectNumber number="{prConvert>quantity}" unit="{prConvert>unit}" />
-                <ObjectNumber number="{prConvert>price}" unit="{prConvert>currency}" />
+                <HBox alignItems="Center" justifyContent="End">
+                  <Input
+                    value="{prConvert>price}"
+                    type="Number"
+                    textAlign="End"
+                    width="8rem" />
+                  <Text text="{prConvert>currency}" class="sapUiTinyMarginBegin" />
+                </HBox>
               </cells>
             </ColumnListItem>
           </items>

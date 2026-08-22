@@ -105,6 +105,7 @@
                 id="purchaseRequisitionsTable"
                 class="poHistoryTable wideDataTable"
                 mode="MultiSelect"
+                selectionChange="onPRSelectionChange"
                 sticky="ColumnHeaders"
                 alternateRowColors="true"
                 growing="true"
@@ -165,6 +166,7 @@
                 id="plannedOrdersTable"
                 class="poHistoryTable wideDataTable"
                 mode="MultiSelect"
+                selectionChange="onPlannedSelectionChange"
                 sticky="ColumnHeaders"
                 alternateRowColors="true"
                 growing="true"
@@ -178,9 +180,11 @@
                   <Column width="12rem" hAlign="End"><Text text="Quantity" /></Column>
                   <Column width="12rem"><Text text="Production Date" /></Column>
                   <Column width="8rem"><Text text="Plant" /></Column>
+                  <Column width="13rem"><Text text="Status" /></Column>
+                  <Column width="13rem"><Text text="Production Order" /></Column>
                 </columns>
                 <items>
-                  <ColumnListItem>
+                  <ColumnListItem highlight="{parts: ['plannedResults>ProcessingStatus', 'plannedResults>ProductionOrder'], formatter: '.formatPlannedOrderState'}">
                     <cells>
                       <ObjectIdentifier title="{plannedResults>PlannedOrder}" />
                       <ObjectIdentifier title="{plannedResults>Material}" />
@@ -188,6 +192,10 @@
                       <ObjectNumber number="{plannedResults>PlannedOrderQuantity}" unit="{plannedResults>Unit}" />
                       <Text text="{path: 'plannedResults>PlannedStartDate', formatter: '.formatDate'}" />
                       <Text text="{plannedResults>Plant}" />
+                      <ObjectStatus
+                        text="{parts: ['plannedResults>ProcessingStatus', 'plannedResults>ProductionOrder'], formatter: '.formatPlannedOrderStatus'}"
+                        state="{parts: ['plannedResults>ProcessingStatus', 'plannedResults>ProductionOrder'], formatter: '.formatPlannedOrderState'}" />
+                      <ObjectIdentifier title="{plannedResults>ProductionOrder}" />
                     </cells>
                   </ColumnListItem>
                 </items>

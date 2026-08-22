@@ -394,16 +394,13 @@ sap.ui.define([
                 return;
             }
 
-            const sMaterial = oContext.getProperty("material") || "";
             const sPlant = oContext.getProperty("plant") || "";
-            const sStatus = String(oContext.getProperty("status") || "").toUpperCase();
-            const sRequestId = oContext.getProperty("pir_request_id") || "";
             const sBatchId = oContext.getProperty("batch_id") || "";
             const sRequirementDate = oContext.getProperty("requirement_date") || "";
             const sBatchCode = this._formatForecastBatchCode(sBatchId, sRequirementDate);
 
-            if (sStatus !== "CREATED" && sStatus !== "MRP_ERROR") {
-                MessageBox.warning("MRP can only be run for a created PIR or retried after an MRP error.");
+            if (!sBatchId) {
+                MessageBox.warning("This forecast does not have a Batch ID and cannot run batch MRP.");
                 return;
             }
 
@@ -446,48 +443,64 @@ sap.ui.define([
                     "/PIRRequests",
                     undefined,
                     undefined,
-                    [new Filter("pir_request_id", FilterOperator.EQ, sRequestId)],
+                    [new Filter("batch_id", FilterOperator.EQ, sBatchId)],
                     {
                         $$groupId: "$direct",
-                        $select: "pir_request_id,status,bapi_message,material,plant"
+                        $select: "pir_request_id,batch_id,status,bapi_message,material,plant"
                     }
                 );
 
-                let sUpdatedStatus = "";
-                let sMessage = "";
+                let aBatchResults = [];
 
-                for (let iAttempt = 0; iAttempt < 8; iAttempt += 1) {
+                for (let iAttempt = 0; iAttempt < 10; iAttempt += 1) {
                     await new Promise(function (resolve) {
-                        setTimeout(resolve, 800);
+                        setTimeout(resolve, 500);
                     });
 
                     oPollBinding.refresh();
-                    const aContexts = await oPollBinding.requestContexts(0, 1);
-                    if (aContexts.length > 0) {
-                        sUpdatedStatus = String(aContexts[0].getProperty("status") || "").toUpperCase();
-                        sMessage = aContexts[0].getProperty("bapi_message") || "";
-                    }
+                    const aContexts = await oPollBinding.requestContexts(0, 100);
+                    aBatchResults = aContexts.map(function (oBatchContext) {
+                        return oBatchContext.getObject();
+                    });
 
-                    if (sUpdatedStatus === "MRP_COMPLETED" || sUpdatedStatus === "MRP_ERROR") {
+                    if (aBatchResults.length > 0 && aBatchResults.every(function (oRequest) {
+                        const sRequestStatus = String(oRequest.status || "").toUpperCase();
+                        return sRequestStatus === "MRP_COMPLETED" || sRequestStatus === "MRP_ERROR";
+                    })) {
                         break;
                     }
                 }
 
                 this.onRefresh();
 
-                if (sUpdatedStatus === "MRP_COMPLETED") {
+                const aCompleted = aBatchResults.filter(function (oRequest) {
+                    return String(oRequest.status || "").toUpperCase() === "MRP_COMPLETED";
+                });
+                const aFailed = aBatchResults.filter(function (oRequest) {
+                    return String(oRequest.status || "").toUpperCase() === "MRP_ERROR";
+                });
+                const sCreatedDocuments = await this._getMRPCreatedDocuments(
+                    aBatchResults.map(function (oRequest) {
+                        return oRequest.pir_request_id;
+                    })
+                );
+                const sResultDetails = aBatchResults.map(function (oRequest) {
+                    return "• " + (oRequest.material || "Unknown material") + ": " +
+                        (oRequest.bapi_message || oRequest.status || "No SAP message");
+                }).join("\n");
+
+                if (aBatchResults.length > 0 && aFailed.length === 0 &&
+                    aCompleted.length === aBatchResults.length) {
                     oPIR.setProperty("/batchStatusText", "Total MRP completed");
                     oPIR.setProperty("/batchStatusState", "Success");
-                    const sCreatedDocuments = await this._getMRPCreatedDocuments(sRequestId);
                     MessageBox.success(
                         "Forecast Batch: " + sBatchCode + "\n" +
                         "Batch ID: " + (sBatchId || "-") + "\n" +
                         "Plant: " + sPlant + "\n" +
                         "Requirement Date: " + (sRequirementDate || "-") + "\n\n" +
-                        "Total MRP completed successfully for " +
-                        (oPIR.getProperty("/batchMealCount") || "the selected") +
+                        "MRP completed successfully for " + aCompleted.length +
                         " forecast(s) in plant " + sPlant + "." +
-                        (sMessage ? "\n\n" + sMessage : "") +
+                        (sResultDetails ? "\n\nMaterial results:\n" + sResultDetails : "") +
                         (sCreatedDocuments ? "\n\nDocuments created:\n" + sCreatedDocuments :
                             "\n\nNo new Planned Order or Purchase Requisition was recorded."),
                         {
@@ -497,10 +510,27 @@ sap.ui.define([
                             }.bind(this)
                         }
                     );
+                } else if (aCompleted.length > 0) {
+                    oPIR.setProperty("/batchStatusText", "Total MRP partially completed");
+                    oPIR.setProperty("/batchStatusState", "Warning");
+                    MessageBox.warning(
+                        "Forecast Batch: " + sBatchCode + "\n" +
+                        "Batch ID: " + sBatchId + "\n" +
+                        "Plant: " + sPlant + "\n\n" +
+                        "Successful: " + aCompleted.length + "/" + aBatchResults.length + "\n" +
+                        "Failed: " + aFailed.length + "\n\n" +
+                        sResultDetails +
+                        (sCreatedDocuments ? "\n\nDocuments created:\n" + sCreatedDocuments : ""),
+                        { title: "MRP Partially Completed" }
+                    );
                 } else {
                     oPIR.setProperty("/batchStatusText", "Total MRP failed");
                     oPIR.setProperty("/batchStatusState", "Error");
-                    MessageBox.error(sMessage || "SAP did not return MRP status MRP_COMPLETED.");
+                    MessageBox.error(
+                        "Forecast Batch: " + sBatchCode + "\n" +
+                        "Batch ID: " + sBatchId + "\n\n" +
+                        (sResultDetails || "SAP did not return a completed MRP result.")
+                    );
                 }
             } catch (oError) {
                 oPIR.setProperty("/batchStatusText", "Total MRP failed");
@@ -512,31 +542,56 @@ sap.ui.define([
         },
 
         /** Đọc và trả về MRP Created Documents phục vụ xử lý nội bộ. */
-        _getMRPCreatedDocuments: async function (sPIRRequestId) {
+        _getMRPCreatedDocuments: async function (aPIRRequestIds) {
             try {
                 const oModel = this.getOwnerComponent().getModel();
+                const aValidRequestIds = Array.from(new Set((aPIRRequestIds || []).filter(Boolean)));
+                if (!aValidRequestIds.length) { return ""; }
+
+                const oRequestFilter = new Filter({
+                    filters: aValidRequestIds.map(function (sRequestId) {
+                        return new Filter("PIRRequestID", FilterOperator.EQ, sRequestId);
+                    }),
+                    and: false
+                });
                 const oRuns = oModel.bindList(
                     "/MRPRuns", undefined,
                     [new Sorter("StartedAt", true)],
-                    [new Filter("PIRRequestID", FilterOperator.EQ, sPIRRequestId)],
-                    { $$groupId: "$direct", $select: "MRPRunID,FinishedMaterial,StartedAt" }
+                    [oRequestFilter],
+                    { $$groupId: "$direct", $select: "MRPRunID,PIRRequestID,FinishedMaterial,StartedAt" }
                 );
-                const aRunContexts = await oRuns.requestContexts(0, 1);
+                const aRunContexts = await oRuns.requestContexts(0, 100);
                 if (!aRunContexts.length) { return ""; }
 
-                const sRunId = aRunContexts[0].getProperty("MRPRunID");
-                const oItems = oModel.bindList(
-                    "/MRPRunItems", undefined,
-                    [new Sorter("ItemNo", false)],
-                    [new Filter("MRPRunID", FilterOperator.EQ, sRunId)],
-                    {
-                        $$groupId: "$direct",
-                        $select: "ItemNo,DocumentCategory,DocumentNumber,DocumentItem,Material,RequiredQuantity,Unit"
+                const aRunItems = await Promise.all(aRunContexts.map(async function (oRunContext) {
+                    const oItems = oModel.bindList(
+                        "/MRPRunItems", undefined,
+                        [new Sorter("ItemNo", false)],
+                        [new Filter("MRPRunID", FilterOperator.EQ, oRunContext.getProperty("MRPRunID"))],
+                        {
+                            $$groupId: "$direct",
+                            $select: "MRPRunID,ItemNo,DocumentCategory,DocumentNumber,DocumentItem,Material,RequiredQuantity,Unit"
+                        }
+                    );
+                    const aItemContexts = await oItems.requestContexts(0, 200);
+                    return aItemContexts.map(function (oItemContext) {
+                        return oItemContext.getObject();
+                    });
+                }));
+
+                const mDocuments = new Map();
+                aRunItems.flat().forEach(function (oItem) {
+                    const sKey = [
+                        oItem.DocumentCategory,
+                        oItem.DocumentNumber,
+                        oItem.DocumentItem
+                    ].join("|");
+                    if (!mDocuments.has(sKey)) {
+                        mDocuments.set(sKey, oItem);
                     }
-                );
-                const aItemContexts = await oItems.requestContexts(0, 100);
-                return aItemContexts.map(function (oItemContext) {
-                    const oItem = oItemContext.getObject();
+                });
+
+                return Array.from(mDocuments.values()).map(function (oItem) {
                     const sCategory = oItem.DocumentCategory === "PLANNED_ORDER"
                         ? "Planned Order" : "Purchase Requisition";
                     const sItem = oItem.DocumentItem ? "/" + oItem.DocumentItem : "";
