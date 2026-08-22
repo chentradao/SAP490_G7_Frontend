@@ -83,6 +83,10 @@ sap.ui.define([
             this.getOwnerComponent().getRouter().navTo("RouteMRPResults");
         },
 
+        onOpenProductionQueue: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteProductionOrderHistory");
+        },
+
         /** Xử lý sự kiện Search từ giao diện người dùng. */
         onSearch: function (oEvent) {
             const sQuery = (

@@ -1,0 +1,125 @@
+<mvc:View
+  controllerName="sap490g7fioriapp.controller.MRPRun"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  displayBlock="true">
+
+  <Page title="MRP Run" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button text="Create PIR" icon="sap-icon://add-document" type="Transparent" press="onOpenPIRPlanning" />
+      <Button text="MRP Results" icon="sap-icon://inspect" type="Transparent" press="onOpenMRPResults" />
+      <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+    </headerContent>
+
+    <content>
+      <VBox class="poHistoryShell">
+        <HBox class="poHistoryHero" justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+          <VBox class="poHistoryHeroText">
+            <Title text="Forecast Batches Ready for MRP" level="H2" />
+            <Text text="Run MRP for an entire Forecast Batch or process an individual forecast when needed." class="poHistorySubtitle" />
+          </VBox>
+          <ObjectStatus text="Plant P001" icon="sap-icon://factory" state="Information" />
+        </HBox>
+
+        <MessageStrip
+          text="Recommended: Run Total MRP once for each Forecast Batch so shared raw-material requirements are calculated together."
+          type="Information"
+          showIcon="true"
+          class="sapUiSmallMarginBottom" />
+
+        <OverflowToolbar class="poHistoryFilterBar">
+          <SearchField
+            id="mrpRunSearch"
+            width="24rem"
+            placeholder="Search batch ID or material"
+            search="onFiltersChanged"
+            liveChange="onFiltersChanged" />
+          <Select id="mrpRunStatusFilter" width="12rem" selectedKey="ALL" change="onFiltersChanged">
+            <core:Item key="ALL" text="All Statuses" />
+            <core:Item key="READY" text="Ready to Run" />
+            <core:Item key="COMPLETED" text="MRP Completed" />
+            <core:Item key="ERROR" text="MRP Error" />
+            <core:Item key="LEGACY" text="Legacy / No Batch" />
+          </Select>
+          <Select id="mrpRunSort" width="12rem" selectedKey="NEWEST" change="onFiltersChanged">
+            <core:Item key="NEWEST" text="Newest First" />
+            <core:Item key="OLDEST" text="Oldest First" />
+            <core:Item key="BATCH_ASC" text="Batch ID A–Z" />
+            <core:Item key="BATCH_DESC" text="Batch ID Z–A" />
+          </Select>
+          <ObjectStatus
+            text="{= ${pir>/filteredBatchCount} + ' / ' + ${pir>/totalBatchCount} + ' batch(es)' }"
+            state="Information" />
+          <ToolbarSpacer />
+          <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClearFilters" />
+        </OverflowToolbar>
+
+        <ScrollContainer width="100%" height="58vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
+          <List
+            id="mrpRunBatchList"
+            class="poHistoryTable wideDataTable"
+            growing="true"
+            growingThreshold="20"
+            noDataText="No forecast batches found"
+            items="{pir>/historyBatches}">
+            <items>
+              <CustomListItem>
+                <Panel expandable="true" expanded="false" class="staffWorkflowPanel sapUiTinyMarginBottom">
+                  <headerToolbar>
+                    <OverflowToolbar>
+                      <Title text="Forecast Batch {pir>batchId}" level="H4" />
+                      <Text text="{pir>summary}" class="sapUiSmallMarginBegin" />
+                      <ToolbarSpacer />
+                      <Button
+                        text="Run Total MRP"
+                        icon="sap-icon://process"
+                        type="Emphasized"
+                        press="onRunHistoryBatch"
+                        visible="{pir>canRunMRP}"
+                        enabled="{= !!${pir>requestId} &amp;&amp; !${pir>/busy} }" />
+                      <Button
+                        text="View MRP Results"
+                        icon="sap-icon://inspect"
+                        type="Transparent"
+                        press="onViewBatchMRPResults"
+                        visible="{pir>canViewResults}" />
+                    </OverflowToolbar>
+                  </headerToolbar>
+                  <content>
+                    <Table items="{pir>items}" inset="false" sticky="ColumnHeaders" alternateRowColors="true">
+                      <columns>
+                        <Column width="12rem"><Text text="Material" /></Column>
+                        <Column width="11rem"><Text text="Requirement Date" /></Column>
+                        <Column width="10rem" hAlign="End"><Text text="Quantity" /></Column>
+                        <Column width="11rem"><Text text="Status" /></Column>
+                        <Column width="24rem"><Text text="SAP Message" /></Column>
+                        <Column width="9rem" hAlign="Center"><Text text="Action" /></Column>
+                      </columns>
+                      <items>
+                        <ColumnListItem highlight="{path: 'pir>status', formatter: '.formatHighlight'}">
+                          <cells>
+                            <ObjectIdentifier title="{pir>material}" text="{pir>pir_request_id}" />
+                            <Text text="{path: 'pir>requirement_date', formatter: '.formatDate'}" />
+                            <ObjectNumber number="{pir>requirement_quantity}" unit="{pir>unit}" />
+                            <ObjectStatus text="{pir>status}" state="{path: 'pir>status', formatter: '.formatState'}" />
+                            <Text text="{pir>bapi_message}" wrapping="true" maxLines="2" />
+                            <Button
+                              text="Run MRP"
+                              icon="sap-icon://process"
+                              press="onRunSingleMRP"
+                              enabled="{= (${pir>status} === 'CREATED' || ${pir>status} === 'MRP_ERROR') &amp;&amp; !${pir>/busy} }" />
+                          </cells>
+                        </ColumnListItem>
+                      </items>
+                    </Table>
+                  </content>
+                </Panel>
+              </CustomListItem>
+            </items>
+          </List>
+        </ScrollContainer>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

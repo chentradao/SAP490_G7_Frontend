@@ -213,6 +213,14 @@ sap.ui.define([
             return this.formatState(sStatus);
         },
 
+        onOpenPOHistory: function () {
+            this.getOwnerComponent().getRouter().navTo("RoutePOHistory");
+        },
+
+        onOpenMRPResults: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteMRPResults");
+        },
+
         /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             const sPreviousHash = History.getInstance().getPreviousHash();

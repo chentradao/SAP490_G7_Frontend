@@ -14,6 +14,16 @@
 
     <headerContent>
       <Button
+        text="PO History"
+        icon="sap-icon://cart"
+        type="Transparent"
+        press="onOpenPOHistory" />
+      <Button
+        text="MRP Results"
+        icon="sap-icon://business-objects-experience"
+        type="Transparent"
+        press="onOpenMRPResults" />
+      <Button
         text="Refresh"
         icon="sap-icon://refresh"
         type="Transparent"

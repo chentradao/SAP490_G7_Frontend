@@ -1069,6 +1069,14 @@ sap.ui.define([
             return Number.isNaN(oDate.getTime()) ? String(vDate) : oDate.toLocaleString("vi-VN");
         },
 
+        onOpenMRPResults: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteMRPResults");
+        },
+
+        onOpenPOHistory: function () {
+            this.getOwnerComponent().getRouter().navTo("RoutePOHistory");
+        },
+
         /** Điều hướng về màn hình trước hoặc màn hình mặc định khi không có lịch sử. */
         onNavBack: function () {
             const sPreviousHash = History.getInstance().getPreviousHash();

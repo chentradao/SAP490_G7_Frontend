@@ -63,7 +63,10 @@ sap.ui.define([
             this.getView().setModel(oUiModel, "ui");
             this.getView().setModel(new JSONModel({
                 busy: false,
-                items: []
+                items: [],
+                plantOptions: [{ key: "All", text: "All Plants" }],
+                storageOptions: [{ key: "All", text: "All Storage Loc." }],
+                unitOptions: [{ key: "All", text: "All Units" }]
             }), "stock");
 
             this.getOwnerComponent()
@@ -214,6 +217,30 @@ sap.ui.define([
                 }
             }
 
+            const oUnitFilter = this.byId("unitFilter");
+            if (oUnitFilter) {
+                const sUnit = oUnitFilter.getSelectedKey();
+                if (sUnit && sUnit !== "All") {
+                    aFilters.push(new Filter(
+                        "MaterialBaseUnit",
+                        FilterOperator.EQ,
+                        sUnit
+                    ));
+                }
+            }
+
+            const oStatusFilter = this.byId("stockStatusFilter");
+            if (oStatusFilter) {
+                const sStatus = oStatusFilter.getSelectedKey();
+                if (sStatus && sStatus !== "All") {
+                    aFilters.push(new Filter(
+                        "StockStatusKey",
+                        FilterOperator.EQ,
+                        sStatus
+                    ));
+                }
+            }
+
             oBinding.filter(aFilters);
         },
 
@@ -223,6 +250,8 @@ sap.ui.define([
             this.byId("materialSearchField").setValue("");
             this.byId("plantFilter").setSelectedKey("All");
             this.byId("storageLocFilter").setSelectedKey("All");
+            this.byId("unitFilter").setSelectedKey("All");
+            this.byId("stockStatusFilter").setSelectedKey("All");
             this._applyFilters();
         },
 
@@ -263,9 +292,30 @@ sap.ui.define([
 
                 const oPayload = await oResponse.json();
 
+                const aItems = (Array.isArray(oPayload.value) ? oPayload.value : []).map(function (oItem) {
+                    const sStatus = this.formatStockStatus(
+                        oItem.AvailableQuantity,
+                        oItem.ReorderPoint
+                    );
+                    return Object.assign({}, oItem, {
+                        StockStatusKey: sStatus === "Out of Stock"
+                            ? "OUT"
+                            : (sStatus === "Low Stock" ? "LOW" : "AVAILABLE")
+                    });
+                }, this);
+
+                oStockModel.setProperty("/items", aItems);
                 oStockModel.setProperty(
-                    "/items",
-                    Array.isArray(oPayload.value) ? oPayload.value : []
+                    "/plantOptions",
+                    this._buildFilterOptions(aItems, "Plant", "All Plants", "Plant ")
+                );
+                oStockModel.setProperty(
+                    "/storageOptions",
+                    this._buildFilterOptions(aItems, "StorageLocation", "All Storage Loc.", "Storage ")
+                );
+                oStockModel.setProperty(
+                    "/unitOptions",
+                    this._buildFilterOptions(aItems, "MaterialBaseUnit", "All Units", "Unit ")
                 );
 
                 this._applyFilters();
@@ -278,6 +328,19 @@ sap.ui.define([
             } finally {
                 oStockModel.setProperty("/busy", false);
             }
+        },
+
+        _buildFilterOptions: function (aItems, sProperty, sAllText, sPrefix) {
+            const aValues = Array.from(new Set(aItems.map(function (oItem) {
+                return String(oItem[sProperty] || "").trim();
+            }).filter(Boolean))).sort();
+
+            return [{ key: "All", text: sAllText }].concat(aValues.map(function (sValue) {
+                return {
+                    key: sValue,
+                    text: sPrefix + sValue
+                };
+            }));
         },
 
 

@@ -11,8 +11,7 @@ sap.ui.define([
     "sap/m/SelectDialog",
     "sap/m/StandardListItem",
     "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator",
-    "sap/ui/model/Sorter"
+    "sap/ui/model/FilterOperator"
 ], function (
     Controller,
     History,
@@ -22,8 +21,7 @@ sap.ui.define([
     SelectDialog,
     StandardListItem,
     Filter,
-    FilterOperator,
-    Sorter
+    FilterOperator
 ) {
     "use strict";
 
@@ -66,11 +64,19 @@ sap.ui.define([
                 return;
             }
 
-            this.byId("mrpMaterialFilter").setValue("");
+            this.byId("mrpPRMaterialFilter").setValue("");
             this.byId("mrpPRFilter").setValue("");
-            this.byId("mrpPlantFilter").setValue("P001");
             this.byId("mrpPRScope").setSelectedKey("OPEN");
-            this.byId("mrpPRSort").setSelectedKey("PRIORITY");
+            this.byId("mrpPlannedOrderFilter").setValue("");
+            this.byId("mrpPlannedMaterialFilter").setValue("");
+            this.byId("mrpPlannedScope").setSelectedKey("READY");
+            const oSelectedBatch = this.getOwnerComponent().getModel("selectedForecastBatch");
+            if (oSelectedBatch && oSelectedBatch.getProperty("/batchId")) {
+                this.getView().getModel("mrpBatches").setProperty(
+                    "/selectedBatchId",
+                    oSelectedBatch.getProperty("/batchId")
+                );
+            }
             ["plannedOrdersTable", "purchaseRequisitionsTable"].forEach(function (sId) {
                 const oBinding = this.byId(sId).getBinding("items");
                 if (oBinding) {
@@ -80,35 +86,39 @@ sap.ui.define([
             this.onRefresh();
         },
 
+        onOpenForecasts: function () {
+            this.getOwnerComponent().getRouter().navTo("RoutePIRPlanning");
+        },
+
+        onOpenPOHistory: function () {
+            this.getOwnerComponent().getRouter().navTo("RoutePOHistory");
+        },
+
+        onOpenProductionQueue: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteProductionOrderHistory");
+        },
+
         /** Đọc và trả về Filter Value phục vụ xử lý nội bộ. */
         _getFilterValue: function (sId) {
             return String(this.byId(sId).getValue() || "").trim().toUpperCase();
         },
 
-        /** Xử lý sự kiện Filter từ giao diện người dùng. */
+        /** Áp dụng toàn bộ bộ lọc theo từng nhóm chứng từ. */
         onFilter: function () {
-            const sMaterial = this._getFilterValue("mrpMaterialFilter");
+            this.onFilterPR();
+            this.onFilterPlanned();
+        },
+
+        /** Lọc danh sách Purchase Requisition trong Forecast Batch đang chọn. */
+        onFilterPR: function () {
+            const sMaterial = this._getFilterValue("mrpPRMaterialFilter");
             const sPurchaseRequisition = this._getFilterValue("mrpPRFilter");
-            const sPlant = this._getFilterValue("mrpPlantFilter");
             const sPRScope = this.byId("mrpPRScope").getSelectedKey();
-            const sPRSort = this.byId("mrpPRSort").getSelectedKey();
-            const aCommonFilters = [];
+            const aPRFilters = [];
 
             if (sMaterial) {
-                aCommonFilters.push(new Filter("Material", FilterOperator.Contains, sMaterial));
+                aPRFilters.push(new Filter("Material", FilterOperator.Contains, sMaterial));
             }
-            if (sPlant) {
-                aCommonFilters.push(new Filter("Plant", FilterOperator.EQ, sPlant));
-            }
-
-            const oPlannedBinding = this.byId("plannedOrdersTable").getBinding("items");
-            if (oPlannedBinding) {
-                oPlannedBinding.filter([
-                    new Filter("Material", FilterOperator.StartsWith, "FG")
-                ].concat(aCommonFilters));
-            }
-
-            const aPRFilters = aCommonFilters.slice();
             if (sPurchaseRequisition) {
                 aPRFilters.push(new Filter(
                     "PurchaseRequisition",
@@ -122,29 +132,51 @@ sap.ui.define([
             const oPRBinding = this.byId("purchaseRequisitionsTable").getBinding("items");
             if (oPRBinding) {
                 oPRBinding.filter(aPRFilters);
-                if (sPRSort === "NEWEST") {
-                    oPRBinding.sort([new Sorter("CreationDate", true), new Sorter("PurchaseRequisition", true)]);
-                } else if (sPRSort === "OLDEST") {
-                    oPRBinding.sort([new Sorter("CreationDate", false), new Sorter("PurchaseRequisition", false)]);
-                } else {
-                    oPRBinding.sort([new Sorter("DeliveryDate", false), new Sorter("CreationDate", false)]);
-                }
             }
         },
 
-        /** Xử lý sự kiện Clear Filters từ giao diện người dùng. */
-        onClearFilters: function () {
-            this.byId("mrpMaterialFilter").setValue("");
+        /** Lọc danh sách Planned Order trong Forecast Batch đang chọn. */
+        onFilterPlanned: function () {
+            const sPlannedOrder = this._getFilterValue("mrpPlannedOrderFilter");
+            const sMaterial = this._getFilterValue("mrpPlannedMaterialFilter");
+            const sScope = this.byId("mrpPlannedScope").getSelectedKey();
+            const aFilters = [new Filter("Material", FilterOperator.StartsWith, "FG")];
+
+            if (sPlannedOrder) {
+                aFilters.push(new Filter("PlannedOrder", FilterOperator.Contains, sPlannedOrder));
+            }
+            if (sMaterial) {
+                aFilters.push(new Filter("Material", FilterOperator.Contains, sMaterial));
+            }
+            if (sScope === "READY") {
+                aFilters.push(new Filter("CanConvert", FilterOperator.EQ, true));
+            }
+
+            const oBinding = this.byId("plannedOrdersTable").getBinding("items");
+            if (oBinding) {
+                oBinding.filter(aFilters);
+            }
+        },
+
+        /** Xóa riêng bộ lọc Purchase Requisition. */
+        onClearPRFilters: function () {
+            this.byId("mrpPRMaterialFilter").setValue("");
             this.byId("mrpPRFilter").setValue("");
-            this.byId("mrpPlantFilter").setValue("");
-            this.byId("mrpPRScope").setSelectedKey("ALL");
-            this.byId("mrpPRSort").setSelectedKey("PRIORITY");
-            this.onFilter();
+            this.byId("mrpPRScope").setSelectedKey("OPEN");
+            this.onFilterPR();
+        },
+
+        /** Xóa riêng bộ lọc Planned Order. */
+        onClearPlannedFilters: function () {
+            this.byId("mrpPlannedOrderFilter").setValue("");
+            this.byId("mrpPlannedMaterialFilter").setValue("");
+            this.byId("mrpPlannedScope").setSelectedKey("READY");
+            this.onFilterPlanned();
         },
 
         /** Tải lại dữ liệu mới nhất cho các binding đang hiển thị. */
         onRefresh: function () {
-            this._loadBatchResults();
+            return this._loadBatchResults();
         },
 
         onBatchChange: function () {
@@ -191,16 +223,23 @@ sap.ui.define([
                     this._readCollection("/MRPRuns"),
                     this._readCollection("/MRPRunItems"),
                     this._readCollection("/MRPPurchaseRequisitions"),
-                    this._readCollection("/MRPPlannedOrders")
+                    this._readCollection("/MRPPlannedOrders"),
+                    this._readCollection("/ProductionOrderRequests")
                 ]);
                 const aRuns = aResults[0];
                 const aRunItems = aResults[1];
                 const aPurchaseRequisitions = aResults[2];
                 const aPlannedOrders = aResults[3];
+                const aProductionOrderRequests = aResults[4];
                 const mRuns = new Map();
                 const mBatches = new Map();
                 const mPR = new Map();
                 const mPlanned = new Map();
+                const mProductionRequests = new Map();
+                const normalizeDocumentNumber = function (vValue) {
+                    const sValue = String(vValue || "").trim();
+                    return /^\d+$/.test(sValue) ? sValue.replace(/^0+(?=\d)/, "") : sValue;
+                };
 
                 aRuns.forEach(function (oRun) {
                     mRuns.set(String(oRun.MRPRunID || ""), oRun);
@@ -238,6 +277,15 @@ sap.ui.define([
                 }, this);
                 aPlannedOrders.forEach(function (oPlanned) {
                     mPlanned.set(String(oPlanned.PlannedOrder || ""), oPlanned);
+                });
+                aProductionOrderRequests.forEach(function (oRequest) {
+                    const sPlannedOrder = normalizeDocumentNumber(oRequest.planned_order);
+                    if (!sPlannedOrder || !oRequest.production_order) {
+                        return;
+                    }
+                    const sBatchId = String(oRequest.batch_id || "");
+                    mProductionRequests.set(sBatchId + "|" + sPlannedOrder, oRequest);
+                    mProductionRequests.set("|" + sPlannedOrder, oRequest);
                 });
 
                 const mTrackedDocuments = new Map();
@@ -308,8 +356,14 @@ sap.ui.define([
                         if (!String(sMaterial).startsWith("FG")) {
                             return;
                         }
-                        const sPlannedStatus = oTracked.ProcessingStatus || "OPEN";
-                        const sProductionOrder = oTracked.ProductionOrder || "";
+                        const sNormalizedPlannedOrder = normalizeDocumentNumber(oTracked.DocumentNumber);
+                        const oProductionRequest = mProductionRequests.get(
+                            oTracked.BatchID + "|" + sNormalizedPlannedOrder
+                        ) || mProductionRequests.get("|" + sNormalizedPlannedOrder) || {};
+                        const sProductionOrder = oTracked.ProductionOrder || oProductionRequest.production_order || "";
+                        const sPlannedStatus = sProductionOrder
+                            ? "PROD_ORDER_CREATED"
+                            : (oTracked.ProcessingStatus || oProductionRequest.status || "OPEN");
                         aTrackedPlannedOrders.push(Object.assign({}, oStandard, {
                             BatchID: oTracked.BatchID,
                             MRPRunID: oTracked.MRPRunID,
@@ -1019,7 +1073,7 @@ sap.ui.define([
                 }
 
                 oTable.removeSelections(true);
-                this.onRefresh();
+                await this.onRefresh();
 
                 const sCreatedText = aCreated.length
                     ? aCreated.map(function (oItem) {

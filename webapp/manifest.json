@@ -194,10 +194,10 @@
           ]
         },
         {
-          "name": "RouteForecastBatchOverview",
-          "pattern": "ForecastBatch/{batchId}",
+          "name": "RouteMRPRun",
+          "pattern": "MRPRun",
           "target": [
-            "TargetForecastBatchOverview"
+            "TargetMRPRun"
           ]
         },
         {
@@ -377,12 +377,12 @@
           "viewId": "PIRPlanning",
           "viewName": "PIRPlanning"
         },
-        "TargetForecastBatchOverview": {
+        "TargetMRPRun": {
           "viewType": "XML",
           "transition": "slide",
           "clearControlAggregation": false,
-          "viewId": "ForecastBatchOverview",
-          "viewName": "ForecastBatchOverview"
+          "viewId": "MRPRun",
+          "viewName": "MRPRun"
         },
         "TargetPOCreate": {
           "viewType": "XML",

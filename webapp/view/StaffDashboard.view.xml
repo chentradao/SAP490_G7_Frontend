@@ -32,7 +32,7 @@
               </VBox>
               <HBox wrap="Wrap">
                 <Button text="Create PIR" icon="sap-icon://business-objects-experience" type="Emphasized" press="onOpenPIRPlanning" class="sapUiTinyMarginEnd" />
-                <Button text="Batch Overview" icon="sap-icon://process" press="onOpenForecastBatchOverview" class="sapUiTinyMarginEnd" />
+                <Button text="MRP Run" icon="sap-icon://process" press="onOpenMRPRun" class="sapUiTinyMarginEnd" />
                 <Button text="View MRP Results" icon="sap-icon://inventory" press="onOpenMRPResults" />
               </HBox>
             </HBox>

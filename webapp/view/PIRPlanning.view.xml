@@ -10,6 +10,7 @@
   <!-- Trang chính: Demand Forecast and PIR -->
   <Page title="Demand Forecast and PIR" showNavButton="true" navButtonPress="onNavBack">
     <headerContent>
+      <Button text="MRP Run" icon="sap-icon://process" type="Transparent" press="onOpenMRPRun" />
       <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
     </headerContent>
     <content>
@@ -32,11 +33,19 @@
         <!-- Khu vực nghiệp vụ: 1. Choose a Meal -->
         <Panel headerText="1. Choose a Meal" class="staffWorkflowPanel pirPlanningColumn">
           <content>
-            <SearchField
-              width="100%"
-              placeholder="Search meal code or description"
-              liveChange="onFinishedGoodsSearch"
-              class="sapUiTinyMarginBottom" />
+            <OverflowToolbar class="sapUiTinyMarginBottom">
+              <SearchField
+                width="100%"
+                placeholder="Search meal code or description"
+                liveChange="onFinishedGoodsSearch" />
+              <ToolbarSpacer />
+              <Button
+                text="Clear Selection"
+                icon="sap-icon://decline"
+                type="Transparent"
+                press="onClearMealSelection"
+                enabled="{= ${pir>/selectedMeals}.length > 0 &amp;&amp; !${pir>/busy} }" />
+            </OverflowToolbar>
             <ScrollContainer width="100%" horizontal="true" vertical="false" focusable="true" class="wideTableScroll">
               <Table
                 id="pirFinishedGoodsTable"
@@ -51,6 +60,7 @@
                   <Column width="11rem"><Text text="Material" /></Column>
                   <Column width="18rem"><Text text="Description" /></Column>
                   <Column width="12rem" hAlign="End"><Text text="Current FG Stock" /></Column>
+                  <Column width="8rem" hAlign="Center"><Text text="BOM" /></Column>
                 </columns>
                 <items>
                   <ColumnListItem type="Active">
@@ -58,6 +68,11 @@
                       <ObjectIdentifier title="{Material}" text="{MaterialBaseUnit}" />
                       <Text text="{MaterialDescription}" />
                       <ObjectNumber number="{StockQuantity}" unit="{MaterialBaseUnit}" />
+                      <Button
+                        text="View BOM"
+                        icon="sap-icon://inspection"
+                        type="Transparent"
+                        press="onViewBOM" />
                     </cells>
                   </ColumnListItem>
                 </items>
@@ -88,6 +103,14 @@
                   minDate="{pir>/minimumDate}" />
 
               </f:SimpleForm>
+
+              <OverflowToolbar>
+                <Title text="Selected Meals" level="H5" />
+                <ToolbarSpacer />
+                <ObjectStatus
+                  text="{= ${pir>/selectedMeals}.length + ' meal(s) selected' }"
+                  state="{= ${pir>/selectedMeals}.length > 0 ? 'Information' : 'None' }" />
+              </OverflowToolbar>
 
               <Table
                 id="pirSelectedMealsTable"
@@ -133,63 +156,64 @@
         </Panel>
         </HBox>
 
-        <Panel
-          headerText="Previous Forecasts and MRP Runs"
-          expandable="true"
-          expanded="false"
-          class="staffWorkflowPanel sapUiMediumMarginTop">
-        <ScrollContainer width="100%" height="34vh" horizontal="true" vertical="true" focusable="true" class="wideTableScroll">
-          <List
-            id="pirHistoryList"
-            class="poHistoryTable wideDataTable"
-            sticky="ColumnHeaders"
-            alternateRowColors="true"
-            growing="true"
-            growingThreshold="20"
-            noDataText="No PIR requests found"
-            items="{pir>/historyBatches}">
-            <items>
-              <CustomListItem>
-                <Panel expandable="true" expanded="false" class="sapUiTinyMarginBottom">
-                  <headerToolbar>
-                    <Toolbar>
-                      <Title text="Forecast Batch {pir>batchId}" level="H5" />
-                      <Text text="{pir>summary}" class="sapUiSmallMarginBegin" />
-                      <ToolbarSpacer />
-                      <Button text="Run Total MRP" icon="sap-icon://process" type="Emphasized" press="onRunHistoryBatch" enabled="{= !!${pir>requestId} &amp;&amp; !${pir>/busy} }" />
-                    </Toolbar>
-                  </headerToolbar>
-                  <content>
-                    <Table items="{pir>items}" inset="false">
-                      <columns>
-                        <Column><Text text="Material" /></Column>
-                        <Column><Text text="Requirement Date" /></Column>
-                        <Column hAlign="End"><Text text="Quantity" /></Column>
-                        <Column><Text text="Status" /></Column>
-                        <Column><Text text="SAP Message" /></Column>
-                        <Column width="9rem" hAlign="Center"><Text text="Action" /></Column>
-                      </columns>
-                      <items>
-                        <ColumnListItem highlight="{path: 'pir>status', formatter: '.formatHighlight'}">
-                          <cells>
-                            <ObjectIdentifier title="{pir>material}" text="{pir>pir_request_id}" />
-                            <Text text="{path: 'pir>requirement_date', formatter: '.formatDate'}" />
-                            <ObjectNumber number="{pir>requirement_quantity}" unit="{pir>unit}" />
-                          <ObjectStatus text="{pir>status}" state="{path: 'pir>status', formatter: '.formatState'}" />
-                          <Text text="{pir>bapi_message}" wrapping="true" maxLines="2" />
-                          <Button text="Run MRP" icon="sap-icon://process" press="onRunSingleMRP" enabled="{= (${pir>status} === 'CREATED' || ${pir>status} === 'MRP_ERROR') &amp;&amp; !${pir>/busy} }" />
-                          </cells>
-                        </ColumnListItem>
-                      </items>
-                    </Table>
-                  </content>
-                </Panel>
-              </CustomListItem>
-            </items>
-          </List>
-        </ScrollContainer>
-        </Panel>
       </VBox>
     </content>
   </Page>
+
+  <Dialog
+    id="pirBOMDialog"
+    title="Bill of Materials"
+    contentWidth="58rem"
+    contentHeight="30rem"
+    resizable="true"
+    draggable="true"
+    busy="{pir>/bomBusy}">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="sapUiSmallMarginBottom">
+          <VBox>
+            <Label text="Finished Material" />
+            <ObjectIdentifier title="{pir>/bomMaterial}" text="{pir>/bomDescription}" />
+          </VBox>
+          <ObjectStatus
+            text="{= ${pir>/bomItems}.length + ' component(s)' }"
+            icon="sap-icon://inspection"
+            state="Information" />
+        </HBox>
+        <MessageStrip
+          text="BOM quantities are shown per one finished meal. Available stock is the current SAP stock before MRP."
+          type="Information"
+          showIcon="true"
+          class="sapUiSmallMarginBottom" />
+        <ScrollContainer width="100%" height="20rem" horizontal="true" vertical="true" focusable="true">
+          <Table
+            width="52rem"
+            sticky="ColumnHeaders"
+            alternateRowColors="true"
+            noDataText="No active BOM was found for this finished material"
+            items="{pir>/bomItems}">
+            <columns>
+              <Column width="10rem"><Text text="Component" /></Column>
+              <Column width="18rem"><Text text="Description" /></Column>
+              <Column width="11rem" hAlign="End"><Text text="Required / Meal" /></Column>
+              <Column width="11rem" hAlign="End"><Text text="Available Stock" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <ObjectIdentifier title="{pir>ComponentMaterial}" />
+                  <Text text="{pir>ComponentDescription}" />
+                  <ObjectNumber number="{pir>ComponentQuantity}" unit="{pir>ComponentUnit}" />
+                  <ObjectNumber number="{pir>AvailableQuantity}" unit="{pir>ComponentUnit}" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </ScrollContainer>
+      </VBox>
+    </content>
+    <endButton>
+      <Button text="Close" press="onCloseBOM" />
+    </endButton>
+  </Dialog>
 </mvc:View>

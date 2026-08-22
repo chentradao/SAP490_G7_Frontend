@@ -9,6 +9,9 @@
   <!-- Trang chính: MRP Results -->
   <Page title="MRP Results" showNavButton="true" navButtonPress="onNavBack">
     <headerContent>
+      <Button text="Forecasts" icon="sap-icon://calendar" type="Transparent" press="onOpenForecasts" />
+      <Button text="PO History" icon="sap-icon://cart" type="Transparent" press="onOpenPOHistory" />
+      <Button text="Production Queue" icon="sap-icon://factory" type="Transparent" press="onOpenProductionQueue" />
       <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
     </headerContent>
 
@@ -28,58 +31,36 @@
           showIcon="true"
           class="sapUiSmallMarginBottom" />
 
-        <!-- Khu vực nghiệp vụ: Filters -->
-        <Panel headerText="Filters" class="staffWorkflowPanel">
+        <!-- Khu vực nghiệp vụ: Forecast Batch -->
+        <Panel headerText="Forecast Batch" class="staffWorkflowPanel">
           <content>
-            <Toolbar>
-              <Label text="Forecast Batch" labelFor="mrpBatchSelect" />
-              <Select
-                id="mrpBatchSelect"
-                width="20rem"
-                selectedKey="{mrpBatches>/selectedBatchId}"
-                items="{mrpBatches>/items}"
-                change="onBatchChange">
-                <core:Item key="{mrpBatches>batchId}" text="{mrpBatches>code}" />
-              </Select>
-              <ObjectStatus
-                text="{= ${mrpBatches>/selectedBatch/status} || 'No batch selected' }"
-                state="Information" />
-              <ToolbarSeparator />
-              <Label text="Material" labelFor="mrpMaterialFilter" />
-              <SearchField
-                id="mrpMaterialFilter"
-                width="18rem"
-                placeholder="e.g. FG00015 or RW00001"
-                search="onFilter"
-                liveChange="onFilter" />
-              <ToolbarSeparator />
-              <Label text="Purchase Requisition" labelFor="mrpPRFilter" />
-              <SearchField
-                id="mrpPRFilter"
-                width="14rem"
-                placeholder="Enter PR number"
-                search="onFilter"
-                liveChange="onFilter" />
-              <ToolbarSeparator />
-              <Label text="Plant" labelFor="mrpPlantFilter" />
-              <Input id="mrpPlantFilter" value="P001" width="8rem" submit="onFilter" />
-              <ToolbarSeparator />
-              <Label text="Show PRs" labelFor="mrpPRScope" />
-              <Select id="mrpPRScope" selectedKey="OPEN" width="11rem" change="onFilter">
-                <core:Item key="OPEN" text="Open only" />
-                <core:Item key="ALL" text="All history" />
-              </Select>
-              <ToolbarSeparator />
-              <Label text="Sort" labelFor="mrpPRSort" />
-              <Select id="mrpPRSort" selectedKey="PRIORITY" width="12rem" change="onFilter">
-                <core:Item key="PRIORITY" text="Required first" />
-                <core:Item key="NEWEST" text="Newest created" />
-                <core:Item key="OLDEST" text="Oldest created" />
-              </Select>
-              <ToolbarSpacer />
-              <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClearFilters" />
-              <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
-            </Toolbar>
+            <FlexBox wrap="Wrap" alignItems="End" class="mrpResponsiveFilters sapUiSmallMargin">
+              <VBox width="25rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Forecast Batch" labelFor="mrpBatchSelect" />
+                <HBox alignItems="Center">
+                  <Select
+                    id="mrpBatchSelect"
+                    width="19rem"
+                    selectedKey="{mrpBatches>/selectedBatchId}"
+                    items="{mrpBatches>/items}"
+                    change="onBatchChange">
+                    <core:Item key="{mrpBatches>batchId}" text="{mrpBatches>code}" />
+                  </Select>
+                  <ObjectStatus
+                    text="{= ${mrpBatches>/selectedBatch/status} || 'No batch' }"
+                    state="Information"
+                    class="sapUiTinyMarginBegin" />
+                </HBox>
+              </VBox>
+              <VBox width="10rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Plant" />
+                <ObjectStatus text="{= ${mrpBatches>/selectedBatch/plant} || 'P001' }" icon="sap-icon://factory" state="Information" />
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <Label text="Actions" />
+                <Button text="Refresh" icon="sap-icon://refresh" type="Transparent" press="onRefresh" />
+              </VBox>
+            </FlexBox>
           </content>
         </Panel>
 
@@ -90,6 +71,27 @@
         <!-- Khu vực nghiệp vụ: Purchase Requisitions — Raw Materials to Buy -->
         <Panel headerText="Purchase Requisitions — Raw Materials to Buy" class="staffWorkflowPanel">
           <content>
+            <FlexBox wrap="Wrap" alignItems="End" class="mrpResponsiveFilters sapUiSmallMargin">
+              <VBox width="18rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Search Material" labelFor="mrpPRMaterialFilter" />
+                <SearchField id="mrpPRMaterialFilter" width="100%" placeholder="e.g. RW00001" search="onFilterPR" liveChange="onFilterPR" />
+              </VBox>
+              <VBox width="16rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Search Purchase Requisition" labelFor="mrpPRFilter" />
+                <SearchField id="mrpPRFilter" width="100%" placeholder="Enter PR number" search="onFilterPR" liveChange="onFilterPR" />
+              </VBox>
+              <VBox width="11rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Show PRs" labelFor="mrpPRScope" />
+                <Select id="mrpPRScope" selectedKey="OPEN" width="100%" change="onFilterPR">
+                  <core:Item key="OPEN" text="Open only" />
+                  <core:Item key="ALL" text="All history" />
+                </Select>
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <Label text="Actions" />
+                <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClearPRFilters" />
+              </VBox>
+            </FlexBox>
             <Toolbar>
               <Text text="Select open requisitions from one vendor, then create one Purchase Order containing all selected materials." />
               <ToolbarSpacer />
@@ -150,6 +152,27 @@
         <!-- Khu vực nghiệp vụ: Planned Orders — Ready for Production -->
         <Panel headerText="Planned Orders — Ready for Production" class="staffWorkflowPanel">
           <content>
+            <FlexBox wrap="Wrap" alignItems="End" class="mrpResponsiveFilters sapUiSmallMargin">
+              <VBox width="18rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Search Planned Order" labelFor="mrpPlannedOrderFilter" />
+                <SearchField id="mrpPlannedOrderFilter" width="100%" placeholder="Enter Planned Order number" search="onFilterPlanned" liveChange="onFilterPlanned" />
+              </VBox>
+              <VBox width="18rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Search Material" labelFor="mrpPlannedMaterialFilter" />
+                <SearchField id="mrpPlannedMaterialFilter" width="100%" placeholder="e.g. FG00015" search="onFilterPlanned" liveChange="onFilterPlanned" />
+              </VBox>
+              <VBox width="13rem" class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+                <Label text="Show Planned Orders" labelFor="mrpPlannedScope" />
+                <Select id="mrpPlannedScope" selectedKey="READY" width="100%" change="onFilterPlanned">
+                  <core:Item key="READY" text="Ready only" />
+                  <core:Item key="ALL" text="All history" />
+                </Select>
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <Label text="Actions" />
+                <Button text="Clear" icon="sap-icon://clear-filter" type="Transparent" press="onClearPlannedFilters" />
+              </VBox>
+            </FlexBox>
             <Toolbar>
               <Text text="Select one or more proposals. The system checks BOM stock before conversion." />
               <ToolbarSpacer />

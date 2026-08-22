@@ -15,10 +15,20 @@
 
     <headerContent>
       <Button
+        text="MRP Results"
+        icon="sap-icon://business-objects-experience"
+        type="Transparent"
+        press="onOpenMRPResults" />
+      <Button
         text="GR History"
         icon="sap-icon://history"
         type="Transparent"
         press="onOpenGRHistory" />
+      <Button
+        text="Production Queue"
+        icon="sap-icon://factory"
+        type="Transparent"
+        press="onOpenProductionQueue" />
     </headerContent>
 
     <content>

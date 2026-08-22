@@ -35,23 +35,42 @@
             id="materialSearchField"
             width="20rem"
             placeholder="Search material code or description"
-            search="onSearchMaterial" />
+            search="onSearchMaterial"
+            liveChange="onSearchMaterial" />
           <ToolbarSeparator />
           <Select
             id="plantFilter"
             width="10rem"
             selectedKey="All"
+            items="{stock>/plantOptions}"
             change="onFilterChange">
-            <core:Item key="All" text="All Plants" />
-            <core:Item key="P001" text="Plant P001" />
+            <core:Item key="{stock>key}" text="{stock>text}" />
           </Select>
           <Select
             id="storageLocFilter"
             width="11rem"
             selectedKey="All"
+            items="{stock>/storageOptions}"
             change="onFilterChange">
-            <core:Item key="All" text="All Storage Loc." />
-            <core:Item key="RM01" text="Storage RM01" />
+            <core:Item key="{stock>key}" text="{stock>text}" />
+          </Select>
+          <Select
+            id="unitFilter"
+            width="9rem"
+            selectedKey="All"
+            items="{stock>/unitOptions}"
+            change="onFilterChange">
+            <core:Item key="{stock>key}" text="{stock>text}" />
+          </Select>
+          <Select
+            id="stockStatusFilter"
+            width="11rem"
+            selectedKey="All"
+            change="onFilterChange">
+            <core:Item key="All" text="All Statuses" />
+            <core:Item key="OUT" text="Out of Stock" />
+            <core:Item key="LOW" text="Low Stock" />
+            <core:Item key="AVAILABLE" text="Available" />
           </Select>
           <ToolbarSpacer />
           <Button

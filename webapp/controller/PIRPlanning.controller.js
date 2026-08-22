@@ -44,6 +44,10 @@ sap.ui.define([
                 batchStatusText: "",
                 batchStatusState: "None",
                 historyBatches: [],
+                bomBusy: false,
+                bomMaterial: "",
+                bomDescription: "",
+                bomItems: [],
                 requirementType: "VSF",
                 version: "00",
                 versionActive: true,
@@ -85,6 +89,72 @@ sap.ui.define([
                 };
             });
             oPIR.setProperty("/selectedMeals", aSelectedMeals);
+        },
+
+        onClearMealSelection: function () {
+            const oTable = this.byId("pirFinishedGoodsTable");
+            if (oTable) {
+                oTable.removeSelections(true);
+            }
+            this.getView().getModel("pir").setProperty("/selectedMeals", []);
+        },
+
+        onOpenMRPRun: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteMRPRun");
+        },
+
+        onViewBOM: async function (oEvent) {
+            const oContext = oEvent.getSource().getBindingContext();
+            const oFinishedGood = oContext && oContext.getObject();
+            if (!oFinishedGood || !oFinishedGood.Material) {
+                MessageBox.error("The selected finished material could not be read.");
+                return;
+            }
+
+            const oPIR = this.getView().getModel("pir");
+            oPIR.setProperty("/bomMaterial", oFinishedGood.Material);
+            oPIR.setProperty("/bomDescription", oFinishedGood.MaterialDescription || "");
+            oPIR.setProperty("/bomItems", []);
+            oPIR.setProperty("/bomBusy", true);
+            this.byId("pirBOMDialog").open();
+
+            try {
+                const oBinding = this.getOwnerComponent().getModel().bindList(
+                    "/FinishedGoodsBOM",
+                    undefined,
+                    undefined,
+                    [
+                        new Filter("FinishedMaterial", FilterOperator.EQ, oFinishedGood.Material),
+                        new Filter("Plant", FilterOperator.EQ, oFinishedGood.Plant || "P001")
+                    ],
+                    { $$groupId: "$direct" }
+                );
+                const aContexts = await oBinding.requestContexts(0, 100);
+                oPIR.setProperty("/bomItems", aContexts.map(function (oBOMContext) {
+                    return Object.assign({}, oBOMContext.getObject());
+                }));
+            } catch (oError) {
+                MessageBox.error(oError.message || "Could not load the BOM from SAP.");
+            } finally {
+                oPIR.setProperty("/bomBusy", false);
+            }
+        },
+
+        onCloseBOM: function () {
+            this.byId("pirBOMDialog").close();
+        },
+
+        onViewBatchMRPResults: function (oEvent) {
+            const oBatch = oEvent.getSource().getBindingContext("pir").getObject();
+            if (!oBatch || !oBatch.batchId) {
+                MessageBox.warning("The selected forecast batch does not have a Batch ID.");
+                return;
+            }
+            this.getOwnerComponent().setModel(new JSONModel({
+                batchId: oBatch.batchId,
+                batchCode: this._formatForecastBatchCode(oBatch.batchId, oBatch.requirementDate)
+            }), "selectedForecastBatch");
+            this.getOwnerComponent().getRouter().navTo("RouteMRPResults");
         },
 
         /** Xử lý sự kiện Finished Goods Search từ giao diện người dùng. */
@@ -209,7 +279,7 @@ sap.ui.define([
                         "Requirement date: " + oData.requirementDate + "\n" +
                         "Plant: " + oData.plant + "\n\n" +
                         "Created forecasts:\n" + sCreatedDetails +
-                        "\n\nThe batch is available in Previous Forecasts and MRP Runs.",
+                        "\n\nOpen the MRP Run screen to process this forecast batch.",
                         { title: "Forecast Batch Created" }
                     );
                     oPIR.setProperty("/selectedMeals", []);
@@ -647,7 +717,6 @@ sap.ui.define([
             if (oFinishedGoodsBinding) {
                 oFinishedGoodsBinding.refresh();
             }
-            this._loadPIRHistory();
         },
 
         _loadPIRHistory: async function () {
@@ -678,7 +747,16 @@ sap.ui.define([
                 });
                 const aGroups = Object.keys(mGroups).map(function (sKey) {
                     const oGroup = mGroups[sKey];
+                    const aStatuses = oGroup.items.map(function (oItem) {
+                        return String(oItem.status || "").toUpperCase();
+                    });
                     oGroup.summary = oGroup.items.length + " meal(s) · " + (oGroup.requirementDate || "") + " · " + (oGroup.plant || "");
+                    oGroup.canRunMRP = aStatuses.some(function (sStatus) {
+                        return sStatus === "CREATED" || sStatus === "MRP_ERROR";
+                    });
+                    oGroup.canViewResults = aStatuses.some(function (sStatus) {
+                        return sStatus === "MRP_COMPLETED";
+                    });
                     return oGroup;
                 });
                 aGroups.sort(function (a, b) {

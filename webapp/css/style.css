@@ -461,6 +461,14 @@ body, html {
 .mrpActionTabs .sapMITBContent { padding: 1rem 0 0; }
 .mrpActionTabs .sapMITBContainerContent { border-bottom: 0; }
 
+.mrpResponsiveFilters {
+    gap: 0.25rem;
+}
+
+.mrpResponsiveFilters .sapMLabel {
+    margin-bottom: 0.25rem;
+}
+
 @media (max-width: 48rem) {
     .materialStockShell,
     .poHistoryShell,
