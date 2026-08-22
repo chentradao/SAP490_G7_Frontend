@@ -67,7 +67,7 @@
           <SearchField
             id="poHistorySearch"
             width="22rem"
-            placeholder="Search PO, material or vendor"
+            placeholder="Search PO, batch, material or vendor"
             search="onSearch"
             liveChange="onSearch" />
           <Select
@@ -76,7 +76,9 @@
             selectedKey="ALL"
             change="onStatusChange">
             <core:Item key="ALL" text="All Statuses" />
-            <core:Item key="CREATED" text="Created" />
+            <core:Item key="OPEN" text="Open" />
+            <core:Item key="PARTIALLY_RECEIVED" text="Partially Received" />
+            <core:Item key="FULLY_RECEIVED" text="Fully Received" />
             <core:Item key="PENDING" text="Pending" />
             <core:Item key="ERROR" text="Error" />
           </Select>
@@ -101,7 +103,7 @@
             noDataText="No purchase orders match the selected filters"
             items="{poGroups>/groups}">
             <CustomListItem>
-              <Panel expandable="true" expanded="true" class="staffWorkflowPanel sapUiSmallMarginBottom">
+              <Panel expandable="true" expanded="{poGroups>expanded}" class="staffWorkflowPanel sapUiSmallMarginBottom">
                 <headerToolbar>
                   <OverflowToolbar>
                     <Title text="PO {poGroups>purchaseOrder}" level="H3" />

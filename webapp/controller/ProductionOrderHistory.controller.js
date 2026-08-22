@@ -7,11 +7,12 @@ sap.ui.define([
     "sap/ui/core/routing/History",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
+    "sap/ui/model/Sorter",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
     "sap/m/GroupHeaderListItem"
-], function (Controller, History, Filter, FilterOperator, JSONModel, MessageBox, Fragment, GroupHeaderListItem) {
+], function (Controller, History, Filter, FilterOperator, Sorter, JSONModel, MessageBox, Fragment, GroupHeaderListItem) {
     "use strict";
 
     return Controller.extend("sap490g7fioriapp.controller.ProductionOrderHistory", {
@@ -43,7 +44,27 @@ sap.ui.define([
             }
 
             this.onClearFilters();
+            this._applyBatchGrouping();
             this.onRefresh();
+        },
+
+        _applyBatchGrouping: function () {
+            const oBinding = this.byId("productionHistoryTable").getBinding("items");
+            if (!oBinding) {
+                return;
+            }
+
+            oBinding.sort([
+                new Sorter("batch_id", true, function (oContext) {
+                    const vBatchId = oContext.getProperty("batch_id");
+                    const sBatchId = String(vBatchId || "");
+                    return {
+                        key: sBatchId,
+                        text: sBatchId
+                    };
+                }),
+                new Sorter("created_at", true)
+            ]);
         },
 
         /** Xử lý sự kiện Search từ giao diện người dùng. */
@@ -59,7 +80,9 @@ sap.ui.define([
         },
 
         createProductionBatchHeader: function (oGroup) {
-            const sBatchId = String(oGroup && oGroup.key || "");
+            const sBatchId = String(
+                oGroup && (oGroup.key || oGroup.text || oGroup.value) || ""
+            );
             const sTitle = sBatchId
                 ? "FORECAST-" + sBatchId.replace(/-/g, "").slice(0, 8).toUpperCase()
                 : "LEGACY / MANUAL · NO BATCH";

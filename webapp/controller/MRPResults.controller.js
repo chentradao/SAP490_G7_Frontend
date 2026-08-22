@@ -157,6 +157,16 @@ sap.ui.define([
             return "FORECAST-" + sDate + "-" + (sShortId || "LEGACY");
         },
 
+        _buildPurchaseRequisitionKey: function (vPurchaseRequisition, vItem) {
+            const normalize = function (vValue) {
+                const sValue = String(vValue || "").trim();
+                return /^\d+$/.test(sValue)
+                    ? sValue.replace(/^0+(?=\d)/, "")
+                    : sValue;
+            };
+            return normalize(vPurchaseRequisition) + "|" + normalize(vItem);
+        },
+
         _readCollection: async function (sPath) {
             const oBinding = this.getOwnerComponent().getModel().bindList(
                 sPath,
@@ -219,11 +229,13 @@ sap.ui.define([
 
                 aPurchaseRequisitions.forEach(function (oPR) {
                     mPR.set(
-                        String(oPR.PurchaseRequisition || "") + "|" +
-                        String(oPR.PurchaseRequisitionItem || ""),
+                        this._buildPurchaseRequisitionKey(
+                            oPR.PurchaseRequisition,
+                            oPR.PurchaseRequisitionItem
+                        ),
                         oPR
                     );
-                });
+                }, this);
                 aPlannedOrders.forEach(function (oPlanned) {
                     mPlanned.set(String(oPlanned.PlannedOrder || ""), oPlanned);
                 });
@@ -252,8 +264,10 @@ sap.ui.define([
                     const sCategory = String(oTracked.DocumentCategory || "").toUpperCase();
                     const oBatch = mBatches.get(oTracked.BatchID);
                     if (sCategory === "PURCHASE_REQ") {
-                        const sKey = String(oTracked.DocumentNumber || "") + "|" +
-                            String(oTracked.DocumentItem || "");
+                        const sKey = this._buildPurchaseRequisitionKey(
+                            oTracked.DocumentNumber,
+                            oTracked.DocumentItem
+                        );
                         const oStandard = mPR.get(sKey) || {};
                         const sProcessingStatus = oTracked.ProcessingStatus || oStandard.ProcessingStatus || "OPEN";
                         const sPurchaseOrder = oTracked.PurchaseOrder || oStandard.PurchaseOrder || "";

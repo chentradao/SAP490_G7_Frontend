@@ -59,7 +59,7 @@
           growingScrollToLoad="true"
           growingThreshold="20"
           noDataText="No production-order requests found"
-          items="{path: '/ProductionOrderRequests', filters: [{path: 'material', operator: 'GE', value1: 'FG00009'}], sorter: [{path: 'batch_id', descending: true, group: true}, {path: 'created_at', descending: true}], groupHeaderFactory: '.createProductionBatchHeader'}">
+          items="{path: '/ProductionOrderRequests', filters: [{path: 'material', operator: 'GE', value1: 'FG00009'}], groupHeaderFactory: '.createProductionBatchHeader'}">
           <columns>
             <Column width="14rem"><Text text="Production Order" /></Column>
             <Column width="16rem"><Text text="Material" /></Column>
@@ -77,6 +77,7 @@
                 <VBox>
                   <ObjectIdentifier title="{= ${production_order} || 'Not created' }" text="{request_id}" />
                   <ObjectStatus text="{path: 'planned_order', formatter: '.formatProductionSource'}" state="Information" />
+                  <Text text="{batch_id}" visible="false" />
                 </VBox>
                 <ObjectIdentifier title="{material}" text="{= ${plant} + ' / ' + ${order_type} }" />
                 <ObjectNumber number="{order_quantity}" unit="{unit}" />

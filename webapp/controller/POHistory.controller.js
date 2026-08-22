@@ -133,6 +133,16 @@ sap.ui.define([
             return "FORECAST-" + sDate + "-" + sShortId;
         },
 
+        _normalizeBatchId: function (sBatchId) {
+            return String(sBatchId || "").replace(/-/g, "").toUpperCase();
+        },
+
+        _formatTrackedForecastBatchCode: function (sBatchId, vFallbackDate) {
+            const sRequirementDate = this._batchRequirementDates &&
+                this._batchRequirementDates[this._normalizeBatchId(sBatchId)];
+            return this._formatForecastBatchCode(sBatchId, sRequirementDate || vFallbackDate);
+        },
+
         _loadPOGroups: async function (sQuery, sStatus) {
             const oGroupsModel = this.getView().getModel("poGroups");
             const oModel = this.getOwnerComponent().getModel();
@@ -153,10 +163,18 @@ sap.ui.define([
                     undefined,
                     { $$groupId: "$direct" }
                 );
+                const oMRPRunsBinding = oModel.bindList(
+                    "/MRPRuns",
+                    undefined,
+                    undefined,
+                    undefined,
+                    { $$groupId: "$direct", $select: "BatchID,RequirementDate,StartedAt" }
+                );
 
                 const aResults = await Promise.all([
                     oPOBinding.requestContexts(0, 5000),
-                    oOverviewBinding.requestContexts(0, 5000)
+                    oOverviewBinding.requestContexts(0, 5000),
+                    oMRPRunsBinding.requestContexts(0, 5000)
                 ]);
 
                 const mOverview = {};
@@ -164,6 +182,19 @@ sap.ui.define([
                     const oItem = oContext.getObject();
                     mOverview[oItem.request_id] = oItem;
                 });
+
+                const mBatchDates = {};
+                const mBatchTimestamps = {};
+                aResults[2].forEach(function (oContext) {
+                    const oRun = oContext.getObject();
+                    const sBatchKey = this._normalizeBatchId(oRun.BatchID);
+                    const sTimestamp = String(oRun.StartedAt || "");
+                    if (sBatchKey && (!mBatchTimestamps[sBatchKey] || sTimestamp > mBatchTimestamps[sBatchKey])) {
+                        mBatchTimestamps[sBatchKey] = sTimestamp;
+                        mBatchDates[sBatchKey] = oRun.RequirementDate || "";
+                    }
+                }, this);
+                this._batchRequirementDates = mBatchDates;
 
                 const sNormalizedQuery = String(sQuery || "").trim().toUpperCase();
                 const mGroups = {};
@@ -175,17 +206,15 @@ sap.ui.define([
                         ? "CREATED"
                         : (String(oPO.status || "").toUpperCase() === "ERROR" ? "ERROR" : "PENDING");
 
-                    if (sStatus && sStatus !== "ALL" && sStatus !== sDerivedStatus) {
-                        return;
-                    }
-
                     const sSearchText = [
                         oPO.purchase_order,
                         oPO.material,
                         oPO.material_description,
                         oPO.vendor,
                         oPO.vendor_name,
-                        oPO.purchase_requisition
+                        oPO.purchase_requisition,
+                        oPO.batch_id,
+                        oPO.batch_id ? this._formatTrackedForecastBatchCode(oPO.batch_id) : ""
                     ].join(" ").toUpperCase();
 
                     if (sNormalizedQuery && sSearchText.indexOf(sNormalizedQuery) === -1) {
@@ -210,7 +239,7 @@ sap.ui.define([
                             purchaseOrder: oPO.purchase_order || "Not generated",
                             batchId: oPO.batch_id || "",
                             batchCode: oPO.batch_id
-                                ? this._formatForecastBatchCode(
+                                ? this._formatTrackedForecastBatchCode(
                                     oPO.batch_id,
                                     oPO.delivery_date || oPO.created_at
                                 )
@@ -244,7 +273,29 @@ sap.ui.define([
                     oGroup.remainingItemCount = oGroup.items.filter(function (oItem) {
                         return Number(oItem.remaining_quantity || 0) > 0 && Boolean(oItem.purchase_order_item);
                     }).length;
+                    oGroup.receivedItemCount = oGroup.items.filter(function (oItem) {
+                        return Number(oItem.received_quantity || 0) > 0;
+                    }).length;
+
+                    if (oGroup.purchaseOrder === "Not generated") {
+                        oGroup.statusKey = oGroup.statusText;
+                    } else if (oGroup.itemCount > 0 && oGroup.remainingItemCount === 0) {
+                        oGroup.statusKey = "FULLY_RECEIVED";
+                        oGroup.statusText = "FULLY RECEIVED";
+                        oGroup.statusState = "Success";
+                    } else if (oGroup.receivedItemCount > 0) {
+                        oGroup.statusKey = "PARTIALLY_RECEIVED";
+                        oGroup.statusText = "PARTIALLY RECEIVED";
+                        oGroup.statusState = "Warning";
+                    } else {
+                        oGroup.statusKey = "OPEN";
+                        oGroup.statusText = "OPEN";
+                        oGroup.statusState = "Information";
+                    }
+                    oGroup.expanded = false;
                     return oGroup;
+                }).filter(function (oGroup) {
+                    return !sStatus || sStatus === "ALL" || oGroup.statusKey === sStatus;
                 }).sort(function (a, b) {
                     return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
                 });
@@ -402,7 +453,7 @@ sap.ui.define([
                 mrpRunId: oItem.mrp_run_id || "",
                 mrpRunItemNo: oItem.mrp_run_item_no || "",
                 batchCode: oItem.batch_id
-                    ? this._formatForecastBatchCode(
+                    ? this._formatTrackedForecastBatchCode(
                         oItem.batch_id,
                         oItem.delivery_date || oItem.created_at
                     )
@@ -571,7 +622,7 @@ sap.ui.define([
                 mrpRunId: oPO.mrp_run_id || "",
                 mrpRunItemNo: oPO.mrp_run_item_no || "",
                 batchCode: oPO.batch_id
-                    ? this._formatForecastBatchCode(
+                    ? this._formatTrackedForecastBatchCode(
                         oPO.batch_id,
                         oPO.delivery_date || oPO.created_at
                     )

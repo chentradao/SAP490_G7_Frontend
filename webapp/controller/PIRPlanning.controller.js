@@ -579,6 +579,31 @@ sap.ui.define([
                     });
                 }));
 
+                const oPurchaseRequisitions = oModel.bindList(
+                    "/MRPPurchaseRequisitions",
+                    undefined,
+                    undefined,
+                    undefined,
+                    {
+                        $$groupId: "$direct",
+                        $select: "PurchaseRequisition,PurchaseRequisitionItem,RequestedQuantity,Unit"
+                    }
+                );
+                const aPurchaseRequisitionContexts = await oPurchaseRequisitions.requestContexts(0, 5000);
+                const normalize = function (vValue) {
+                    const sValue = String(vValue || "").trim();
+                    return /^\d+$/.test(sValue)
+                        ? sValue.replace(/^0+(?=\d)/, "")
+                        : sValue;
+                };
+                const mPurchaseRequisitions = new Map();
+                aPurchaseRequisitionContexts.forEach(function (oContext) {
+                    const oPurchaseRequisition = oContext.getObject();
+                    const sKey = normalize(oPurchaseRequisition.PurchaseRequisition) + "|" +
+                        normalize(oPurchaseRequisition.PurchaseRequisitionItem);
+                    mPurchaseRequisitions.set(sKey, oPurchaseRequisition);
+                });
+
                 const mDocuments = new Map();
                 aRunItems.flat().forEach(function (oItem) {
                     const sKey = [
@@ -595,10 +620,21 @@ sap.ui.define([
                     const sCategory = oItem.DocumentCategory === "PLANNED_ORDER"
                         ? "Planned Order" : "Purchase Requisition";
                     const sItem = oItem.DocumentItem ? "/" + oItem.DocumentItem : "";
+                    const sPurchaseRequisitionKey = normalize(oItem.DocumentNumber) + "|" +
+                        normalize(oItem.DocumentItem);
+                    const oLivePurchaseRequisition = oItem.DocumentCategory === "PURCHASE_REQ"
+                        ? mPurchaseRequisitions.get(sPurchaseRequisitionKey)
+                        : null;
+                    const nQuantity = oLivePurchaseRequisition
+                        ? oLivePurchaseRequisition.RequestedQuantity
+                        : oItem.RequiredQuantity;
+                    const sUnit = oLivePurchaseRequisition
+                        ? oLivePurchaseRequisition.Unit
+                        : oItem.Unit;
                     return "• " + sCategory + ": " + oItem.DocumentNumber + sItem +
                         " — " + oItem.Material + " — " +
-                        Number(oItem.RequiredQuantity || 0).toLocaleString("vi-VN", { maximumFractionDigits: 3 }) +
-                        " " + (oItem.Unit || "");
+                        Number(nQuantity || 0).toLocaleString("vi-VN", { maximumFractionDigits: 3 }) +
+                        " " + (sUnit || "");
                 }).join("\n");
             } catch (oError) {
                 return "";

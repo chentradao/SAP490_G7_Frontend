@@ -150,7 +150,7 @@
             items="{pir>/historyBatches}">
             <items>
               <CustomListItem>
-                <Panel expandable="true" expanded="true" class="sapUiTinyMarginBottom">
+                <Panel expandable="true" expanded="false" class="sapUiTinyMarginBottom">
                   <headerToolbar>
                     <Toolbar>
                       <Title text="Forecast Batch {pir>batchId}" level="H5" />
